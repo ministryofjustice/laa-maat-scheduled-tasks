@@ -1,0 +1,13 @@
+server:
+  port: 8499
+
+management:
+  server:
+    port: 8510
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

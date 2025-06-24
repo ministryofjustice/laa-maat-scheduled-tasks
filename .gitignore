@@ -1,4 +1,4 @@
-microservice-template/.gradle
+maat-scheduled-tasks/.gradle
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
