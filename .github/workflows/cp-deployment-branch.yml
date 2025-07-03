@@ -1,0 +1,42 @@
+name: Build and Deploy to Non-Prod Environments
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+
+jobs:
+
+  application-image-build:
+    name: application-image-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ECR_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.ECR_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
+      - name: Build & Push Image
+        id: build-and-push-image
+        run: |
+          echo "Building the ear file and Docker image with gradle..."
+          pushd maat-scheduled-tasks
+          chmod +x ./gradlew
+          ./gradlew build
+          echo "Building the docker image and tagging it"
+          docker build -t maat-scheduled-tasks .
+          docker tag maat-scheduled-tasks $REGISTRY/$REPOSITORY:$GITHUB_TAG
+          echo "Pushing the Docker image to $REGISTRY/$REPOSITORY:$GITHUB_TAG"
+          docker push $REGISTRY/$REPOSITORY:$GITHUB_TAG
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          GITHUB_TAG: ${{ github.sha }}
