@@ -31,8 +31,8 @@ service:
   port: 8080
 
 # TODO ingress config
-#ingress:
-#  enabled: false
+ingress:
+  enabled: false
 #  className: ""
 #  annotations: {}
 #    # kubernetes.io/ingress.class: nginx
