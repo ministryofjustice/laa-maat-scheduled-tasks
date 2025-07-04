@@ -2,7 +2,7 @@
 {{/*
 Environment variables for service containers
 */}}
-{{- define "laa-maat-data-api.env-vars" }}
+{{- define "laa-maat-scheduled-tasks.env-vars" }}
 env:
   - name: AWS_REGION
     value: {{ .Values.aws_region }}
