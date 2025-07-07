@@ -11,5 +11,5 @@ spec:
   endpoints:
     - port: actuator
       interval: {{ .Values.actuator.metrics.scrapeInterval }}
-{{/*      path: {{ .Values.actuator.metrics.path }}*/}}
+      path: {{ .Values.actuator.metrics.path }}
 {{- end }}
