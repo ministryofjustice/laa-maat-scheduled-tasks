@@ -1,0 +1,15 @@
+{{- if .Values.actuator.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "laa-maat-scheduled-tasks.fullname" .  }}-monitoring
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "laa-maat-scheduled-tasks.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: actuator
+      interval: {{ .Values.actuator.metrics.scrapeInterval }}
+      path: {{ .Values.actuator.metrics.path }}
+{{- end }}

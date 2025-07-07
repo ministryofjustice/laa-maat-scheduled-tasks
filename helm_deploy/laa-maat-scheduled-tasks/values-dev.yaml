@@ -60,3 +60,21 @@ aws_region: eu-west-2
 logging:
   level: DEBUG
 
+actuator:
+  metrics:
+    enabled: true
+    scrapeInterval: 15s
+    path: /actuator/prometheus
+  health:
+    path: /actuator/health
+  port: 8510
+  liveness:
+    initialDelaySeconds: 45
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 5
+  readiness:
+    initialDelaySeconds: 45
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 5
