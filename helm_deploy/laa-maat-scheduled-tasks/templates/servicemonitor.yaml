@@ -7,7 +7,6 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: {{ include "laa-maat-scheduled-tasks.fullname" .}}
       {{- include "laa-maat-scheduled-tasks.selectorLabels" . | nindent 6 }}
   endpoints:
     - port: actuator
