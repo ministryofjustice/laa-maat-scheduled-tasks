@@ -11,5 +11,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: {{ .Values.actuator.port }}
+      targetPort: actuator
+      protocol: TCP
+      name: actuator
   selector:
     {{- include "laa-maat-scheduled-tasks.selectorLabels" . | nindent 4 }}
