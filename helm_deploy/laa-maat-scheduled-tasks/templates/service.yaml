@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: {{ include "laa-maat-scheduled-tasks.fullname" . }}
   labels:
+    app: {{ include "laa-maat-scheduled-tasks.fullname" .}}
     {{- include "laa-maat-scheduled-tasks.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
