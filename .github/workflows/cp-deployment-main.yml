@@ -127,7 +127,7 @@ jobs:
 
   deploy-to-prod:
     name: deploy-to-prod
-    needs: [application-image-build]
+    needs: [application-image-build, deploy-to-development, deploy-to-test, deploy-to-uat]
     runs-on: ubuntu-latest
     environment: prod
     env:
