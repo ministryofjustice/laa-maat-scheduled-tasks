@@ -1,12 +1,13 @@
-name: Build and Deploy to Non-Prod Environments
+name: Build and Deploy MAAT Scheduled Tasks
 
 permissions:
   id-token: write
   contents: read
 
 on:
-  #TODO remove push when merging! Only do workflow_dispatch.
   push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -121,5 +122,32 @@ jobs:
         run: |
           cd helm_deploy/laa-maat-scheduled-tasks
           helm upgrade laa-maat-scheduled-tasks -f values-uat.yaml . --install --wait --namespace=${KUBE_NAMESPACE} --set image.tag="$GITHUB_TAG"
+        env:
+          GITHUB_TAG: ${{ github.sha }}
+
+  deploy-to-prod:
+    name: deploy-to-prod
+    needs: [application-image-build]
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+      KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticating to the Kubernetes cluster
+        id: authenticate-k8s-cluster
+        run: |
+          echo "${{ secrets.KUBE_CERT }}" > ca.crt
+          kubectl config set-cluster ${KUBE_CLUSTER} --certificate-authority=./ca.crt --server=https://${KUBE_CLUSTER}
+          kubectl config set-credentials deploy-user --token=${{ secrets.KUBE_TOKEN }}
+          kubectl config set-context ${KUBE_CLUSTER} --cluster=${KUBE_CLUSTER} --user=deploy-user --namespace=${KUBE_NAMESPACE}
+          kubectl config use-context ${KUBE_CLUSTER}
+
+      - name: Helm deploy to PROD environment
+        id: deploy-to-prod
+        run: |
+          cd helm_deploy/laa-maat-scheduled-tasks
+          helm upgrade laa-maat-scheduled-tasks -f values-prod.yaml . --install --wait --namespace=${KUBE_NAMESPACE} --set image.tag="$GITHUB_TAG"
         env:
           GITHUB_TAG: ${{ github.sha }}
