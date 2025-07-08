@@ -1,0 +1,123 @@
+name: Build and Deploy to Non-Prod Environments
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  application-image-build:
+    name: application-image-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ECR_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.ECR_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
+      - name: Build & Push Image
+        id: build-and-push-image
+        run: |
+          echo "Building the ear file and Docker image with gradle..."
+          pushd maat-scheduled-tasks
+          chmod +x ./gradlew
+          ./gradlew build
+          echo "Building the docker image and tagging it"
+          docker build -t maat-scheduled-tasks .
+          docker tag maat-scheduled-tasks $REGISTRY/$REPOSITORY:$GITHUB_TAG
+          echo "Pushing the Docker image to $REGISTRY/$REPOSITORY:$GITHUB_TAG"
+          docker push $REGISTRY/$REPOSITORY:$GITHUB_TAG
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          GITHUB_TAG: ${{ github.sha }}
+
+  deploy-to-development:
+    name: deploy-to-development
+    needs: [application-image-build]
+    runs-on: ubuntu-latest
+    environment: development
+    env:
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+      KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticating to the Kubernetes cluster
+        id: authenticate-k8s-cluster
+        run: |
+          echo "${{ secrets.KUBE_CERT }}" > ca.crt
+          kubectl config set-cluster ${KUBE_CLUSTER} --certificate-authority=./ca.crt --server=https://${KUBE_CLUSTER}
+          kubectl config set-credentials deploy-user --token=${{ secrets.KUBE_TOKEN }}
+          kubectl config set-context ${KUBE_CLUSTER} --cluster=${KUBE_CLUSTER} --user=deploy-user --namespace=${KUBE_NAMESPACE}
+          kubectl config use-context ${KUBE_CLUSTER}
+
+      - name: Helm deploy to Dev environment
+        id: deploy-to-dev
+        run: |
+          cd helm_deploy/laa-maat-scheduled-tasks
+          helm upgrade laa-maat-scheduled-tasks -f values-dev.yaml . --install --wait --namespace=${KUBE_NAMESPACE} --set image.tag="$GITHUB_TAG"
+        env:
+          GITHUB_TAG: ${{ github.sha }}
+
+  deploy-to-test:
+    name: deploy-to-test
+    needs: [application-image-build]
+    runs-on: ubuntu-latest
+    environment: test
+    env:
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+      KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticating to the Kubernetes cluster
+        id: authenticate-k8s-cluster
+        run: |
+          echo "${{ secrets.KUBE_CERT }}" > ca.crt
+          kubectl config set-cluster ${KUBE_CLUSTER} --certificate-authority=./ca.crt --server=https://${KUBE_CLUSTER}
+          kubectl config set-credentials deploy-user --token=${{ secrets.KUBE_TOKEN }}
+          kubectl config set-context ${KUBE_CLUSTER} --cluster=${KUBE_CLUSTER} --user=deploy-user --namespace=${KUBE_NAMESPACE}
+          kubectl config use-context ${KUBE_CLUSTER}
+
+      - name: Helm deploy to Test environment
+        id: deploy-to-test
+        run: |
+          cd helm_deploy/laa-maat-scheduled-tasks
+          helm upgrade laa-maat-scheduled-tasks -f values-test.yaml . --install --wait --namespace=${KUBE_NAMESPACE} --set image.tag="$GITHUB_TAG"
+        env:
+          GITHUB_TAG: ${{ github.sha }}
+
+  deploy-to-uat:
+    name: deploy-to-uat
+    needs: [application-image-build]
+    runs-on: ubuntu-latest
+    environment: uat
+    env:
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+      KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticating to the Kubernetes cluster
+        id: authenticate-k8s-cluster
+        run: |
+          echo "${{ secrets.KUBE_CERT }}" > ca.crt
+          kubectl config set-cluster ${KUBE_CLUSTER} --certificate-authority=./ca.crt --server=https://${KUBE_CLUSTER}
+          kubectl config set-credentials deploy-user --token=${{ secrets.KUBE_TOKEN }}
+          kubectl config set-context ${KUBE_CLUSTER} --cluster=${KUBE_CLUSTER} --user=deploy-user --namespace=${KUBE_NAMESPACE}
+          kubectl config use-context ${KUBE_CLUSTER}
+
+      - name: Helm deploy to UAT environment
+        id: deploy-to-uat
+        run: |
+          cd helm_deploy/laa-maat-scheduled-tasks
+          helm upgrade laa-maat-scheduled-tasks -f values-uat.yaml . --install --wait --namespace=${KUBE_NAMESPACE} --set image.tag="$GITHUB_TAG"
+        env:
+          GITHUB_TAG: ${{ github.sha }}
