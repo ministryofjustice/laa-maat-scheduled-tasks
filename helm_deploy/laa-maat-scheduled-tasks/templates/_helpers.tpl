@@ -60,3 +60,14 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create ingress configuration
+*/}}
+{{- define "laa-maat-scheduled-tasks.ingress" -}}
+{{- $internalAllowlistSourceRange := (lookup "v1" "Secret" .Release.Namespace "maat-scheduled-tasks-env-variables").data.INTERNAL_ALLOWLIST_SOURCE_RANGE | b64dec }}
+{{- if $internalAllowlistSourceRange }}
+  nginx.ingress.kubernetes.io/whitelist-source-range: {{ $internalAllowlistSourceRange }}
+  external-dns.alpha.kubernetes.io/set-identifier: {{ include "laa-maat-scheduled-tasks.fullname" . }}-{{ $.Values.ingress.environmentName}}-green
+{{- end }}
+{{- end }}

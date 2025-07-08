@@ -33,14 +33,14 @@ service:
 # TODO ingress config
 ingress:
   enabled: true
-  environmentName: laa-maat-scheduled-tasks-dev
+  environmentName: laa-maat-scheduled-tasks-prod
   className: default
   annotations:
     external-dns.alpha.kubernetes.io/aws-weight: "100"
     nginx.ingress.kubernetes.io/affinity: "cookie"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "300"
   hosts:
-    - host: laa-maat-scheduled-tasks-dev.apps.live.cloud-platform.service.justice.gov.uk
+    - host: laa-maat-scheduled-tasks-prod.apps.live.cloud-platform.service.justice.gov.uk
       paths:
         - path: /
           pathType: "Prefix"
@@ -58,7 +58,7 @@ autoscaling:
 aws_region: eu-west-2
 
 logging:
-  level: DEBUG
+  level: INFO
 
 actuator:
   metrics:
