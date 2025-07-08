@@ -5,8 +5,6 @@ permissions:
   contents: read
 
 on:
-  #TODO remove push when merging! Only do workflow_dispatch.
-  push:
   workflow_dispatch:
 
 jobs:
