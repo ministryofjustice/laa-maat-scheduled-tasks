@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+    environment:
+      - SENTRY_ENV=development
+      - SENTRY_SAMPLE_RATE=0.0
+      - LMR_REPORTS=0 0 1 * * ?
+      - EVIDENCE_REMINDER_LETTER=0 0 21 ? * MON-FRI
+      - INACTIVATE_USERS=0 0 13 ? * SAT
+      - FA_FIX=0 30 20 * * ?
+      - CENTRAL_PRINT=0 30 21 ? * MON-FRI
+    env_file:
+      - app.env
+
+    ports:
+      - "8499:8499"
+      - "8510:8510"
+      - "8484:8484"
+    command: java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8383 -jar app.jar
+
+networks:
+  local-container-network:
+    driver: bridge
+    name: local-container-network

@@ -11,5 +11,42 @@ management:
   endpoint:
     health:
       show-details: always
+
+spring:
+  application:
+    name: maat-scheduled-tasks
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 5
+      max-lifetime: 1900000          # 31 mins+
+      leak-detection-threshold: 1860000  # ~31 mins
+      idle-timeout: 600000           # 10 mins
     prometheus:
       enabled: true
+
+maat_batch:
+  lmr_reports:
+    cron_expression:  ${LMR_REPORTS}
+  evidence_reminder_letter:
+    cron_expression:  ${EVIDENCE_REMINDER_LETTER}
+  inactive_users:
+    cron_expression: ${INACTIVATE_USERS}
+  fa_fix:
+    cron_expression: ${FA_FIX}
+  central_print:
+    cron_expression: ${CENTRAL_PRINT}
+
+
+sentry:
+  dsn: ${SENTRY_DSN}
+  environment: ${SENTRY_ENV}
+  release: 0.0.1
+  servername: aws-eks-container
+  send-default-pii: true
+  attach-stacktrace: true
+  sample-rate: ${SENTRY_SAMPLE_RATE}

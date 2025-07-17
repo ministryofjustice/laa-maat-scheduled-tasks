@@ -57,6 +57,22 @@ autoscaling:
 
 aws_region: eu-west-2
 
+host_env: production
+sentry:
+  sampleRate: 1.0
+
+maat_batch:
+  lmr_reports:
+    cron_expression:  '-'
+  evidence_reminder_letter:
+    cron_expression:  '-'
+  inactive_users:
+    cron_expression: '-'
+  fa_fix:
+    cron_expression: '-'
+  central_print:
+    cron_expression: '-'
+
 logging:
   level: INFO
 
