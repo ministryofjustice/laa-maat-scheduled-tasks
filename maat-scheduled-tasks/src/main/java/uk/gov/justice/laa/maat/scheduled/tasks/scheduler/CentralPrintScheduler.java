@@ -10,7 +10,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.service.StoredProcedureService;
 @EnableScheduling
 @RequiredArgsConstructor
 public class CentralPrintScheduler {
-    private static final String BATCH_CENTRAL_PRINT_RUN = "xxrep_batch.central_print_run";
+    private static final String BATCH_CENTRAL_PRINT_RUN = "rep.xxrep_batch.central_print_run";
     private final StoredProcedureService storedProcedureService;
 
     @Scheduled(cron = "${maat_batch.central_print.cron_expression}")
