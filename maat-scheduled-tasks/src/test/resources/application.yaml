@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: maat-scheduled-tasks
+  datasource:
+    url: jdbc:h2:mem:mla;MODE=Oracle;DB_CLOSE_DELAY=-1;IGNORE_CATALOGS=TRUE;NON_KEYWORDS=VALUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    name: TOGDATA
+
+maat_batch:
+  lmr_reports:
+    cron_expression: 0 0 9 * * *
+  evidence_reminder_letter:
+    cron_expression: 0 0 9 * * *
+  inactive_users:
+    cron_expression: 0 0 9 * * *
+  fa_fix:
+    cron_expression: 0 0 9 * * *
+  central_print:
+    cron_expression: 0 0 9 * * *
