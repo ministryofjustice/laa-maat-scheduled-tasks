@@ -13,7 +13,7 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class CentralPrintSchedulerTest {
 
-    private static final String BATCH_CENTRAL_PRINT_RUN = "xxrep_batch.central_print_run";
+    private static final String BATCH_CENTRAL_PRINT_RUN = "rep.xxrep_batch.central_print_run";
 
     @InjectMocks
     private CentralPrintScheduler centralPrintScheduler;
