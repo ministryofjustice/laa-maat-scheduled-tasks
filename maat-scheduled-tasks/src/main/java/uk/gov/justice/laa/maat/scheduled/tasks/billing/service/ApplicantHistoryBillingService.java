@@ -19,18 +19,16 @@ public class ApplicantHistoryBillingService {
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
 
     public List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
-        List<ApplicantHistoryBillingDTO> applicantHistoryDTOs = new ArrayList<>();
-
-        List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryBilling();
+        List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
         log.info("Application histories successfully extracted for billing data.");
 
-        if (!applicantHistoryEntities.isEmpty()) {
-            applicantHistoryDTOs = applicantHistoryEntities
-                .stream()
-                .map(applicantHistoryBillingMapper::mapEntityToDTO)
-                .toList();
+        if (applicantHistoryEntities.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        return applicantHistoryDTOs;
+        return applicantHistoryEntities
+            .stream()
+            .map(applicantHistoryBillingMapper::mapEntityToDTO)
+            .toList();
     }
 }
