@@ -7,7 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.billing.repository.MaatReferenceRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.billing.service.MaatReferenceService;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.RecordsAlreadyExistException;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -37,7 +37,7 @@ class MaatReferenceServiceTest {
 
         assertThatThrownBy(() -> {
             service.populateMaatReferences();
-        }).isInstanceOf(RecordsAlreadyExistException.class)
+        }).isInstanceOf(MAATScheduledTasksException.class)
             .hasMessageContaining("The maat references table is already populated.");
     }
 
