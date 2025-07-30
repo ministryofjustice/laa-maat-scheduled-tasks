@@ -31,8 +31,8 @@ class ApplicantHistoryBillingServiceTest {
     private ApplicantHistoryBillingService service;
 
     @Test
-    void givenApplicantHistoriesToExtract_whenExtractApplicantHistoryBillingIsInvoked_thenApplicantHistoriesReturned() {
-        when(repository.extractApplicantHistoryBilling())
+    void givenApplicantHistoriesToExtract_whenExtractApplicantHistoryForBillingIsInvoked_thenApplicantHistoriesReturned() {
+        when(repository.extractApplicantHistoryForBilling())
             .thenReturn(List.of(TestEntityDataBuilder.getApplicantHistoryBillingEntity()));
         when(mapper.mapEntityToDTO(any(ApplicantHistoryBillingEntity.class)))
             .thenReturn(TestModelDataBuilder.getApplicantHistoryBillingDTO());
@@ -43,8 +43,8 @@ class ApplicantHistoryBillingServiceTest {
     }
 
     @Test
-    void givenNoApplicantHistoriesToExtract_whenExtractApplicantHistoryBillingIsInvoked_thenEmptyListReturned() {
-        when(repository.extractApplicantHistoryBilling()).thenReturn(new ArrayList<>());
+    void givenNoApplicantHistoriesToExtract_whenExtractApplicantForHistoryBillingIsInvoked_thenEmptyListReturned() {
+        when(repository.extractApplicantHistoryForBilling()).thenReturn(new ArrayList<>());
 
         List<ApplicantHistoryBillingDTO> dtos = service.extractApplicantHistory();
 

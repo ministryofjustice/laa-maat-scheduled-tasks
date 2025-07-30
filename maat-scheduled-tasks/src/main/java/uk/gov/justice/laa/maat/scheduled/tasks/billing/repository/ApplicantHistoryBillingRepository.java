@@ -25,7 +25,7 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
                             A1.DATE_MODIFIED,
                             A1.USER_MODIFIED
                         FROM TOGDATA.APPLICANT_HISTORY A1
-                        INNER JOIN TOGDATA.MAAT_REFS_TO_EXTRACT M
+                        JOIN TOGDATA.MAAT_REFS_TO_EXTRACT M
                         ON A1.ID = M.APHI_ID
                         UNION
                         SELECT 
@@ -45,7 +45,6 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
                             A2.USER_MODIFIED
                         FROM TOGDATA.APPLICANT_HISTORY A2
                         WHERE A2.SEND_TO_CCLF = 'Y'
-                        FETCH FIRST 10 ROWS ONLY
                         """, nativeQuery = true)
-    List<ApplicantHistoryBillingEntity> extractApplicantHistoryBilling();
+    List<ApplicantHistoryBillingEntity> extractApplicantHistoryForBilling();
 }
