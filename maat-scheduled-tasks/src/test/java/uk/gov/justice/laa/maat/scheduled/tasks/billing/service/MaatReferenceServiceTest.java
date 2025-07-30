@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing;
+package uk.gov.justice.laa.maat.scheduled.tasks.billing.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
