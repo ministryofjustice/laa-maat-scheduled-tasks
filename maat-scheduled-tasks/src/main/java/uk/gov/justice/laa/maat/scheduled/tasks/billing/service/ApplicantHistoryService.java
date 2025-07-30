@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.billing.repository.ApplicantHistoryRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 
 @Slf4j
 @Service
@@ -21,7 +22,7 @@ public class ApplicantHistoryService {
 
         if (updatedRows != ids.size()) {
             String errorMsg = String.format(
-                "Number of applicant histories reset: %d, does not equal those supplied in request: %d.",
+                "Number of applicant histories reset: %d, does not equal those supplied: %d.",
                 updatedRows, ids.size());
             log.error(errorMsg);
             throw new MAATScheduledTasksException(errorMsg);
