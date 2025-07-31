@@ -40,4 +40,10 @@ class MaatReferenceServiceTest {
             .hasMessageContaining("The maat references table is already populated.");
     }
 
+    @Test
+    void givenTableIsPopulated_whenDeleteMaatReferencesIsInvoked_thenRepositoryIsCalled() {
+        service.deleteMaatReferences();
+
+        verify(repository).deleteAll();
+    }
 }
