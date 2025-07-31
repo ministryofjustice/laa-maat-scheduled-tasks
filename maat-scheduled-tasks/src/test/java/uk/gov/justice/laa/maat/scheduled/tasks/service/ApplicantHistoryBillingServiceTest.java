@@ -1,8 +1,12 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -14,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder;
@@ -48,6 +53,30 @@ class ApplicantHistoryBillingServiceTest {
         List<ApplicantHistoryBillingDTO> dtos = service.extractApplicantHistory();
 
         assertTrue(dtos.isEmpty(), "Applicant history billing data returned when none expected.");
+    }
+
+    @Test
+    void givenValidDataProvided_whenResetApplicantHistoryIsInvoked_thenRepositoryIsCalled() {
+        String userModified = "test-u";
+        List<Integer> ids = List.of(1, 2, 3);
+        when(repository.resetApplicantHistory(anyString(), anyList())).thenReturn(ids.size());
+
+        service.resetApplicantHistory(userModified, ids);
+
+        verify(repository).resetApplicantHistory(userModified, ids);
+    }
+
+    @Test
+    void givenLessRowsUpdated_whenResetApplicantHistoryIsInvoked_thenExceptionIsThrown() {
+        String userModified = "test-u";
+        List<Integer> ids = List.of(1, 2, 3);
+        when(repository.resetApplicantHistory(anyString(), anyList())).thenReturn(ids.size() - 1);
+
+        assertThatThrownBy(() -> {
+            service.resetApplicantHistory(userModified, ids);
+        }).isInstanceOf(MAATScheduledTasksException.class).hasMessageContaining(String.format(
+            "Number of applicant histories reset: %d, does not equal those supplied: %d.",
+            ids.size() - 1, ids.size()));
     }
 }
 
