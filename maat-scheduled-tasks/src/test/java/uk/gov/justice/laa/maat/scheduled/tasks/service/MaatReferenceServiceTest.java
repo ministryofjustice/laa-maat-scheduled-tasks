@@ -44,6 +44,6 @@ class MaatReferenceServiceTest {
     void givenTableIsPopulated_whenDeleteMaatReferencesIsInvoked_thenRepositoryIsCalled() {
         service.deleteMaatReferences();
 
-        verify(repository).deleteAll();
+        verify(repository).deleteMaatReferences();
     }
 }

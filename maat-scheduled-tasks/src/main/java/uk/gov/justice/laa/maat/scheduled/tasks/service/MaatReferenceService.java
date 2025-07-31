@@ -29,7 +29,7 @@ public class MaatReferenceService {
     @Transactional
     public void deleteMaatReferences() {
         log.info("Deleting all maat references from table...");
-        maatReferenceRepository.deleteAll();
+        maatReferenceRepository.deleteMaatReferences();
     }
 
 }
