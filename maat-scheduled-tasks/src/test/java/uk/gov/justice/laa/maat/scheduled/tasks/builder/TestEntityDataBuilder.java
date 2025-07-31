@@ -1,10 +1,12 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.builder;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Component
 public class TestEntityDataBuilder {
@@ -52,5 +54,22 @@ public class TestEntityDataBuilder {
             .userModified("alice-smith")
             .caseType("EITHER WAY")
             .build();
+    }
+
+    public static ApplicantBillingEntity getPopulatedApplicantBillingEntity(Integer id) {
+        return ApplicantBillingEntity.builder()
+                .id(id)
+                .firstName("test-first-name")
+                .lastName("test-last-name")
+                .otherNames("test-other-names")
+                .dob(LocalDate.parse("2025-07-31"))
+                .gender("male")
+                .niNumber("AB123456C")
+                .foreignId("foreign-ID")
+                .dateCreated(LocalDateTime.parse("2024-08-29T11:38:12"))
+                .userCreated("user-created")
+                .dateModified(LocalDateTime.parse("2024-04-01T10:45:09"))
+                .userModified("user-modified")
+                .build();
     }
 }
