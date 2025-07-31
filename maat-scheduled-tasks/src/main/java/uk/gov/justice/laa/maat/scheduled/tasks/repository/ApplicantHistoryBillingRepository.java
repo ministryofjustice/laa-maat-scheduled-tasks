@@ -1,10 +1,10 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing.repository;
+package uk.gov.justice.laa.maat.scheduled.tasks.repository;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 
 @Repository
 public interface ApplicantHistoryBillingRepository extends JpaRepository<ApplicantHistoryBillingEntity, Integer> {

@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing.entity;
+package uk.gov.justice.laa.maat.scheduled.tasks.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

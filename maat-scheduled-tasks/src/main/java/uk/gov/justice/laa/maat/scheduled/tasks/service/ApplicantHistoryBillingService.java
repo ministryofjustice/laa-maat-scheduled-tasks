@@ -1,14 +1,14 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing.service;
+package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.entity.ApplicantHistoryBillingEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.mapper.ApplicantHistoryBillingMapper;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.repository.ApplicantHistoryBillingRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
+import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 
 @Slf4j
 @Service

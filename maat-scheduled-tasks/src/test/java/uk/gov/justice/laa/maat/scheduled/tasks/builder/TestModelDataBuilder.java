@@ -3,7 +3,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.builder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.dto.ApplicantHistoryBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 
 @Component
 public class TestModelDataBuilder {

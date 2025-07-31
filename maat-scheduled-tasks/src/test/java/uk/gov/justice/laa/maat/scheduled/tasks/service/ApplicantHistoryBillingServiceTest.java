@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing;
+package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,11 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.entity.ApplicantHistoryBillingEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.mapper.ApplicantHistoryBillingMapper;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.repository.ApplicantHistoryBillingRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.service.ApplicantHistoryBillingService;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
+import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder;
 

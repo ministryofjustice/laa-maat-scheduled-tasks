@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing.dto;
+package uk.gov.justice.laa.maat.scheduled.tasks.dto;
 
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
