@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing.repository;
+package uk.gov.justice.laa.maat.scheduled.tasks.repository;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
