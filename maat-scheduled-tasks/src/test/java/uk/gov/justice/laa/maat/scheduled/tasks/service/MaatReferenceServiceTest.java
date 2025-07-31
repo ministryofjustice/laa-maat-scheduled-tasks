@@ -1,12 +1,11 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing.service;
+package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.repository.MaatReferenceRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.billing.service.MaatReferenceService;
+import uk.gov.justice.laa.maat.scheduled.tasks.repository.MaatReferenceRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 
 import static org.mockito.Mockito.when;

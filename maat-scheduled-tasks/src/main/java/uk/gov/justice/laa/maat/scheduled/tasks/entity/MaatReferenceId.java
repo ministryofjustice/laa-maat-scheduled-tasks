@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing.entity;
+package uk.gov.justice.laa.maat.scheduled.tasks.entity;
 
 import java.io.Serializable;
 import lombok.AllArgsConstructor;

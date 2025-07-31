@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.billing.entity;
+package uk.gov.justice.laa.maat.scheduled.tasks.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.MaatReferenceId;
 
 @Getter
 @Setter
