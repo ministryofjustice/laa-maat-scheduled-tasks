@@ -26,4 +26,10 @@ public class MaatReferenceService {
         maatReferenceRepository.populateMaatReferences();
     }
 
+    @Transactional
+    public void deleteMaatReferences() {
+        log.info("Deleting all maat references from table...");
+        maatReferenceRepository.deleteAll();
+    }
+
 }
