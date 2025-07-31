@@ -22,10 +22,6 @@ public class ApplicantHistoryBillingService {
         List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
         log.info("Application histories successfully extracted for billing data.");
 
-        if (applicantHistoryEntities.isEmpty()) {
-            return new ArrayList<>();
-        }
-
         return applicantHistoryEntities
             .stream()
             .map(applicantHistoryBillingMapper::mapEntityToDTO)
