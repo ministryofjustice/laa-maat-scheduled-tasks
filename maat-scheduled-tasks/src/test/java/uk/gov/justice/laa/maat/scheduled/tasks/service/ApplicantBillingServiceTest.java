@@ -11,6 +11,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 
 import java.util.List;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateBillingRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -22,6 +23,7 @@ class ApplicantBillingServiceTest {
 
     private static final int TEST_ID_1 = 1;
     private static final int TEST_ID_2 = 2;
+    private static final String USERNAME = "test_user";
 
     @Mock
     private ApplicantBillingRepository applicantBillingRepository;
@@ -45,5 +47,16 @@ class ApplicantBillingServiceTest {
 
         assertEquals(List.of(dto1, dto2), applicantBillingService.findAllApplicantsForBilling());
         verify(applicantBillingRepository, times(1)).findAllApplicantsForBilling();
+    }
+
+    @Test
+    void givenAnUpdateBillingRequest_whenResetApplicantBillingCalled_shouldCallResetApplicantBillingOnRepository() {
+        UpdateBillingRequest request = new UpdateBillingRequest();
+        request.setUserModified(USERNAME);
+        request.setIds(List.of(TEST_ID_1, TEST_ID_2));
+
+        applicantBillingService.resetApplicantBilling(request);
+
+        verify(applicantBillingRepository).resetApplicantBilling(request.getIds(), request.getUserModified());
     }
 }

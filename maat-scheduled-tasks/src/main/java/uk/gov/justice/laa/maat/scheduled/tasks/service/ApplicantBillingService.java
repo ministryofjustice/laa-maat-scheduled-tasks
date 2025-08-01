@@ -9,6 +9,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 
 import java.util.List;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateBillingRequest;
 
 @Slf4j
 @Service
@@ -23,6 +24,11 @@ public class ApplicantBillingService {
         log.info("Extracted data for {} applicants", applicants.size());
 
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
+    }
+
+    public void resetApplicantBilling(UpdateBillingRequest request) {
+        int updatedCount = applicantBillingRepository.resetApplicantBilling(request.getIds(), request.getUserModified());
+        log.info("Reset SEND_TO_CCLF for {} applicants", updatedCount);
     }
 
 }
