@@ -1,8 +1,10 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 
 import java.util.List;
@@ -25,4 +27,15 @@ public interface ApplicantBillingRepository extends JpaRepository<ApplicantBilli
             """,
             nativeQuery = true)
     List<ApplicantBillingEntity> findAllApplicantsForBilling();
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+        UPDATE TOGDATA.applicants
+        SET     send_to_cclf = NULL,
+                date_modified = CURRENT_TIMESTAMP,
+                user_modified = :username
+        WHERE id IN (:applicantIds)
+        """, nativeQuery = true)
+    int resetApplicantBilling(List<Integer> applicantIds, String username);
 }
