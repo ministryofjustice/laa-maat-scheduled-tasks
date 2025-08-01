@@ -1,12 +1,19 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.builder;
 
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.crime.enums.AppealType;
+import uk.gov.justice.laa.crime.enums.EvidenceFeeLevel;
+import uk.gov.justice.laa.crime.enums.MagCourtOutcome;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtCaseType;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtTrialOutcome;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateBillingRequest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class TestModelDataBuilder {
@@ -29,33 +36,6 @@ public class TestModelDataBuilder {
             .build();
     }
 
-    public static RepOrderBillingDTO getRepOrderBillingDTO(Integer id) {
-        return RepOrderBillingDTO.builder()
-            .id(id)
-            .applicantId(123)
-            .arrestSummonsNo("ARREST-5678")
-            .evidenceFeeLevel("LEVEL1")
-            .supplierAccountCode("AB123C")
-            .magsCourtId(34)
-            .magsCourtOutcome("COMMITTED")
-            .dateReceived(LocalDate.of(2025, 6, 10))
-            .crownCourtRepOrderDate(LocalDate.of(2025, 6, 12))
-            .offenceType("BURGLARY")
-            .crownCourtWithdrawalDate(LocalDate.of(2025, 6, 30))
-            .applicantHistoryId(96)
-            .caseId("CASE-123-C")
-            .committalDate(LocalDate.of(2025, 6, 11))
-            .repOrderStatus("CURR")
-            .appealTypeCode("ACN")
-            .crownCourtOutcome("CONVICTED")
-            .dateCreated(LocalDate.of(2025, 6, 20))
-            .userCreated("joe-bloggs")
-            .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
-            .userModified("alice-smith")
-            .caseType("EITHER WAY")
-            .build();
-    }
-
     public static ApplicantBillingDTO getApplicantDTO(Integer id) {
         return ApplicantBillingDTO.builder()
                 .id(id)
@@ -72,4 +52,40 @@ public class TestModelDataBuilder {
                 .userModified("user-modified")
                 .build();
     }
+
+
+    public static RepOrderBillingDTO getRepOrderBillingDTO(Integer id) {
+        return RepOrderBillingDTO.builder()
+                .id(id)
+                .applicantId(123)
+                .arrestSummonsNo("ARREST-5678")
+                .evidenceFeeLevel(EvidenceFeeLevel.LEVEL1.getFeeLevel())
+                .supplierAccountCode("AB123C")
+                .magsCourtId(34)
+                .magsCourtOutcome(MagCourtOutcome.COMMITTED.getOutcome())
+                .dateReceived(LocalDate.of(2025, 6, 10))
+                .crownCourtRepOrderDate(LocalDate.of(2025, 6, 12))
+                .offenceType("BURGLARY")
+                .crownCourtWithdrawalDate(LocalDate.of(2025, 6, 30))
+                .applicantHistoryId(96)
+                .caseId("CASE-123-C")
+                .committalDate(LocalDate.of(2025, 6, 11))
+                .repOrderStatus("CURR")
+                .appealTypeCode(AppealType.ACN.getCode())
+                .crownCourtOutcome(CrownCourtTrialOutcome.CONVICTED.getValue())
+                .dateCreated(LocalDate.of(2025, 6, 20))
+                .userCreated("joe-bloggs")
+                .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
+                .userModified("alice-smith")
+                .caseType(CrownCourtCaseType.EITHER_WAY.getValue())
+                .build();
+    }
+
+    public static UpdateBillingRequest getUpdateBillingRequest() {
+        return UpdateBillingRequest.builder()
+                .userModified("joe-bloggs")
+                .ids(List.of(1003456, 1003457))
+                .build();
+    }
+
 }
