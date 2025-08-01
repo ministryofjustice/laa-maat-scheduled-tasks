@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
@@ -57,23 +58,23 @@ class ApplicantHistoryBillingServiceTest {
 
     @Test
     void givenValidDataProvided_whenResetApplicantHistoryIsInvoked_thenRepositoryIsCalled() {
-        String userModified = "test-u";
-        List<Integer> ids = List.of(1, 2, 3);
+        ResetBillingDTO resetBillingDTO = TestModelDataBuilder.getResetBillingDTO();
+        List<Integer> ids = resetBillingDTO.getIds();
         when(repository.resetApplicantHistory(anyString(), anyList())).thenReturn(ids.size());
 
-        service.resetApplicantHistory(userModified, ids);
+        service.resetApplicantHistory(resetBillingDTO);
 
-        verify(repository).resetApplicantHistory(userModified, ids);
+        verify(repository).resetApplicantHistory(resetBillingDTO.getUserModified(), ids);
     }
 
     @Test
     void givenLessRowsUpdated_whenResetApplicantHistoryIsInvoked_thenExceptionIsThrown() {
-        String userModified = "test-u";
-        List<Integer> ids = List.of(1, 2, 3);
+        ResetBillingDTO resetBillingDTO = TestModelDataBuilder.getResetBillingDTO();
+        List<Integer> ids = resetBillingDTO.getIds();
         when(repository.resetApplicantHistory(anyString(), anyList())).thenReturn(ids.size() - 1);
 
         assertThatThrownBy(() -> {
-            service.resetApplicantHistory(userModified, ids);
+            service.resetApplicantHistory(resetBillingDTO);
         }).isInstanceOf(MAATScheduledTasksException.class).hasMessageContaining(String.format(
             "Number of applicant histories reset: %d, does not equal those supplied: %d.",
             ids.size() - 1, ids.size()));
