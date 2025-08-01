@@ -15,7 +15,8 @@ java {
 def versions = [
 		sentryVersion					 : "8.13.0",
 		ojdbcVersion					 : "21.7.0.0",
-		mapstructVersion				 : "1.6.3"
+		mapstructVersion				 : "1.6.3",
+		crimeCommonsClasses				 : "4.11.1"
 ]
 
 configurations {
@@ -39,14 +40,19 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation "com.oracle.database.jdbc:ojdbc11:$versions.ojdbcVersion"
 	implementation 'io.micrometer:micrometer-registry-prometheus'
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
 	implementation "org.mapstruct:mapstruct:$versions.mapstructVersion"
+	implementation "uk.gov.justice.service.laa-crime:crime-commons-classes:$versions.crimeCommonsClasses"
+
+	compileOnly 'org.projectlombok:lombok'
+
+	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor "org.mapstruct:mapstruct-processor:$versions.mapstructVersion"
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation "com.h2database:h2"
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
 }
 
 tasks.named('test') {
