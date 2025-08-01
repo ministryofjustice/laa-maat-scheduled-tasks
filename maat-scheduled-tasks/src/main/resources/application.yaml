@@ -40,6 +40,8 @@ maat_batch:
     cron_expression: ${FA_FIX}
   central_print:
     cron_expression: ${CENTRAL_PRINT}
+  trial_data_population:
+    cron_expression: ${TRIAL_DATA_CRON_EXPRESSION}
 
 
 sentry:

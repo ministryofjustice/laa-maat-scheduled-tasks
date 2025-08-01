@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.LocalManagementReportsService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.StoredProcedureService;
+import uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService;
 
 @Component
 @EnableScheduling
@@ -17,6 +18,7 @@ public class MaatBatchesScheduler {
     private static final String MAAT_BATCH_FA_FIX = "maat_batch..FA_fix";
     private final LocalManagementReportsService localManagementReportsService;
     private final StoredProcedureService storedProcedureService;
+    private final TrialDataService trialDataService;
 
     @Scheduled(cron = "${maat_batch.lmr_reports.cron_expression}")
     public void executeLocalManagementReports() {
@@ -37,4 +39,10 @@ public class MaatBatchesScheduler {
     public void executeFinancialAssessmentFix() {
         storedProcedureService.callStoredProcedure(MAAT_BATCH_FA_FIX);
     }
+
+    @Scheduled(cron = "${maat_batch.trial_data_population.cron_expression}")
+    public void executeTrialDataPopulation() {
+        trialDataService.populateTrialDataInMaat();
+    }
+
 }
