@@ -34,9 +34,9 @@ class RepOrderBillingMapperTest {
             .appealTypeCode("ACN")
             .crownCourtOutcome("CONVICTED")
             .dateCreated(LocalDate.of(2025, 6, 20))
-            .userCreated("joe-bloggs")
+            .userCreated("test-u")
             .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
-            .userModified("alice-smith")
+            .userModified("test-u")
             .caseType("EITHER WAY")
             .build();
 

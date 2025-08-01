@@ -5,8 +5,11 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 
@@ -26,5 +29,22 @@ public class ApplicantHistoryBillingService {
             .stream()
             .map(applicantHistoryBillingMapper::mapEntityToDTO)
             .toList();
+    }
+
+    @Transactional(rollbackFor = MAATScheduledTasksException.class)
+    public void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
+        List<Integer> ids = resetBillingDTO.getIds();
+
+        log.info("Resetting CCLF flag for extracted applicant histories...");
+        int updatedRows = applicantHistoryBillingRepository.resetApplicantHistory(
+            resetBillingDTO.getUserModified(), ids);
+
+        if (updatedRows != ids.size()) {
+            String errorMsg = String.format(
+                "Number of applicant histories reset: %d, does not equal those supplied: %d.",
+                updatedRows, ids.size());
+            log.error(errorMsg);
+            throw new MAATScheduledTasksException(errorMsg);
+        }
     }
 }
