@@ -41,7 +41,7 @@ maat_batch:
   central_print:
     cron_expression: ${CENTRAL_PRINT}
 
-hub_batch:
+xhibit_batch:
   trial_data_population:
     cron_expression: ${TRIAL_DATA_CRON_EXPRESSION}
 

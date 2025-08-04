@@ -11,10 +11,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class HubBatchesSchedulerTest {
+class XhibitBatchesSchedulerTest {
 
     @InjectMocks
-    private HubBatchesScheduler scheduler;
+    private XhibitBatchesScheduler scheduler;
 
     @Mock
     private TrialDataService trialDataService;

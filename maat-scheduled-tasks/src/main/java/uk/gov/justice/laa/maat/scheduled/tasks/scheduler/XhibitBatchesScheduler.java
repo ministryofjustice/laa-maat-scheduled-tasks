@@ -9,11 +9,11 @@ import uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService;
 @Component
 @EnableScheduling
 @RequiredArgsConstructor
-public class HubBatchesScheduler {
+public class XhibitBatchesScheduler {
 
     private final TrialDataService trialDataService;
 
-    @Scheduled(cron = "${hub_batch.trial_data_population.cron_expression}")
+    @Scheduled(cron = "${xhibit_batch.trial_data_population.cron_expression}")
     public void executeTrialDataPopulationInToHub() {
         trialDataService.populateTrialDataInToHub();
     }

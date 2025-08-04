@@ -26,7 +26,7 @@ env:
   - name: CENTRAL_PRINT
     value: {{ .Values.maat_batch.central_print.cron_expression }}
   - name: TRIAL_DATA_CRON_EXPRESSION
-    value: {{ .Values.hub_batch.trial_data_population.cron_expression }}
+    value: {{ .Values.xhibit_batch.trial_data_population.cron_expression }}
   - name: LOG_LEVEL
     value: {{ .Values.logging.level }}
   - name: AWS_DEFAULT_REGION
