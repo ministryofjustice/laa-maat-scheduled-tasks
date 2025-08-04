@@ -16,9 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateBillingRequest;
 
 @ExtendWith(MockitoExtension.class)
 class RepOrderBillingServiceTest {
@@ -59,12 +59,12 @@ class RepOrderBillingServiceTest {
 
     @Test
     void givenRepOrdersNotSuccessfullyUpdated_whenResetRepOrdersSentForBillingIsInvoked_thenReturnsFalse() {
-        UpdateBillingRequest request = TestModelDataBuilder.getUpdateBillingRequest();
-        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(request.getUserModified(), request.getIds()))
+        ResetRepOrderBillingDTO resetRepOrderBillingDTO = TestModelDataBuilder.getResetRepOrderBillingDTO();
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(resetRepOrderBillingDTO.getUserModified(), resetRepOrderBillingDTO.getIds()))
                 .thenReturn(1);
 
         MAATScheduledTasksException exception = assertThrows(MAATScheduledTasksException.class,
-                () -> repOrderBillingService.resetRepOrdersSentForBilling(request));
+                () -> repOrderBillingService.resetRepOrdersSentForBilling(resetRepOrderBillingDTO));
 
         assertEquals(
                 "Unable to reset rep orders sent for billing as only 1 rep order(s) could be processed (from a total of 2 rep order(s))"
@@ -73,10 +73,11 @@ class RepOrderBillingServiceTest {
 
     @Test
     void givenRepOrdersSuccessfullyUpdated_whenResetRepOrdersSentForBillingIsInvoked_thenReturnsTrue() {
-        UpdateBillingRequest request = TestModelDataBuilder.getUpdateBillingRequest();
-        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(request.getUserModified(), request.getIds()))
-                .thenReturn(request.getIds().size());
+        ResetRepOrderBillingDTO resetRepOrderBillingDTO = TestModelDataBuilder.getResetRepOrderBillingDTO();
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(
+            resetRepOrderBillingDTO.getUserModified(), resetRepOrderBillingDTO.getIds()))
+                .thenReturn(resetRepOrderBillingDTO.getIds().size());
 
-        assertDoesNotThrow(() -> repOrderBillingService.resetRepOrdersSentForBilling(request));
+        assertDoesNotThrow(() -> repOrderBillingService.resetRepOrdersSentForBilling(resetRepOrderBillingDTO));
     }
 }

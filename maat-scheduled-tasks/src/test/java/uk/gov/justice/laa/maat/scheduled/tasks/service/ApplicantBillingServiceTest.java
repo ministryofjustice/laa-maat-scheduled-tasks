@@ -7,13 +7,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 
 import java.util.List;
-import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateBillingRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -52,24 +52,24 @@ class ApplicantBillingServiceTest {
     }
 
     @Test
-    void givenAnUpdateBillingRequest_whenResetApplicantBillingCalled_shouldCallResetApplicantBillingOnRepository() {
-        UpdateBillingRequest request = TestModelDataBuilder.getUpdateBillingRequest();
-        when(applicantBillingRepository.resetApplicantBilling(request.getIds(), request.getUserModified()))
+    void givenValidData_whenResetApplicantBillingIsInvoked_shouldCallResetApplicantBillingOnRepository() {
+        ResetApplicantBillingDTO resetApplicantBillingDTO = TestModelDataBuilder.getResetApplicantBillingDTO();
+        when(applicantBillingRepository.resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified()))
             .thenReturn(2);
         
-        applicantBillingService.resetApplicantBilling(request);
+        applicantBillingService.resetApplicantBilling(resetApplicantBillingDTO);
 
-        verify(applicantBillingRepository).resetApplicantBilling(request.getIds(), request.getUserModified());
+        verify(applicantBillingRepository).resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
     }
 
     @Test
     void givenApplicantBillingNotSuccessfullyUpdated_whenResetApplicantBillingIsInvoked_thenReturnsFalse() {
-        UpdateBillingRequest request = TestModelDataBuilder.getUpdateBillingRequest();
-        when(applicantBillingRepository.resetApplicantBilling(request.getIds(), request.getUserModified()))
+        ResetApplicantBillingDTO resetApplicantBillingDTO = TestModelDataBuilder.getResetApplicantBillingDTO();
+        when(applicantBillingRepository.resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified()))
             .thenReturn(1);
 
         MAATScheduledTasksException exception = assertThrows(MAATScheduledTasksException.class,
-            () -> applicantBillingService.resetApplicantBilling(request));
+            () -> applicantBillingService.resetApplicantBilling(resetApplicantBillingDTO));
 
         assertEquals(
             "Unable to reset applicants sent for billing as only 1 applicant(s) could be processed (from a total of 2 applicant(s))"

@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateBillingRequest;
 
 import java.text.MessageFormat;
 import java.util.Collections;
@@ -35,12 +35,14 @@ public class RepOrderBillingService {
     }
 
     @Transactional(rollbackFor = MAATScheduledTasksException.class)
-    public void resetRepOrdersSentForBilling(UpdateBillingRequest request) {
+    public void resetRepOrdersSentForBilling(ResetRepOrderBillingDTO resetRepOrderBillingDTO) {
         int updatedRows = repOrderBillingRepository.resetBillingFlagForRepOrderIds(
-                request.getUserModified(), request.getIds());
+            resetRepOrderBillingDTO.getUserModified(), resetRepOrderBillingDTO.getIds());
 
-        if (updatedRows != request.getIds().size()) {
-            String message = MessageFormat.format("Unable to reset rep orders sent for billing as only {0} rep order(s) could be processed (from a total of {1} rep order(s))", updatedRows, request.getIds().size());
+        if (updatedRows != resetRepOrderBillingDTO.getIds().size()) {
+            String message = MessageFormat.format(
+                "Unable to reset rep orders sent for billing as only {0} rep order(s) could be processed (from a total of {1} rep order(s))", 
+                updatedRows, resetRepOrderBillingDTO.getIds().size());
             log.error(message);
             throw new MAATScheduledTasksException(message);
         }
