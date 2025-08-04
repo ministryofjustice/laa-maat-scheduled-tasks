@@ -73,6 +73,10 @@ maat_batch:
   central_print:
     cron_expression: '0 30 21 ? * MON-FRI'
 
+xhibit_batch:
+  trial_data_population:
+    cron_expression: '0 0 5 ? * MON-FRI'
+
 logging:
   level: INFO
 

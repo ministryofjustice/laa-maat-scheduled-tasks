@@ -14,7 +14,7 @@ public class MaatBatchesScheduler {
 
     private static final String MAAT_BATCH_PROCESS_CORRESPONDENCE = "maat_batch.process_correspondence";
     private static final String MAAT_BATCH_INACTIVE_USERS = "maat_batch.process_inactive_users";
-    private static final String MAAT_BATCH_FA_FIX = "maat_batch..FA_fix";
+    private static final String MAAT_BATCH_FA_FIX = "maat_batch.FA_fix";
     private final LocalManagementReportsService localManagementReportsService;
     private final StoredProcedureService storedProcedureService;
 
@@ -37,4 +37,5 @@ public class MaatBatchesScheduler {
     public void executeFinancialAssessmentFix() {
         storedProcedureService.callStoredProcedure(MAAT_BATCH_FA_FIX);
     }
+
 }
