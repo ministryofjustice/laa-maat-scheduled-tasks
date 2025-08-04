@@ -74,7 +74,9 @@ maat_batch:
     cron_expression: '0 30 21 ? * MON-FRI'
 
 xhibit_batch:
-  trial_data_population:
+  trial_data_processing:
+    cron_expression: '0 0 5 ? * MON-FRI'
+  appeal_data_processing:
     cron_expression: '0 0 5 ? * MON-FRI'
 
 logging:

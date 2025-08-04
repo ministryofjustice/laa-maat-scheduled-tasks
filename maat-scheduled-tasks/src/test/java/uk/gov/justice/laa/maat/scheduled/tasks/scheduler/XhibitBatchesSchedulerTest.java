@@ -20,13 +20,27 @@ class XhibitBatchesSchedulerTest {
     private TrialDataService trialDataService;
 
     @Test
-    void shouldCallPopulateTrialDataInToHub() {
+    void testExecuteTrialDataProcessing() {
         // When
-        scheduler.executeTrialDataPopulationInToHub();
+        scheduler.executeTrialDataProcessing();
 
         // Then
         verify(trialDataService, times(1))
                 .populateTrialDataInToHub();
+        verify(trialDataService, times(1))
+                .processTrialDataInToMaat();
+    }
+
+    @Test
+    void testExecuteAppealDataProcessing() {
+        // When
+        scheduler.executeAppealDataProcessing();
+
+        // Then
+        verify(trialDataService, times(1))
+                .populateAppealDataInToHub();
+        verify(trialDataService, times(1))
+                .processAppealDataInToMaat();
     }
 
 }
