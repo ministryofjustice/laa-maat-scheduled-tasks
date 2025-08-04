@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TrialDataService {
 
-    public void populateTrialDataInMaat() {
-        log.info("Starting to populate Trial Data in to MAAT.");
+    public void populateTrialDataInToHub() {
+        log.info("Starting to populate Trial Data in to Hub.");
     }
 
 }

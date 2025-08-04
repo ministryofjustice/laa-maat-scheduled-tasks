@@ -12,7 +12,7 @@ services:
       - INACTIVATE_USERS=0 0 13 ? * SAT
       - FA_FIX=0 30 20 * * ?
       - CENTRAL_PRINT=0 30 21 ? * MON-FRI
-      - TRIAL_DATA_CRON_EXPRESSION=0/10 * * ? * MON-FRI
+      - TRIAL_DATA_CRON_EXPRESSION=0 0 5 ? * MON-FRI
     env_file:
       - app.env
 
