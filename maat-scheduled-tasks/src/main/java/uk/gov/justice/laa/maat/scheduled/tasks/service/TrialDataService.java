@@ -13,4 +13,8 @@ public class TrialDataService {
         log.info("Starting to populate Trial Data in to Hub.");
     }
 
+    public void processTrialDataInToMaat() {
+        log.info("Starting to process Trial Data in to MAAT.");
+    }
+
 }

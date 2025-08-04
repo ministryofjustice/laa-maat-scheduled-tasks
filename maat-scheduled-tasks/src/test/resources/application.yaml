@@ -23,3 +23,5 @@ maat_batch:
 xhibit_batch:
   trial_data_population:
     cron_expression: 0 0 9 * * *
+  trial_data_processing:
+    cron_expression: 0 0 9 * * *

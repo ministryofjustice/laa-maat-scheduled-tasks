@@ -18,4 +18,9 @@ public class XhibitBatchesScheduler {
         trialDataService.populateTrialDataInToHub();
     }
 
+    @Scheduled(cron = "${xhibit_batch.trial_data_processing.cron_expression}")
+    public void executeTrialDataProcessingInToMAAT() {
+        trialDataService.processTrialDataInToMaat();
+    }
+
 }

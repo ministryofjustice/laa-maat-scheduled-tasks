@@ -29,4 +29,14 @@ class XhibitBatchesSchedulerTest {
                 .populateTrialDataInToHub();
     }
 
+    @Test
+    void shouldCallProcessTrialDataInToMaat() {
+        // When
+        scheduler.executeTrialDataProcessingInToMAAT();
+
+        // Then
+        verify(trialDataService, times(1))
+                .processTrialDataInToMaat();
+    }
+
 }
