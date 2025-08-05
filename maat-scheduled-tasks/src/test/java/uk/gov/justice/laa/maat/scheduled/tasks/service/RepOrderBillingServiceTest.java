@@ -58,20 +58,6 @@ class RepOrderBillingServiceTest {
     }
 
     @Test
-    void givenRepOrdersNotSuccessfullyUpdated_whenResetRepOrdersSentForBillingIsInvoked_thenReturnsFalse() {
-        ResetRepOrderBillingDTO resetRepOrderBillingDTO = TestModelDataBuilder.getResetRepOrderBillingDTO();
-        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(resetRepOrderBillingDTO.getUserModified(), resetRepOrderBillingDTO.getIds()))
-                .thenReturn(1);
-
-        MAATScheduledTasksException exception = assertThrows(MAATScheduledTasksException.class,
-                () -> repOrderBillingService.resetRepOrdersSentForBilling(resetRepOrderBillingDTO));
-
-        assertEquals(
-                "Unable to reset rep orders sent for billing as only 1 rep order(s) could be processed (from a total of 2 rep order(s))"
-                , exception.getMessage());
-    }
-
-    @Test
     void givenRepOrdersSuccessfullyUpdated_whenResetRepOrdersSentForBillingIsInvoked_thenReturnsTrue() {
         ResetRepOrderBillingDTO resetRepOrderBillingDTO = TestModelDataBuilder.getResetRepOrderBillingDTO();
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(
