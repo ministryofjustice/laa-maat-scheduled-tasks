@@ -1,13 +1,19 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.repository;
 
-import java.util.List;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 
+import java.util.List;
+
 @Repository
-public interface RepOrderBillingRepository extends JpaRepository<RepOrderBillingEntity, Integer> {
+public interface RepOrderBillingRepository extends
+    JpaRepository<RepOrderBillingEntity, Integer> {
+
     @Query(value = """
         SELECT  r.id
               , r.appl_id
@@ -36,4 +42,18 @@ public interface RepOrderBillingRepository extends JpaRepository<RepOrderBilling
         ON      r.ID = ex.MAAT_ID
     """, nativeQuery = true)
     List<RepOrderBillingEntity> getRepOrdersForBilling();
+
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+        UPDATE  TOGDATA.REP_ORDERS r
+        SET     r.SEND_TO_CCLF = null,
+                r.DATE_MODIFIED = CURRENT_DATE,
+                r.USER_MODIFIED = :userModified
+        WHERE   r.ID IN :ids
+    """, nativeQuery = true)
+    int resetBillingFlagForRepOrderIds(@Param("userModified") String userModified, @Param("ids") List<Integer> ids);
+
+
 }

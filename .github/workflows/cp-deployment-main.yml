@@ -125,11 +125,11 @@ jobs:
         env:
           GITHUB_TAG: ${{ github.sha }}
 
-  deploy-to-prod:
-    name: deploy-to-prod
+  deploy-to-production:
+    name: deploy-to-production
     needs: [application-image-build, deploy-to-development, deploy-to-test, deploy-to-uat]
     runs-on: ubuntu-latest
-    environment: prod
+    environment: production
     env:
       KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
       KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
@@ -144,8 +144,8 @@ jobs:
           kubectl config set-context ${KUBE_CLUSTER} --cluster=${KUBE_CLUSTER} --user=deploy-user --namespace=${KUBE_NAMESPACE}
           kubectl config use-context ${KUBE_CLUSTER}
 
-      - name: Helm deploy to PROD environment
-        id: deploy-to-prod
+      - name: Helm deploy to Production environment
+        id: deploy-to-production
         run: |
           cd helm_deploy/laa-maat-scheduled-tasks
           helm upgrade laa-maat-scheduled-tasks -f values-prod.yaml . --install --wait --namespace=${KUBE_NAMESPACE} --set image.tag="$GITHUB_TAG"
