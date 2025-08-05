@@ -58,7 +58,7 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
                             TOGDATA.APPLICANT_HISTORY 
                         SET 
                             SEND_TO_CCLF = null, 
-                            DATE_MODIFIED = CURRENT_DATE, 
+                            DATE_MODIFIED = SYSDATE, 
                             USER_MODIFIED = :userModified
                         WHERE 
                             ID IN :ids

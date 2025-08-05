@@ -8,9 +8,10 @@ import uk.gov.justice.laa.crime.enums.MagCourtOutcome;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtCaseType;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtTrialOutcome;
-import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateBillingRequest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -92,11 +93,18 @@ public class TestModelDataBuilder {
                 .build();
     }
 
-    public static UpdateBillingRequest getUpdateBillingRequest() {
-        return UpdateBillingRequest.builder()
-                .userModified(USER_NAME)
+    public static ResetApplicantBillingDTO getResetApplicantBillingDTO() {
+        return ResetApplicantBillingDTO.builder()
+                .userModified("joe-bloggs")
                 .ids(List.of(1003456, 1003457))
                 .build();
+    }
+
+    public static ResetRepOrderBillingDTO getResetRepOrderBillingDTO() {
+        return ResetRepOrderBillingDTO.builder()
+            .userModified("joe-bloggs")
+            .ids(List.of(1003456, 1003457))
+            .build();
     }
 
 }

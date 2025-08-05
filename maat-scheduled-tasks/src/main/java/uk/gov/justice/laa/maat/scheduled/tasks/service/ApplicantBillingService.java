@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
@@ -23,6 +24,11 @@ public class ApplicantBillingService {
         log.info("Extracted data for {} applicants", applicants.size());
 
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
+    }
+    
+    public void resetApplicantBilling(ResetApplicantBillingDTO resetApplicantBillingDTO) {
+        int updatedRows = applicantBillingRepository.resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
+        log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
     }
 
 }
