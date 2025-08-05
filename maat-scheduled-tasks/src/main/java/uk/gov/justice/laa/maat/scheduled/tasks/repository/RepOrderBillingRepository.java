@@ -49,7 +49,7 @@ public interface RepOrderBillingRepository extends
     @Query(value = """
         UPDATE  TOGDATA.REP_ORDERS r
         SET     r.SEND_TO_CCLF = null,
-                r.DATE_MODIFIED = CURRENT_DATE,
+                r.DATE_MODIFIED = SYSDATE,
                 r.USER_MODIFIED = :userModified
         WHERE   r.ID IN :ids
     """, nativeQuery = true)

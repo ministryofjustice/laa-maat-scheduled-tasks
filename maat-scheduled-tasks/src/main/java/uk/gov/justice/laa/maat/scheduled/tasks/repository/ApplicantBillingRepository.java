@@ -33,7 +33,7 @@ public interface ApplicantBillingRepository extends JpaRepository<ApplicantBilli
     @Query(value = """
         UPDATE TOGDATA.applicants
         SET     send_to_cclf = NULL,
-                date_modified = CURRENT_TIMESTAMP,
+                date_modified = SYSDATE,
                 user_modified = :username
         WHERE id IN (:applicantIds)
         """, nativeQuery = true)
