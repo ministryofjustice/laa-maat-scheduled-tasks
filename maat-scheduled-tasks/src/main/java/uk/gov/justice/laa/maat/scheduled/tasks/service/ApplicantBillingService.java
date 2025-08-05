@@ -28,19 +28,10 @@ public class ApplicantBillingService {
 
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
     }
-
-    @Transactional(rollbackFor = MAATScheduledTasksException.class)
+    
     public void resetApplicantBilling(ResetApplicantBillingDTO resetApplicantBillingDTO) {
         int updatedRows = applicantBillingRepository.resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
         log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
-
-        if (updatedRows != resetApplicantBillingDTO.getIds().size()) {
-            String message = MessageFormat.format(
-                "Unable to reset applicants sent for billing as only {0} applicant(s) could be processed (from a total of {1} applicant(s))", 
-                updatedRows, resetApplicantBillingDTO.getIds().size());
-            log.error(message);
-            throw new MAATScheduledTasksException(message);
-        }
     }
 
 }

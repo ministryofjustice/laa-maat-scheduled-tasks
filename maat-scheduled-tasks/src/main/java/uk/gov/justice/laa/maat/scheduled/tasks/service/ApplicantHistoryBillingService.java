@@ -30,21 +30,12 @@ public class ApplicantHistoryBillingService {
             .map(applicantHistoryBillingMapper::mapEntityToDTO)
             .toList();
     }
-
-    @Transactional(rollbackFor = MAATScheduledTasksException.class)
+    
     public void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
         List<Integer> ids = resetBillingDTO.getIds();
 
         log.info("Resetting CCLF flag for extracted applicant histories...");
-        int updatedRows = applicantHistoryBillingRepository.resetApplicantHistory(
+        applicantHistoryBillingRepository.resetApplicantHistory(
             resetBillingDTO.getUserModified(), ids);
-
-        if (updatedRows != ids.size()) {
-            String errorMsg = String.format(
-                "Number of applicant histories reset: %d, does not equal those supplied: %d.",
-                updatedRows, ids.size());
-            log.error(errorMsg);
-            throw new MAATScheduledTasksException(errorMsg);
-        }
     }
 }

@@ -61,18 +61,4 @@ class ApplicantBillingServiceTest {
 
         verify(applicantBillingRepository).resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
     }
-
-    @Test
-    void givenApplicantBillingNotSuccessfullyUpdated_whenResetApplicantBillingIsInvoked_thenReturnsFalse() {
-        ResetApplicantBillingDTO resetApplicantBillingDTO = TestModelDataBuilder.getResetApplicantBillingDTO();
-        when(applicantBillingRepository.resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified()))
-            .thenReturn(1);
-
-        MAATScheduledTasksException exception = assertThrows(MAATScheduledTasksException.class,
-            () -> applicantBillingService.resetApplicantBilling(resetApplicantBillingDTO));
-
-        assertEquals(
-            "Unable to reset applicants sent for billing as only 1 applicant(s) could be processed (from a total of 2 applicant(s))"
-            , exception.getMessage());
-    }
 }

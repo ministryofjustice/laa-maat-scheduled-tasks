@@ -66,18 +66,5 @@ class ApplicantHistoryBillingServiceTest {
 
         verify(repository).resetApplicantHistory(resetBillingDTO.getUserModified(), ids);
     }
-
-    @Test
-    void givenLessRowsUpdated_whenResetApplicantHistoryIsInvoked_thenExceptionIsThrown() {
-        ResetBillingDTO resetBillingDTO = TestModelDataBuilder.getResetBillingDTO();
-        List<Integer> ids = resetBillingDTO.getIds();
-        when(repository.resetApplicantHistory(anyString(), anyList())).thenReturn(ids.size() - 1);
-
-        assertThatThrownBy(() -> {
-            service.resetApplicantHistory(resetBillingDTO);
-        }).isInstanceOf(MAATScheduledTasksException.class).hasMessageContaining(String.format(
-            "Number of applicant histories reset: %d, does not equal those supplied: %d.",
-            ids.size() - 1, ids.size()));
-    }
 }
 
