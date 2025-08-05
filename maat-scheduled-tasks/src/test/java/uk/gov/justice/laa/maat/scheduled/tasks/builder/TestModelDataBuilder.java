@@ -14,11 +14,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateBillingRequest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-<<<<<<< HEAD
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
-=======
-import java.util.List;
->>>>>>> main
 
 @Component
 public class TestModelDataBuilder {
