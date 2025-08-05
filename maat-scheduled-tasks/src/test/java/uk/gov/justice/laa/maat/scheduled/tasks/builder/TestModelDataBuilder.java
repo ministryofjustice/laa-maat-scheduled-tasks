@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.builder;
 
+import java.util.List;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.enums.AppealType;
 import uk.gov.justice.laa.crime.enums.EvidenceFeeLevel;
@@ -14,10 +15,13 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtTrialOutcome;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 
 @Component
 public class TestModelDataBuilder {
+
+    private static final String USER_NAME = "test-u";
+
     public static ApplicantHistoryBillingDTO getApplicantHistoryBillingDTO() {
         return ApplicantHistoryBillingDTO.builder()
             .id(1)
@@ -31,7 +35,7 @@ public class TestModelDataBuilder {
             .niNumber("JM933396A")
             .foreignId(null)
             .dateCreated(LocalDateTime.parse("2021-10-09T15:01:25"))
-            .userCreated("TEST")
+            .userCreated(USER_NAME)
             .dateModified(null)
             .userModified(null)
             .build();
@@ -39,19 +43,26 @@ public class TestModelDataBuilder {
 
     public static ApplicantBillingDTO getApplicantDTO(Integer id) {
         return ApplicantBillingDTO.builder()
-                .id(id)
-                .firstName("test-first-name")
-                .lastName("test-last-name")
-                .otherNames("test-other-names")
-                .dob(LocalDate.parse("2025-07-31"))
-                .gender("male")
-                .niNumber("AB123456C")
-                .foreignId("foreign-ID")
-                .dateCreated(LocalDateTime.parse("2024-08-29T11:38:12"))
-                .userCreated("user-created")
-                .dateModified(LocalDateTime.parse("2024-04-01T10:45:09"))
-                .userModified("user-modified")
-                .build();
+            .id(id)
+            .firstName("test-first-name")
+            .lastName("test-last-name")
+            .otherNames("test-other-names")
+            .dob(LocalDate.parse("2025-07-31"))
+            .gender("male")
+            .niNumber("AB123456C")
+            .foreignId("foreign-ID")
+            .dateCreated(LocalDateTime.parse("2024-08-29T11:38:12"))
+            .userCreated(USER_NAME)
+            .dateModified(LocalDateTime.parse("2024-04-01T10:45:09"))
+            .userModified(USER_NAME)
+            .build();
+    }
+
+    public static ResetBillingDTO getResetBillingDTO() {
+        return ResetBillingDTO.builder()
+            .userModified(USER_NAME)
+            .ids(List.of(1, 2, 3))
+            .build();
     }
 
 
@@ -75,9 +86,9 @@ public class TestModelDataBuilder {
                 .appealTypeCode(AppealType.ACN.getCode())
                 .crownCourtOutcome(CrownCourtTrialOutcome.CONVICTED.getValue())
                 .dateCreated(LocalDate.of(2025, 6, 20))
-                .userCreated("joe-bloggs")
+                .userCreated(USER_NAME)
                 .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
-                .userModified("alice-smith")
+                .userModified(USER_NAME)
                 .caseType(CrownCourtCaseType.EITHER_WAY.getValue())
                 .build();
     }

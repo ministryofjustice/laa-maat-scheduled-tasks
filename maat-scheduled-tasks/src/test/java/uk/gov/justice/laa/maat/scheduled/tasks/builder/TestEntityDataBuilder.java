@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 
 @Component
 public class TestEntityDataBuilder {
+
+    private static final String USER_NAME = "test-u";
+
     public static ApplicantHistoryBillingEntity getApplicantHistoryBillingEntity() {
         return ApplicantHistoryBillingEntity.builder()
             .id(666)
@@ -28,7 +31,7 @@ public class TestEntityDataBuilder {
             .niNumber("JM933396A")
             .foreignId("T35T")
             .dateCreated(LocalDateTime.parse("2021-10-09T15:01:25"))
-            .userCreated("TEST")
+            .userCreated(USER_NAME)
             .dateModified(null)
             .userModified(null)
             .build();
@@ -45,9 +48,9 @@ public class TestEntityDataBuilder {
                 .niNumber("AB123456C")
                 .foreignId("foreign-ID")
                 .dateCreated(LocalDateTime.parse("2024-08-29T11:38:12"))
-                .userCreated("user-created")
+                .userCreated(USER_NAME)
                 .dateModified(LocalDateTime.parse("2024-04-01T10:45:09"))
-                .userModified("user-modified")
+                .userModified(USER_NAME)
                 .build();
     }
 
@@ -71,9 +74,9 @@ public class TestEntityDataBuilder {
                 .appealTypeCode(AppealType.ACN.getCode())
                 .crownCourtOutcome(CrownCourtTrialOutcome.CONVICTED.getValue())
                 .dateCreated(LocalDate.of(2025, 6, 20))
-                .userCreated("joe-bloggs")
+                .userCreated(USER_NAME)
                 .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
-                .userModified("alice-smith")
+                .userModified(USER_NAME)
                 .caseType(CrownCourtCaseType.EITHER_WAY.getValue())
                 .build();
     }
