@@ -20,7 +20,7 @@ maat_batch:
   central_print:
     cron_expression: 0 0 9 * * *
 
-xhibit_batch:
+xhibit-batch:
   trial_data_processing:
     cron_expression: 0 0 9 * * *
   appeal_data_processing:

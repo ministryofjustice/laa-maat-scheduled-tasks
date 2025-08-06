@@ -7,10 +7,16 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
 @EnableAsync
 public class AsyncConfig implements AsyncConfigurer {
+
+    @Bean
+    public S3Client s3Client() {
+        return S3Client.builder().build();
+    }
 
     @Bean(name = "taskExecutor")
     public Executor taskExecutor() {
