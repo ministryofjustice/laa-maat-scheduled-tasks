@@ -11,7 +11,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class XhibitConfiguration {
 
     @NotNull
-    private String trialPrefix;
+    private String objectKeyAppealPrefix;
+
+    @NotNull
+    private String objectKeyTrialPrefix;
 
     @NotNull
     private String s3DataBucketName;

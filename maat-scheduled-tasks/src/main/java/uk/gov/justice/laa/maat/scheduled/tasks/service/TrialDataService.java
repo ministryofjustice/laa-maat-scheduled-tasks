@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,9 @@ import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 
 @Slf4j
@@ -23,10 +26,32 @@ public class TrialDataService {
     // TODO: Potentially move the S3Client out into a separate XhibitDataService
     private final S3Client s3Client;
 
+    private final XhibitDataService xhibitDataService;
+
     private final XhibitTrialDataRepository trialDataRepository;
 
     public void populateTrialData() {
         log.info("Starting to populate Trial Data in to Hub.");
+
+        try {
+            while (!xhibitDataService.isAllFilesRetrievedFromS3()) {
+                List<XhibitRecordSheetDTO> recordSheetDTOS = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+
+                List<XhibitTrialDataEntity> entities = recordSheetDTOS.stream().map(dto ->
+                    XhibitTrialDataEntity.builder()
+                        .filename(dto.getFilename())
+                        .data(dto.getData())
+                        .build()).toList();
+
+                trialDataRepository.saveAll(entities);
+
+                xhibitDataService.markFilesAsCompleted();
+            }
+        }
+        catch (Exception e) {
+            xhibitDataService.markFilesAsErrored();
+        }
+
     }
 
     public void processTrialDataInToMaat() {
@@ -36,31 +61,7 @@ public class TrialDataService {
 
     public void populateAppealData() {
         log.info("Starting to populate Appeal Data in to Hub.");
-
-        ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
-            .bucket("bucket-name")
-            .prefix("incoming/trial/")
-            .build();
-
-        ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
-
-        listObjectsResponse.contents().forEach(s3Object -> {
-            ResponseBytes<GetObjectResponse> objectResponse = s3Client.getObjectAsBytes(GetObjectRequest.builder()
-                .bucket("bucket-name")
-                .key(s3Object.key())
-                .build());
-
-            String trialDataXml = objectResponse.asUtf8String();
-
-            XhibitTrialDataEntity entity = XhibitTrialDataEntity.builder()
-                .status("UNPROCESSED")
-                .filename(s3Object.key().split("incoming/trial")[1])
-                .data(trialDataXml)
-                .build();
-
-            trialDataRepository.save(entity);
-        });
-
+        // TODO
     }
 
     public void processAppealDataInToMaat() {
