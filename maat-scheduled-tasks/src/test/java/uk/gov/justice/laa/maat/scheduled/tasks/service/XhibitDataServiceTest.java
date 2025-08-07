@@ -170,6 +170,11 @@ class XhibitDataServiceTest {
         assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.getRecordSheets(RecordSheetType.TRIAL));
     }
 
+    @Test
+    void givenAValidListOfRecordSheets_whenMarkRecordSheetsAsCompletedIsInvoked_thenRecordSheetsAreUpdated() {
+        xhibitDataService.renameRecordSheets(List.of(xhibitRecordSheet1), ???);
+    }
+
     private void setupFileResponse(XhibitRecordSheetDTO xhibitRecordSheetDTO, String objectKey) {
         ResponseBytes<GetObjectResponse> fileObjectResponse = ResponseBytes.fromByteArray(
             mock(GetObjectResponse.class),

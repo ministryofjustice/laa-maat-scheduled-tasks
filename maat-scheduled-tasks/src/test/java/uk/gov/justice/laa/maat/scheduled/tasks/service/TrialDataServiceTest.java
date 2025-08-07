@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -51,7 +52,7 @@ class TrialDataServiceTest {
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, never()).saveAll(any());
-        verify(xhibitDataService, never()).markFilesAsCompleted();
+        verify(xhibitDataService, never()).renameRecordSheets(anyList());
         verify(xhibitDataService, never()).markFilesAsErrored();
     }
 
@@ -66,7 +67,7 @@ class TrialDataServiceTest {
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, times(1)).saveAll(any());
-        verify(xhibitDataService, times(1)).markFilesAsCompleted();
+        verify(xhibitDataService, times(1)).renameRecordSheets(anyList());
         verify(xhibitDataService, never()).markFilesAsErrored();
     }
 
@@ -81,7 +82,7 @@ class TrialDataServiceTest {
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, never()).saveAll(any());
-        verify(xhibitDataService, never()).markFilesAsCompleted();
+        verify(xhibitDataService, never()).renameRecordSheets(anyList());
         verify(xhibitDataService, times(1)).markFilesAsErrored();
     }
 }

@@ -38,11 +38,11 @@ public class TrialDataService {
 
                     trialDataRepository.saveAll(entities);
 
-                    xhibitDataService.markFilesAsCompleted();
+                    xhibitDataService.renameRecordSheets(recordSheetsResponse.getRetrievedRecordSheets(), ???);
                 }
 
                 if (!recordSheetsResponse.getErroredRecordSheets().isEmpty()) {
-                    xhibitDataService.markFilesAsErrored();
+                    xhibitDataService.renameRecordSheets(recordSheetsResponse.getErroredRecordSheets(), ???);
                 }
 
             } while (!xhibitDataService.allRecordSheetsRetrieved());

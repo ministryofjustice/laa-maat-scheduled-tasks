@@ -17,6 +17,12 @@ public class XhibitConfiguration {
     private String objectKeyTrialPrefix;
 
     @NotNull
+    private String objectKeyTrialErrorPrefix;
+
+    @NotNull
+    private String objectKeyTrialProcessedPrefix;
+
+    @NotNull
     private String s3DataBucketName;
 
     @NotNull

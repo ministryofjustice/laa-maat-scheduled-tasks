@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
@@ -9,6 +10,8 @@ import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
@@ -18,7 +21,6 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
@@ -93,12 +95,25 @@ public class XhibitDataService {
         }
     }
 
-    public void markFilesAsCompleted() {
+    public void renameRecordSheets(List<XhibitRecordSheetDTO> recordSheets, String prefix) {
+        recordSheets.forEach(recordSheet -> {
+            String fileName = recordSheet.getFilename();
 
+            CopyObjectRequest copyObjectrequest = CopyObjectRequest.builder()
+                .sourceBucket(xhibitConfiguration.getS3DataBucketName())
+                .sourceKey(xhibitConfiguration.getObjectKeyTrialPrefix() + fileName)
+                .destinationBucket(xhibitConfiguration.getS3DataBucketName())
+                .destinationKey(prefix + fileName)
+                .build();
+
+            s3Client.copyObject(copyObjectrequest);
+
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(xhibitConfiguration.getS3DataBucketName())
+                .key(xhibitConfiguration.getObjectKeyTrialPrefix() + fileName)
+                .build();
+
+            s3Client.deleteObject(deleteObjectRequest);
+        });
     }
-
-    public void markFilesAsErrored() {
-
-    }
-
 }
