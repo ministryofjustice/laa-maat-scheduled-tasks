@@ -114,7 +114,7 @@ class XhibitDataServiceTest {
         GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
         assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
-        assertThat(xhibitDataService.isAllFilesRetrieved()).isFalse();
+        assertThat(xhibitDataService.allRecordSheetsRetrieved()).isFalse();
 
         ListObjectsV2Response nextPageResponse = mock(ListObjectsV2Response.class);
 
@@ -132,7 +132,7 @@ class XhibitDataServiceTest {
         recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
         assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
-        assertThat(xhibitDataService.isAllFilesRetrieved()).isTrue();
+        assertThat(xhibitDataService.allRecordSheetsRetrieved()).isTrue();
     }
 
     @Test

@@ -1,12 +1,10 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
@@ -28,27 +26,29 @@ public class TrialDataService {
         log.info("Starting to populate Trial Data in to Hub.");
 
         try {
-            while (!xhibitDataService.isAllFilesRetrieved()) {
+            do {
                 GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
-                List<XhibitTrialDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets().stream().map(dto ->
-                    XhibitTrialDataEntity.builder()
-                        .filename(dto.getFilename())
-                        .data(dto.getData())
-                        .build()).toList();
+                if (!recordSheetsResponse.getRetrievedRecordSheets().isEmpty()) {
+                    List<XhibitTrialDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets().stream().map(dto ->
+                        XhibitTrialDataEntity.builder()
+                            .filename(dto.getFilename())
+                            .data(dto.getData())
+                            .build()).toList();
 
-                trialDataRepository.saveAll(entities);
+                    trialDataRepository.saveAll(entities);
 
-                xhibitDataService.markFilesAsCompleted();
+                    xhibitDataService.markFilesAsCompleted();
+                }
 
                 if (!recordSheetsResponse.getErroredRecordSheets().isEmpty()) {
                     xhibitDataService.markFilesAsErrored();
                 }
 
-            }
+            } while (!xhibitDataService.allRecordSheetsRetrieved());
         }
         catch (Exception e) {
-            xhibitDataService.markFilesAsErrored();
+            // Do something
         }
 
     }

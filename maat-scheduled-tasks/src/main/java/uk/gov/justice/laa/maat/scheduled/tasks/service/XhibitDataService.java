@@ -1,10 +1,8 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.ResponseBytes;
@@ -29,8 +27,9 @@ public class XhibitDataService {
 
     private final XhibitConfiguration xhibitConfiguration;
 
+    @Accessors(fluent = true)
     @Getter
-    private boolean allFilesRetrieved;
+    private boolean allRecordSheetsRetrieved;
 
     private String continuationToken;
 
@@ -76,7 +75,7 @@ public class XhibitDataService {
         });
 
         if (!listObjectsResponse.isTruncated()) {
-            allFilesRetrieved = true;
+            allRecordSheetsRetrieved = true;
         }
 
         continuationToken = listObjectsResponse.continuationToken();
