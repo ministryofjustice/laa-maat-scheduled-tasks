@@ -1,22 +1,16 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.core.ResponseBytes;
-import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
 @Slf4j
 @Service
@@ -34,10 +28,10 @@ public class TrialDataService {
         log.info("Starting to populate Trial Data in to Hub.");
 
         try {
-            while (!xhibitDataService.isAllFilesRetrievedFromS3()) {
-                List<XhibitRecordSheetDTO> recordSheetDTOS = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+            while (!xhibitDataService.isAllFilesRetrieved()) {
+                GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
-                List<XhibitTrialDataEntity> entities = recordSheetDTOS.stream().map(dto ->
+                List<XhibitTrialDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets().stream().map(dto ->
                     XhibitTrialDataEntity.builder()
                         .filename(dto.getFilename())
                         .data(dto.getData())
@@ -46,6 +40,11 @@ public class TrialDataService {
                 trialDataRepository.saveAll(entities);
 
                 xhibitDataService.markFilesAsCompleted();
+
+                if (!recordSheetsResponse.getErroredRecordSheets().isEmpty()) {
+                    xhibitDataService.markFilesAsErrored();
+                }
+
             }
         }
         catch (Exception e) {

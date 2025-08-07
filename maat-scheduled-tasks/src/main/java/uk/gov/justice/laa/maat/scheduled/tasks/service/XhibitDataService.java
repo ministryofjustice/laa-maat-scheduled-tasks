@@ -11,11 +11,14 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
 @Slf4j
 @Service
@@ -27,11 +30,13 @@ public class XhibitDataService {
     private final XhibitConfiguration xhibitConfiguration;
 
     @Getter
-    private boolean allFilesRetrievedFromS3;
+    private boolean allFilesRetrieved;
 
     private String continuationToken;
 
-    public List<XhibitRecordSheetDTO> getRecordSheets(RecordSheetType recordSheetType) {
+    public GetRecordSheetsResponse getRecordSheets(RecordSheetType recordSheetType) {
+        GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
+
         String objectKeyPrefix = recordSheetType == RecordSheetType.TRIAL
             ? xhibitConfiguration.getObjectKeyTrialPrefix() : xhibitConfiguration.getObjectKeyAppealPrefix();
 
@@ -44,33 +49,39 @@ public class XhibitDataService {
         ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
 
         if (listObjectsResponse.contents().isEmpty()) {
-            return Collections.emptyList();
+            return recordSheetsResponse;
         }
 
-        List<XhibitRecordSheetDTO> results = new ArrayList<>();
-
         listObjectsResponse.contents().forEach(s3Object -> {
-            ResponseBytes<GetObjectResponse> objectResponse = s3Client.getObjectAsBytes(
-                GetObjectRequest.builder()
-                    .bucket(xhibitConfiguration.getS3DataBucketName())
-                    .key(s3Object.key())
+            try {
+                ResponseBytes<GetObjectResponse> objectResponse = s3Client.getObjectAsBytes(
+                    GetObjectRequest.builder()
+                        .bucket(xhibitConfiguration.getS3DataBucketName())
+                        .key(s3Object.key())
+                        .build());
+
+                String trialDataXml = objectResponse.asUtf8String();
+
+                recordSheetsResponse.getRetrievedRecordSheets().add(XhibitRecordSheetDTO.builder()
+                    .filename(s3Object.key().split(objectKeyPrefix)[1])
+                    .data(trialDataXml)
                     .build());
+            }
+            catch (NoSuchKeyException | InvalidObjectStateException ex) {
+                recordSheetsResponse.getErroredRecordSheets().add(XhibitRecordSheetDTO.builder()
+                    .filename(s3Object.key().split(objectKeyPrefix)[1])
+                    .build());
+            }
 
-            String trialDataXml = objectResponse.asUtf8String();
-
-            results.add(XhibitRecordSheetDTO.builder()
-                .filename(s3Object.key().split(objectKeyPrefix)[1])
-                .data(trialDataXml)
-                .build());
         });
 
         if (!listObjectsResponse.isTruncated()) {
-            allFilesRetrievedFromS3 = true;
+            allFilesRetrieved = true;
         }
 
         continuationToken = listObjectsResponse.continuationToken();
 
-        return results;
+        return recordSheetsResponse;
     }
 
     public void markFilesAsCompleted() {

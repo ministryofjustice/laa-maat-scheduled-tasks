@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.any;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,16 +15,12 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.util.StringUtils;
-import software.amazon.awssdk.core.BytesWrapper;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
@@ -35,6 +30,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.GetObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.ListObjectsV2RequestArgumentMatcher;
+import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceTest {
@@ -75,9 +71,9 @@ class XhibitDataServiceTest {
         when(listObjectsV2Response.contents()).thenReturn(Collections.emptyList());
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
-        List<XhibitRecordSheetDTO> recordSheetDtos = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
-        assertTrue(recordSheetDtos.isEmpty());
+        assertTrue(recordSheetsResponse.getRetrievedRecordSheets().isEmpty());
     }
 
     @Test
@@ -95,9 +91,9 @@ class XhibitDataServiceTest {
         setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
 
-        List<XhibitRecordSheetDTO> actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
-        assertEquals(expectedRecordSheets, actualRecordSheets);
+        assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
     }
 
     @Test
@@ -113,10 +109,10 @@ class XhibitDataServiceTest {
 
         setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
 
-        List<XhibitRecordSheetDTO> actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
-        assertEquals(expectedRecordSheets, actualRecordSheets);
-        assertThat(xhibitDataService.isAllFilesRetrievedFromS3()).isFalse();
+        assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
+        assertThat(xhibitDataService.isAllFilesRetrieved()).isFalse();
 
         ListObjectsV2Response nextPageResponse = mock(ListObjectsV2Response.class);
 
@@ -131,10 +127,10 @@ class XhibitDataServiceTest {
 
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
 
-        actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+        recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
-        assertEquals(expectedRecordSheets, actualRecordSheets);
-        assertThat(xhibitDataService.isAllFilesRetrievedFromS3()).isTrue();
+        assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
+        assertThat(xhibitDataService.isAllFilesRetrieved()).isTrue();
     }
 
     private void setupFileResponse(XhibitRecordSheetDTO xhibitRecordSheetDTO, String objectKey) {
