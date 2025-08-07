@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
@@ -83,7 +85,7 @@ class XhibitDataServiceTest {
             S3Object.builder().key("trial/file2.xml").build()
         ));
         when(listObjectsV2Response.isTruncated()).thenReturn(true);
-        when(listObjectsV2Response.continuationToken()).thenReturn("test-continuation-token");
+        when(listObjectsV2Response.continuationToken()).thenReturn(null);
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
         List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
@@ -133,6 +135,31 @@ class XhibitDataServiceTest {
         assertThat(xhibitDataService.isAllFilesRetrieved()).isTrue();
     }
 
+    @Test
+    void getRecordSheets_returnsErroredRecordSheets_whenDataCannotBeRetrieved() {
+        when(listObjectsV2Response.contents()).thenReturn(List.of(
+            S3Object.builder().key("trial/file1.xml").build(),
+            S3Object.builder().key("trial/file2.xml").build(),
+            S3Object.builder().key("trial/file3.xml").build()
+        ));
+        when(listObjectsV2Response.isTruncated()).thenReturn(true);
+        when(listObjectsV2Response.continuationToken()).thenReturn(null);
+        when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
+
+        List<XhibitRecordSheetDTO> expectedSuccessfulRecordSheets = List.of(xhibitRecordSheet2);
+        List<String> expectedErroredRecordSheets = List.of("file1.xml", "file3.xml");
+
+        setupErrorFileResponse("trial/file1.xml");
+        setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
+        setupErrorFileResponse("trial/file3.xml");
+
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+
+        assertEquals(expectedSuccessfulRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
+        assertEquals(expectedErroredRecordSheets, recordSheetsResponse.getErroredRecordSheets().stream().map(
+            XhibitRecordSheetDTO::getFilename).toList());
+    }
+
     private void setupFileResponse(XhibitRecordSheetDTO xhibitRecordSheetDTO, String objectKey) {
         ResponseBytes<GetObjectResponse> fileObjectResponse = ResponseBytes.fromByteArray(
             mock(GetObjectResponse.class),
@@ -140,6 +167,10 @@ class XhibitDataServiceTest {
         );
 
         doReturn(fileObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher(objectKey)));
+    }
+
+    private void setupErrorFileResponse(String objectKey) {
+        doThrow(InvalidObjectStateException.class).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher(objectKey)));
     }
 
 }
