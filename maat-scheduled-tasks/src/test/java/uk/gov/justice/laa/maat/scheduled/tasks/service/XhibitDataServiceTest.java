@@ -54,6 +54,16 @@ class XhibitDataServiceTest {
     @InjectMocks
     private XhibitDataService xhibitDataService;
 
+    private final XhibitRecordSheetDTO xhibitRecordSheet1 = XhibitRecordSheetDTO.builder()
+        .filename("file1.xml")
+        .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Alice Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
+        .build();
+
+    private final XhibitRecordSheetDTO xhibitRecordSheet2 = XhibitRecordSheetDTO.builder()
+        .filename("file2.xml")
+        .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Joe Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
+        .build();
+
     @BeforeEach
     void beforeEach() {
         when(xhibitConfiguration.getObjectKeyTrialPrefix()).thenReturn("trial/");
@@ -80,29 +90,10 @@ class XhibitDataServiceTest {
         when(listObjectsV2Response.continuationToken()).thenReturn("test-continuation-token");
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
-        List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(
-            XhibitRecordSheetDTO.builder()
-                .filename("file1.xml")
-                .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Alice Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
-                .build(),
-            XhibitRecordSheetDTO.builder()
-                .filename("file2.xml")
-                .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Joe Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
-                .build()
-        );
+        List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
 
-        ResponseBytes<GetObjectResponse> file1ObjectResponse = ResponseBytes.fromByteArray(
-            mock(GetObjectResponse.class),
-            expectedRecordSheets.get(0).getData().getBytes(StandardCharsets.UTF_8)
-        );
-
-        ResponseBytes<GetObjectResponse> file2ObjectResponse = ResponseBytes.fromByteArray(
-            mock(GetObjectResponse.class),
-            expectedRecordSheets.get(1).getData().getBytes(StandardCharsets.UTF_8)
-        );
-
-        doReturn(file1ObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher("trial/file1.xml")));
-        doReturn(file2ObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher("trial/file2.xml")));
+        setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
+        setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
 
         List<XhibitRecordSheetDTO> actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
@@ -118,19 +109,9 @@ class XhibitDataServiceTest {
         when(listObjectsV2Response.continuationToken()).thenReturn("test-continuation-token");
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
-        List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(
-            XhibitRecordSheetDTO.builder()
-                .filename("file1.xml")
-                .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Alice Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
-                .build()
-        );
+        List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(xhibitRecordSheet1);
 
-        ResponseBytes<GetObjectResponse> file1ObjectResponse = ResponseBytes.fromByteArray(
-            mock(GetObjectResponse.class),
-            expectedRecordSheets.get(0).getData().getBytes(StandardCharsets.UTF_8)
-        );
-
-        doReturn(file1ObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher("trial/file1.xml")));
+        setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
 
         List<XhibitRecordSheetDTO> actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
@@ -146,24 +127,23 @@ class XhibitDataServiceTest {
         when(nextPageResponse.continuationToken()).thenReturn(null);
         when(s3Client.listObjectsV2(argThat(new ListObjectsV2RequestArgumentMatcher("test-continuation-token")))).thenReturn(nextPageResponse);
 
-        expectedRecordSheets = List.of(
-            XhibitRecordSheetDTO.builder()
-                .filename("file2.xml")
-                .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Joe Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
-                .build()
-        );
+        expectedRecordSheets = List.of(xhibitRecordSheet2);
 
-        ResponseBytes<GetObjectResponse> file2ObjectResponse = ResponseBytes.fromByteArray(
-            mock(GetObjectResponse.class),
-            expectedRecordSheets.get(0).getData().getBytes(StandardCharsets.UTF_8)
-        );
-
-        doReturn(file2ObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher("trial/file2.xml")));
+        setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
 
         actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
         assertEquals(expectedRecordSheets, actualRecordSheets);
         assertThat(xhibitDataService.isAllFilesRetrievedFromS3()).isTrue();
+    }
+
+    private void setupFileResponse(XhibitRecordSheetDTO xhibitRecordSheetDTO, String objectKey) {
+        ResponseBytes<GetObjectResponse> fileObjectResponse = ResponseBytes.fromByteArray(
+            mock(GetObjectResponse.class),
+            xhibitRecordSheetDTO.getData().getBytes(StandardCharsets.UTF_8)
+        );
+
+        doReturn(fileObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher(objectKey)));
     }
 
 }
