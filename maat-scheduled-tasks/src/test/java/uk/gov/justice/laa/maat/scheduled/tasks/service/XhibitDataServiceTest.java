@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.any;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -33,6 +34,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.GetObjectRequestArgumentMatcher;
+import uk.gov.justice.laa.maat.scheduled.tasks.matchers.ListObjectsV2RequestArgumentMatcher;
 
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceTest {
@@ -74,7 +76,8 @@ class XhibitDataServiceTest {
             S3Object.builder().key("trial/file1.xml").build(),
             S3Object.builder().key("trial/file2.xml").build()
         ));
-        when(listObjectsV2Response.isTruncated()).thenReturn(false);
+        when(listObjectsV2Response.isTruncated()).thenReturn(true);
+        when(listObjectsV2Response.continuationToken()).thenReturn("test-continuation-token");
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
         List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(
@@ -98,12 +101,69 @@ class XhibitDataServiceTest {
             expectedRecordSheets.get(1).getData().getBytes(StandardCharsets.UTF_8)
         );
 
+        doReturn(file1ObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher("trial/file1.xml")));
         doReturn(file2ObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher("trial/file2.xml")));
+
+        List<XhibitRecordSheetDTO> actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+
+        assertEquals(expectedRecordSheets, actualRecordSheets);
+    }
+
+    @Test
+    void getRecordSheets_whenContinuationTokenExists_thenReturnsNextPageOfRecordSheets() {
+        when(listObjectsV2Response.contents()).thenReturn(List.of(
+            S3Object.builder().key("trial/file1.xml").build()
+        ));
+        when(listObjectsV2Response.isTruncated()).thenReturn(true);
+        when(listObjectsV2Response.continuationToken()).thenReturn("test-continuation-token");
+        when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
+
+        List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(
+            XhibitRecordSheetDTO.builder()
+                .filename("file1.xml")
+                .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Alice Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
+                .build()
+        );
+
+        ResponseBytes<GetObjectResponse> file1ObjectResponse = ResponseBytes.fromByteArray(
+            mock(GetObjectResponse.class),
+            expectedRecordSheets.get(0).getData().getBytes(StandardCharsets.UTF_8)
+        );
+
         doReturn(file1ObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher("trial/file1.xml")));
 
         List<XhibitRecordSheetDTO> actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
 
         assertEquals(expectedRecordSheets, actualRecordSheets);
+        assertThat(xhibitDataService.isAllFilesRetrievedFromS3()).isFalse();
+
+        ListObjectsV2Response nextPageResponse = mock(ListObjectsV2Response.class);
+
+        when(nextPageResponse.contents()).thenReturn(List.of(
+            S3Object.builder().key("trial/file2.xml").build()
+        ));
+        when(nextPageResponse.isTruncated()).thenReturn(false);
+        when(nextPageResponse.continuationToken()).thenReturn(null);
+        when(s3Client.listObjectsV2(argThat(new ListObjectsV2RequestArgumentMatcher("test-continuation-token")))).thenReturn(nextPageResponse);
+
+        expectedRecordSheets = List.of(
+            XhibitRecordSheetDTO.builder()
+                .filename("file2.xml")
+                .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Joe Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
+                .build()
+        );
+
+        ResponseBytes<GetObjectResponse> file2ObjectResponse = ResponseBytes.fromByteArray(
+            mock(GetObjectResponse.class),
+            expectedRecordSheets.get(0).getData().getBytes(StandardCharsets.UTF_8)
+        );
+
+        doReturn(file2ObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher("trial/file2.xml")));
+
+        actualRecordSheets = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+
+        assertEquals(expectedRecordSheets, actualRecordSheets);
+        assertThat(xhibitDataService.isAllFilesRetrievedFromS3()).isTrue();
     }
 
 }
