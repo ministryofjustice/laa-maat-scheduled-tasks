@@ -25,3 +25,23 @@ xhibit_batch:
     cron_expression: 0 0 9 * * *
   appeal_data_processing:
     cron_expression: 0 0 9 * * *
+
+services:
+  cclf-api:
+    base-url: http://localhost:${wiremock.server.port}/api/internal/v1/
+    registrationId: cclf
+
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retry-exceptions:
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - org.springframework.web.reactive.function.client.WebClientResponseException.BadGateway
+          - org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests
+          - org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
+          - org.springframework.web.reactive.function.client.WebClientResponseException.GatewayTimeout
