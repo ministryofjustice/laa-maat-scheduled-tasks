@@ -52,8 +52,8 @@ class TrialDataServiceTest {
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, never()).saveAll(any());
-        verify(xhibitDataService, never()).renameRecordSheets(anyList());
-        verify(xhibitDataService, never()).markFilesAsErrored();
+        verify(xhibitDataService, never()).markRecordsSheetsAsProcessed(any(), any());
+        verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
     }
 
     @Test
@@ -67,8 +67,8 @@ class TrialDataServiceTest {
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, times(1)).saveAll(any());
-        verify(xhibitDataService, times(1)).renameRecordSheets(anyList());
-        verify(xhibitDataService, never()).markFilesAsErrored();
+        verify(xhibitDataService, times(1)).markRecordsSheetsAsProcessed(any(), any());
+        verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
     }
 
     @Test
@@ -82,7 +82,7 @@ class TrialDataServiceTest {
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, never()).saveAll(any());
-        verify(xhibitDataService, never()).renameRecordSheets(anyList());
-        verify(xhibitDataService, times(1)).markFilesAsErrored();
+        verify(xhibitDataService, never()).markRecordsSheetsAsProcessed(any(), any());
+        verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(any(), any());
     }
 }

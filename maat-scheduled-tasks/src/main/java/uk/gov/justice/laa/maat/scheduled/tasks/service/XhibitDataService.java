@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.text.MessageFormat;
 import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
@@ -45,7 +47,7 @@ public class XhibitDataService {
         try {
             GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
 
-            String objectKeyPrefix = getPrefix(recordSheetType);
+            String objectKeyPrefix = getPrefixString(recordSheetType);
 
             ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
                 .bucket(xhibitConfiguration.getS3DataBucketName())
@@ -94,10 +96,19 @@ public class XhibitDataService {
         }
     }
 
-    public void renameRecordSheets(List<XhibitRecordSheetDTO> recordSheets,
+    public void markRecordsSheetsAsProcessed(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
+        renameRecordSheets(recordSheets, recordSheetType, RecordSheetStatus.PROCESSED);
+    }
+
+    public void markRecordSheetsAsErrored(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
+        renameRecordSheets(recordSheets, recordSheetType, RecordSheetStatus.ERRORED);
+    }
+
+    private void renameRecordSheets(List<XhibitRecordSheetDTO> recordSheets,
         RecordSheetType recordSheetType, RecordSheetStatus recordSheetStatus) {
-        String sourceKeyPrefix = getPrefix(recordSheetType);
-        String destinationKeyPrefix = getPrefix(recordSheetType, recordSheetStatus);
+        String sourceKeyPrefix = getPrefixString(recordSheetType);
+        String destinationKeyPrefix = getPrefixString(recordSheetType, recordSheetStatus);
+
         log.info(String.format("Assigning {} record sheets the prefix: {}", recordSheetStatus,
             destinationKeyPrefix));
 
@@ -130,26 +141,16 @@ public class XhibitDataService {
         }
     }
 
-    private String getPrefix(RecordSheetType type) {
+    private String getPrefixString(RecordSheetType type) {
         return type == RecordSheetType.TRIAL ? xhibitConfiguration.getObjectKeyTrialPrefix()
             : xhibitConfiguration.getObjectKeyAppealPrefix();
     }
 
-    private String getPrefix(RecordSheetType type, RecordSheetStatus status) {
-        switch (type) {
-            case TRIAL -> {
-                return status == RecordSheetStatus.PROCESSED
-                    ? xhibitConfiguration.getObjectKeyTrialProcessedPrefix()
-                    : xhibitConfiguration.getObjectKeyTrialErroredPrefix();
-            }
-            case APPEAL -> {
-                return status == RecordSheetStatus.ERRORED
-                    ? xhibitConfiguration.getObjectKeyAppealProcessedPrefix()
-                    : xhibitConfiguration.getObjectKeyAppealErroredPrefix();
-            }
-            default -> {
-                // Throw an exception???
-            }
-        }
+    private String getPrefixString(RecordSheetType type, RecordSheetStatus status) {
+        String processedStatus = status == RecordSheetStatus.PROCESSED
+            ? xhibitConfiguration.getObjectKeyProcessedPrefix()
+            : xhibitConfiguration.getObjectKeyErroredPrefix();
+
+        return MessageFormat.format("{0}/{1}/", type.toString().toLowerCase(), processedStatus);
     }
 }

@@ -50,11 +50,11 @@ xhibit-batch:
     cron_expression: ${TRIAL_DATA_CRON_EXPRESSION}
 
   object-key-appeal-prefix: "incoming/appeal/"
-  object-key-appeal-processed-prefix: "processed/appeal"
-  object-key-appeal-errored-prefix: "errored/appeal"
   object-key-trial-prefix: "incoming/trial/"
-  object-key-trial-processed-prefix: "processed/trial"
-  object-key-trial-errored-prefix: "errored/trial"
+
+  object-key-processed-prefix: "processed"
+  object-key-error-prefix: "errored"
+
   s3-data-bucket-name: "s3-bucket-name-here"
   s3-data-bucket-access-key: ${AWS_S3_XHIBIT_DATA_BUCKET_ACCESS_KEY}
   s3-data-bucket-access-secret: ${AWS_S3_XHIBIT_DATA_BUCKET_ACCESS_SECRET}

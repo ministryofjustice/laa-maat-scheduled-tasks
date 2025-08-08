@@ -14,19 +14,13 @@ public class XhibitConfiguration {
     private String objectKeyAppealPrefix;
 
     @NotNull
-    private String objectKeyAppealProcessedPrefix;
+    private String objectKeyProcessedPrefix;
 
     @NotNull
-    private String objectKeyAppealErroredPrefix;
+    private String objectKeyErroredPrefix;
 
     @NotNull
     private String objectKeyTrialPrefix;
-
-    @NotNull
-    private String objectKeyTrialProcessedPrefix;
-
-    @NotNull
-    private String objectKeyTrialErroredPrefix;
 
     @NotNull
     private String s3DataBucketName;

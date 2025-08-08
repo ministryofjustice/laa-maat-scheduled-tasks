@@ -37,14 +37,13 @@ public class TrialDataService {
 
                     trialDataRepository.saveAll(entities);
 
-                    xhibitDataService.renameRecordSheets(
-                        recordSheetsResponse.getRetrievedRecordSheets(),
-                        RecordSheetStatus.PROCESSED);
+                    xhibitDataService.markRecordsSheetsAsProcessed(
+                        recordSheetsResponse.getRetrievedRecordSheets(), RecordSheetType.TRIAL);
                 }
 
                 if (!recordSheetsResponse.getErroredRecordSheets().isEmpty()) {
-                    xhibitDataService.renameRecordSheets(
-                        recordSheetsResponse.getErroredRecordSheets(), RecordSheetStatus.ERRORED);
+                    xhibitDataService.markRecordSheetsAsErrored(
+                        recordSheetsResponse.getErroredRecordSheets(), RecordSheetType.TRIAL);
                 }
 
             } while (!xhibitDataService.allRecordSheetsRetrieved());

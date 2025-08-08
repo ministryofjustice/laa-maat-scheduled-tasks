@@ -9,7 +9,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,6 +29,7 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -36,6 +39,8 @@ import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
+import uk.gov.justice.laa.maat.scheduled.tasks.matchers.CopyObjectRequestArgumentMatcher;
+import uk.gov.justice.laa.maat.scheduled.tasks.matchers.DeleteObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.GetObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.ListObjectsV2RequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
@@ -70,8 +75,8 @@ class XhibitDataServiceTest {
 
     @BeforeEach
     void beforeEach() {
-        when(xhibitConfiguration.getObjectKeyTrialPrefix()).thenReturn("trial/");
-        when(xhibitConfiguration.getS3DataBucketName()).thenReturn("bucket");
+        lenient().when(xhibitConfiguration.getObjectKeyTrialPrefix()).thenReturn("trial/");
+        lenient().when(xhibitConfiguration.getS3DataBucketName()).thenReturn("bucket");
     }
 
     @Test
@@ -174,11 +179,11 @@ class XhibitDataServiceTest {
     }
 
     @Test
-    void givenAValidListOfRecordSheets_whenMarkRecordSheetsAsCompletedIsInvoked_thenRecordSheetsAreUpdated() {
-        xhibitDataService.renameRecordSheets(List.of(xhibitRecordSheet1), ???);
+    void givenNoRecordSheets_whenMarkRecordSheetsAsProcessedIsInvoked_thenNoRecordSheetsAreUpdated() {
+        xhibitDataService.markRecordsSheetsAsProcessed(Collections.emptyList(), RecordSheetType.TRIAL);
 
-        verify(s3Client).copyObject();
-        verify(s3Client).deleteObject();
+        verify(s3Client, never()).copyObject(ArgumentMatchers.any(CopyObjectRequest.class));
+        verify(s3Client, never()).deleteObject(ArgumentMatchers.any(DeleteObjectRequest.class));
     }
 
     private void setupFileResponse(XhibitRecordSheetDTO xhibitRecordSheetDTO, String objectKey) {
