@@ -18,8 +18,10 @@ import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.ObjectNotInActiveTierErrorException;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
@@ -43,9 +45,7 @@ public class XhibitDataService {
         try {
             GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
 
-            String objectKeyPrefix = recordSheetType == RecordSheetType.TRIAL
-                ? xhibitConfiguration.getObjectKeyTrialPrefix()
-                : xhibitConfiguration.getObjectKeyAppealPrefix();
+            String objectKeyPrefix = getPrefix(recordSheetType);
 
             ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
                 .bucket(xhibitConfiguration.getS3DataBucketName())
@@ -89,31 +89,67 @@ public class XhibitDataService {
             continuationToken = listObjectsResponse.continuationToken();
 
             return recordSheetsResponse;
-        }
-        catch (SdkClientException | AwsServiceException ex) {
+        } catch (SdkClientException | AwsServiceException ex) {
             throw new XhibitDataServiceException(ex.getMessage());
         }
     }
 
-    public void renameRecordSheets(List<XhibitRecordSheetDTO> recordSheets, String prefix) {
-        recordSheets.forEach(recordSheet -> {
-            String fileName = recordSheet.getFilename();
+    public void renameRecordSheets(List<XhibitRecordSheetDTO> recordSheets,
+        RecordSheetType recordSheetType, RecordSheetStatus recordSheetStatus) {
+        String sourceKeyPrefix = getPrefix(recordSheetType);
+        String destinationKeyPrefix = getPrefix(recordSheetType, recordSheetStatus);
+        log.info(String.format("Assigning {} record sheets the prefix: {}", recordSheetStatus,
+            destinationKeyPrefix));
 
-            CopyObjectRequest copyObjectrequest = CopyObjectRequest.builder()
-                .sourceBucket(xhibitConfiguration.getS3DataBucketName())
-                .sourceKey(xhibitConfiguration.getObjectKeyTrialPrefix() + fileName)
-                .destinationBucket(xhibitConfiguration.getS3DataBucketName())
-                .destinationKey(prefix + fileName)
-                .build();
+        try {
+            recordSheets.forEach(recordSheet -> {
+                String fileName = recordSheet.getFilename();
 
-            s3Client.copyObject(copyObjectrequest);
+                CopyObjectRequest copyObjectrequest = CopyObjectRequest.builder()
+                    .sourceBucket(xhibitConfiguration.getS3DataBucketName())
+                    .sourceKey(sourceKeyPrefix + fileName)
+                    .destinationBucket(xhibitConfiguration.getS3DataBucketName())
+                    .destinationKey(destinationKeyPrefix + fileName)
+                    .build();
 
-            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                .bucket(xhibitConfiguration.getS3DataBucketName())
-                .key(xhibitConfiguration.getObjectKeyTrialPrefix() + fileName)
-                .build();
+                try {
+                    s3Client.copyObject(copyObjectrequest);
+                } catch (ObjectNotInActiveTierErrorException ex) {
+                    log.warn("One of the record sheets is in Amazon S3 Glacier.");
+                }
 
-            s3Client.deleteObject(deleteObjectRequest);
-        });
+                DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(xhibitConfiguration.getS3DataBucketName())
+                    .key(sourceKeyPrefix + fileName)
+                    .build();
+
+                s3Client.deleteObject(deleteObjectRequest);
+            });
+        } catch (SdkClientException | AwsServiceException ex) {
+            throw new XhibitDataServiceException(ex.getMessage());
+        }
+    }
+
+    private String getPrefix(RecordSheetType type) {
+        return type == RecordSheetType.TRIAL ? xhibitConfiguration.getObjectKeyTrialPrefix()
+            : xhibitConfiguration.getObjectKeyAppealPrefix();
+    }
+
+    private String getPrefix(RecordSheetType type, RecordSheetStatus status) {
+        switch (type) {
+            case TRIAL -> {
+                return status == RecordSheetStatus.PROCESSED
+                    ? xhibitConfiguration.getObjectKeyTrialProcessedPrefix()
+                    : xhibitConfiguration.getObjectKeyTrialErroredPrefix();
+            }
+            case APPEAL -> {
+                return status == RecordSheetStatus.ERRORED
+                    ? xhibitConfiguration.getObjectKeyAppealProcessedPrefix()
+                    : xhibitConfiguration.getObjectKeyAppealErroredPrefix();
+            }
+            default -> {
+                // Throw an exception???
+            }
+        }
     }
 }

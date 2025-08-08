@@ -4,8 +4,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.S3Client;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
@@ -14,9 +14,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse
 @Service
 @RequiredArgsConstructor
 public class TrialDataService {
-
-    // TODO: Potentially move the S3Client out into a separate XhibitDataService
-    private final S3Client s3Client;
 
     private final XhibitDataService xhibitDataService;
 
@@ -27,27 +24,31 @@ public class TrialDataService {
 
         try {
             do {
-                GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+                GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(
+                    RecordSheetType.TRIAL);
 
                 if (!recordSheetsResponse.getRetrievedRecordSheets().isEmpty()) {
-                    List<XhibitTrialDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets().stream().map(dto ->
-                        XhibitTrialDataEntity.builder()
-                            .filename(dto.getFilename())
-                            .data(dto.getData())
-                            .build()).toList();
+                    List<XhibitTrialDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets()
+                        .stream().map(dto ->
+                            XhibitTrialDataEntity.builder()
+                                .filename(dto.getFilename())
+                                .data(dto.getData())
+                                .build()).toList();
 
                     trialDataRepository.saveAll(entities);
 
-                    xhibitDataService.renameRecordSheets(recordSheetsResponse.getRetrievedRecordSheets(), ???);
+                    xhibitDataService.renameRecordSheets(
+                        recordSheetsResponse.getRetrievedRecordSheets(),
+                        RecordSheetStatus.PROCESSED);
                 }
 
                 if (!recordSheetsResponse.getErroredRecordSheets().isEmpty()) {
-                    xhibitDataService.renameRecordSheets(recordSheetsResponse.getErroredRecordSheets(), ???);
+                    xhibitDataService.renameRecordSheets(
+                        recordSheetsResponse.getErroredRecordSheets(), RecordSheetStatus.ERRORED);
                 }
 
             } while (!xhibitDataService.allRecordSheetsRetrieved());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // Do something
         }
 
