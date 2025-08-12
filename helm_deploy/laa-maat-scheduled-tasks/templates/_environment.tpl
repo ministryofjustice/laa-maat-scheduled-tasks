@@ -26,9 +26,9 @@ env:
   - name: CENTRAL_PRINT
     value: {{ .Values.maat_batch.central_print.cron_expression }}
   - name: APPEAL_DATA_CRON_EXPRESSION
-    value: {{ .Values.xhibit_batch.appeal_data_processing.cron_expression }}
+    value: {{ .Values.xhibit-batch.appeal_data_processing.cron_expression }}
   - name: TRIAL_DATA_CRON_EXPRESSION
-    value: {{ .Values.xhibit_batch.trial_data_processing.cron_expression }}
+    value: {{ .Values.xhibit-batch.trial_data_processing.cron_expression }}
   - name: LOG_LEVEL
     value: {{ .Values.logging.level }}
   - name: AWS_DEFAULT_REGION
