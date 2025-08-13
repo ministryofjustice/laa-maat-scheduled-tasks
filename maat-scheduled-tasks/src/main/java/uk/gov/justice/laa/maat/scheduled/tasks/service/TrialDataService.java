@@ -5,9 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
+import uk.gov.justice.laa.maat.scheduled.tasks.factory.PrototypeBeanFactory;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
@@ -16,11 +15,13 @@ import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse
 @RequiredArgsConstructor
 public class TrialDataService {
 
-    private final XhibitDataService xhibitDataService;
+    private final PrototypeBeanFactory prototypeBeanFactory;
 
     private final XhibitTrialDataRepository trialDataRepository;
 
     public void populateTrialData() {
+        XhibitDataService xhibitDataService = prototypeBeanFactory.getXhibitDataService();
+
         log.info("Starting to populate Trial Data in to Hub.");
 
         do {
@@ -63,4 +64,5 @@ public class TrialDataService {
         log.info("Starting to process Appeal Data in to MAAT.");
         // TODO
     }
+
 }

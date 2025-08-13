@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -9,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.factory.PrototypeBeanFactory;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
@@ -31,6 +32,9 @@ class TrialDataServiceTest {
     @Mock
     private XhibitTrialDataRepository trialDataRepository;
 
+    @Mock
+    private PrototypeBeanFactory prototypeBeanFactory;
+
     @InjectMocks
     private TrialDataService trialDataService;
 
@@ -43,6 +47,11 @@ class TrialDataServiceTest {
         .filename("file2.xml")
         .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Joe Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
         .build();
+
+    @BeforeEach
+    void setUp() {
+        when(prototypeBeanFactory.getXhibitDataService()).thenReturn(xhibitDataService);
+    }
 
     @Test
     void givenNoUnprocessedRecordSheets_whenPopulateTrialDataIsInvoked_thenNoDataIsPopulated() {

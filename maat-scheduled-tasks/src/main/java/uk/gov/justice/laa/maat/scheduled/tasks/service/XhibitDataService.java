@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
@@ -33,6 +34,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse
 
 @Slf4j
 @Service
+@Scope("prototype")
 @RequiredArgsConstructor
 public class XhibitDataService {
 
