@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
-import uk.gov.justice.laa.maat.scheduled.tasks.factory.PrototypeBeanFactory;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
@@ -32,9 +30,6 @@ class TrialDataServiceTest {
     @Mock
     private XhibitTrialDataRepository trialDataRepository;
 
-    @Mock
-    private PrototypeBeanFactory prototypeBeanFactory;
-
     @InjectMocks
     private TrialDataService trialDataService;
 
@@ -48,19 +43,15 @@ class TrialDataServiceTest {
         .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Joe Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
         .build();
 
-    @BeforeEach
-    void setUp() {
-        when(prototypeBeanFactory.getXhibitDataService()).thenReturn(xhibitDataService);
-    }
-
     @Test
     void givenNoUnprocessedRecordSheets_whenPopulateTrialDataIsInvoked_thenNoDataIsPopulated() {
-        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL)).thenReturn(new GetRecordSheetsResponse());
-        when(xhibitDataService.allRecordSheetsRetrieved()).thenReturn(true);
+        when(getRecordSheetsResponse.allRecordSheetsRetrieved()).thenReturn(true);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null)).thenReturn(getRecordSheetsResponse);
 
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, never()).saveAll(any());
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, null);
         verify(xhibitDataService, never()).markRecordsSheetsAsProcessed(any(), any());
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
     }
@@ -69,13 +60,14 @@ class TrialDataServiceTest {
     void givenUnprocessRecordSheetsThatAreSuccessfullyRetrieved_whenPopulateTrialDataIsInvoked_thenDataIsPopulated() {
         when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(List.of(xhibitRecordSheet1, xhibitRecordSheet2));
         when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(Collections.emptyList());
+        when(getRecordSheetsResponse.allRecordSheetsRetrieved()).thenReturn(true);
 
-        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL)).thenReturn(getRecordSheetsResponse);
-        when(xhibitDataService.allRecordSheetsRetrieved()).thenReturn(true);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null)).thenReturn(getRecordSheetsResponse);
 
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, times(1)).saveAll(any());
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, null);
         verify(xhibitDataService, times(1)).markRecordsSheetsAsProcessed(any(), any());
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
     }
@@ -84,14 +76,43 @@ class TrialDataServiceTest {
     void givenUnprocessedRecordSheetsThatCannotBeRetrieved_whenPopulateTrialDataIsInvoked_thenNoDataIsPopulated() {
         when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(Collections.emptyList());
         when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(List.of(xhibitRecordSheet1, xhibitRecordSheet2));
+        when(getRecordSheetsResponse.allRecordSheetsRetrieved()).thenReturn(true);
 
-        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL)).thenReturn(getRecordSheetsResponse);
-        when(xhibitDataService.allRecordSheetsRetrieved()).thenReturn(true);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null)).thenReturn(getRecordSheetsResponse);
 
         trialDataService.populateTrialData();
 
         verify(trialDataRepository, never()).saveAll(any());
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, null);
         verify(xhibitDataService, never()).markRecordsSheetsAsProcessed(any(), any());
         verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(any(), any());
+    }
+
+    @Test
+    void givenMultiplePagesOfUnprocessedRecordSheets_whenPopulateTrialDataIsInvoked_thenDataIsPopulated() {
+        GetRecordSheetsResponse firstResponse = GetRecordSheetsResponse.builder()
+            .retrievedRecordSheets(List.of(xhibitRecordSheet1))
+            .erroredRecordSheets(Collections.emptyList())
+            .continuationToken("test-continuation-token")
+            .allRecordSheetsRetrieved(false)
+            .build();
+
+        GetRecordSheetsResponse secondResponse = GetRecordSheetsResponse.builder()
+            .retrievedRecordSheets(List.of(xhibitRecordSheet2))
+            .erroredRecordSheets(Collections.emptyList())
+            .continuationToken(null)
+            .allRecordSheetsRetrieved(true)
+            .build();
+
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null)).thenReturn(firstResponse);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, "test-continuation-token")).thenReturn(secondResponse);
+
+        trialDataService.populateTrialData();
+
+        verify(trialDataRepository, times(2)).saveAll(any());
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, null);
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, "test-continuation-token");
+        verify(xhibitDataService, times(2)).markRecordsSheetsAsProcessed(any(), any());
+        verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
     }
 }

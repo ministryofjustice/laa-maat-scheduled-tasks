@@ -34,7 +34,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse
 
 @Slf4j
 @Service
-@Scope("prototype")
 @RequiredArgsConstructor
 public class XhibitDataService {
 
@@ -42,25 +41,22 @@ public class XhibitDataService {
 
     private final XhibitConfiguration xhibitConfiguration;
 
-    @Accessors(fluent = true)
-    @Getter
-    private boolean allRecordSheetsRetrieved;
-
-    private String continuationToken;
-
-    public GetRecordSheetsResponse getRecordSheets(RecordSheetType recordSheetType) {
+    public GetRecordSheetsResponse getRecordSheets(RecordSheetType recordSheetType, String continuationToken) {
         try {
             GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
 
             String objectKeyPrefix = getPrefixString(recordSheetType);
 
-            ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+            ListObjectsV2Request.Builder listObjectsRequestBuilder = ListObjectsV2Request.builder()
                 .bucket(xhibitConfiguration.getS3DataBucketName())
-                .prefix(objectKeyPrefix)
-                .continuationToken(continuationToken)
-                .build();
+                .prefix(objectKeyPrefix);
 
-            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+            if (continuationToken != null) {
+                listObjectsRequestBuilder.continuationToken(continuationToken);
+            }
+
+            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(
+                listObjectsRequestBuilder.build());
 
             if (listObjectsResponse.contents().isEmpty()) {
                 return recordSheetsResponse;
@@ -89,11 +85,8 @@ public class XhibitDataService {
 
             });
 
-            if (!listObjectsResponse.isTruncated()) {
-                allRecordSheetsRetrieved = true;
-            }
-
-            continuationToken = listObjectsResponse.continuationToken();
+            recordSheetsResponse.allRecordSheetsRetrieved(!listObjectsResponse.isTruncated());
+            recordSheetsResponse.setContinuationToken(listObjectsResponse.nextContinuationToken());
 
             return recordSheetsResponse;
         } catch (SdkClientException | AwsServiceException ex) {

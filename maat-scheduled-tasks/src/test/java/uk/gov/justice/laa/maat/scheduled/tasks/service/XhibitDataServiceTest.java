@@ -86,7 +86,7 @@ class XhibitDataServiceTest {
         when(listObjectsV2Response.contents()).thenReturn(Collections.emptyList());
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
 
         assertTrue(recordSheetsResponse.getRetrievedRecordSheets().isEmpty());
     }
@@ -98,7 +98,7 @@ class XhibitDataServiceTest {
             S3Object.builder().key("trial/file2.xml").build()
         ));
         when(listObjectsV2Response.isTruncated()).thenReturn(true);
-        when(listObjectsV2Response.continuationToken()).thenReturn(null);
+        when(listObjectsV2Response.nextContinuationToken()).thenReturn(null);
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
         List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
@@ -106,46 +106,9 @@ class XhibitDataServiceTest {
         setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
 
         assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
-    }
-
-    @Test
-    void getRecordSheets_whenContinuationTokenExists_thenReturnsNextPageOfRecordSheets() {
-        when(listObjectsV2Response.contents()).thenReturn(List.of(
-            S3Object.builder().key("trial/file1.xml").build()
-        ));
-        when(listObjectsV2Response.isTruncated()).thenReturn(true);
-        when(listObjectsV2Response.continuationToken()).thenReturn("test-continuation-token");
-        when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
-
-        List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(xhibitRecordSheet1);
-
-        setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
-
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
-
-        assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
-        assertThat(xhibitDataService.allRecordSheetsRetrieved()).isFalse();
-
-        ListObjectsV2Response nextPageResponse = mock(ListObjectsV2Response.class);
-
-        when(nextPageResponse.contents()).thenReturn(List.of(
-            S3Object.builder().key("trial/file2.xml").build()
-        ));
-        when(nextPageResponse.isTruncated()).thenReturn(false);
-        when(nextPageResponse.continuationToken()).thenReturn(null);
-        when(s3Client.listObjectsV2(argThat(new ListObjectsV2RequestArgumentMatcher("test-continuation-token")))).thenReturn(nextPageResponse);
-
-        expectedRecordSheets = List.of(xhibitRecordSheet2);
-
-        setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
-
-        recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
-
-        assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
-        assertThat(xhibitDataService.allRecordSheetsRetrieved()).isTrue();
     }
 
     @Test
@@ -156,7 +119,7 @@ class XhibitDataServiceTest {
             S3Object.builder().key("trial/file3.xml").build()
         ));
         when(listObjectsV2Response.isTruncated()).thenReturn(true);
-        when(listObjectsV2Response.continuationToken()).thenReturn(null);
+        when(listObjectsV2Response.nextContinuationToken()).thenReturn(null);
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
         List<XhibitRecordSheetDTO> expectedSuccessfulRecordSheets = List.of(xhibitRecordSheet2);
@@ -166,7 +129,7 @@ class XhibitDataServiceTest {
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
         setupErrorFileResponse("trial/file3.xml");
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
 
         assertEquals(expectedSuccessfulRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
         assertEquals(expectedErroredRecordSheets, recordSheetsResponse.getErroredRecordSheets().stream().map(
@@ -177,7 +140,7 @@ class XhibitDataServiceTest {
     void getRecordSheets_throwsException_whenUnhandledAwsExceptionOccurs() {
         doThrow(SdkClientException.class).when(s3Client).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class));
 
-        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.getRecordSheets(RecordSheetType.TRIAL));
+        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null));
     }
 
     @Test
