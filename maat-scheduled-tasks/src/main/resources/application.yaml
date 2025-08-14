@@ -41,11 +41,19 @@ maat_batch:
   central_print:
     cron_expression: ${CENTRAL_PRINT}
 
-xhibit_batch:
+xhibit-batch:
   appeal_data_processing:
     cron_expression: ${APPEAL_DATA_CRON_EXPRESSION}
   trial_data_processing:
     cron_expression: ${TRIAL_DATA_CRON_EXPRESSION}
+
+  object-key-appeal-prefix: "incoming/appeal/"
+  object-key-trial-prefix: "incoming/trial/"
+
+  object-key-processed-prefix: "processed"
+  object-key-errored-prefix: "errored"
+
+  s3-data-bucket-name: ${S3_DATA_BUCKET_NAME}
 
 sentry:
   dsn: ${SENTRY_DSN}

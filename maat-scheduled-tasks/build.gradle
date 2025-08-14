@@ -19,7 +19,8 @@ def versions = [
 		ojdbcVersion			: "21.7.0.0",
 		mapstructVersion		: "1.6.3",
 		crimeCommonsClasses		: "4.11.1",
-		resilience4j            : "2.3.0"
+		resilience4j            : "2.3.0",
+        awsSdkVersion			: "2.32.14"
 ]
 
 configurations {
@@ -34,6 +35,9 @@ repositories {
 
 dependencies {
 	implementation platform("io.sentry:sentry-bom:$versions.sentryVersion")
+	implementation platform("software.amazon.awssdk:bom:$versions.awsSdkVersion")
+
+	implementation "software.amazon.awssdk:s3"
 	implementation "io.sentry:sentry-spring-boot-starter-jakarta"
 	implementation "io.sentry:sentry-logback"
 	implementation "org.springframework.boot:spring-boot-starter-actuator"
