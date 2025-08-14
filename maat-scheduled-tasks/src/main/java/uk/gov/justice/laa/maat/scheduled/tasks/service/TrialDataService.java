@@ -4,8 +4,10 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitAppealDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitAppealDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
@@ -16,40 +18,13 @@ public class TrialDataService {
 
     private final XhibitDataService xhibitDataService;
 
+    private final XhibitAppealDataRepository appealDataRepository;
     private final XhibitTrialDataRepository trialDataRepository;
 
     public void populateTrialData() {
         log.info("Starting to populate Trial Data in to Hub.");
 
-        GetRecordSheetsResponse recordSheetsResponse;
-        String continuationToken = null;
-
-        do {
-            recordSheetsResponse = xhibitDataService.getRecordSheets(
-                RecordSheetType.TRIAL, continuationToken);
-
-            if (!recordSheetsResponse.getRetrievedRecordSheets().isEmpty()) {
-                List<XhibitTrialDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets()
-                    .stream().map(dto ->
-                        XhibitTrialDataEntity.builder()
-                            .filename(dto.getFilename())
-                            .data(dto.getData())
-                            .build()).toList();
-
-                trialDataRepository.saveAll(entities);
-
-                xhibitDataService.markRecordsSheetsAsProcessed(
-                    recordSheetsResponse.getRetrievedRecordSheets(), RecordSheetType.TRIAL);
-            }
-
-            if (!recordSheetsResponse.getErroredRecordSheets().isEmpty()) {
-                xhibitDataService.markRecordSheetsAsErrored(
-                    recordSheetsResponse.getErroredRecordSheets(), RecordSheetType.TRIAL);
-            }
-
-            continuationToken = recordSheetsResponse.getContinuationToken();
-
-        } while (!recordSheetsResponse.allRecordSheetsRetrieved());
+        populateRecordSheets(RecordSheetType.TRIAL);
     }
 
     public void processTrialDataInToMaat() {
@@ -59,12 +34,60 @@ public class TrialDataService {
 
     public void populateAppealData() {
         log.info("Starting to populate Appeal Data in to Hub.");
-        // TODO
+
+        populateRecordSheets(RecordSheetType.APPEAL);
     }
 
     public void processAppealDataInToMaat() {
         log.info("Starting to process Appeal Data in to MAAT.");
         // TODO
+    }
+
+    private void populateRecordSheets(RecordSheetType recordSheetType) {
+        GetRecordSheetsResponse recordSheetsResponse;
+        String continuationToken = null;
+
+        do {
+            recordSheetsResponse = xhibitDataService.getRecordSheets(
+                recordSheetType, continuationToken);
+
+            if (!recordSheetsResponse.getRetrievedRecordSheets().isEmpty()) {
+                saveRecordSheets(recordSheetType, recordSheetsResponse);
+
+                xhibitDataService.markRecordsSheetsAsProcessed(
+                    recordSheetsResponse.getRetrievedRecordSheets(), recordSheetType);
+            }
+
+            if (!recordSheetsResponse.getErroredRecordSheets().isEmpty()) {
+                xhibitDataService.markRecordSheetsAsErrored(
+                    recordSheetsResponse.getErroredRecordSheets(), recordSheetType);
+            }
+
+            continuationToken = recordSheetsResponse.getContinuationToken();
+
+        } while (!recordSheetsResponse.allRecordSheetsRetrieved());
+    }
+
+    private void saveRecordSheets(RecordSheetType recordSheetType, GetRecordSheetsResponse recordSheetsResponse) {
+        if (RecordSheetType.TRIAL.equals(recordSheetType)) {
+            List<XhibitTrialDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets()
+                .stream().map(dto ->
+                    XhibitTrialDataEntity.builder()
+                        .filename(dto.getFilename())
+                        .data(dto.getData())
+                        .build()).toList();
+
+            trialDataRepository.saveAll(entities);
+        } else {
+            List<XhibitAppealDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets()
+                .stream().map(dto ->
+                    XhibitAppealDataEntity.builder()
+                        .filename(dto.getFilename())
+                        .data(dto.getData())
+                        .build()).toList();
+            
+            appealDataRepository.saveAll(entities);
+        }
     }
 
 }
