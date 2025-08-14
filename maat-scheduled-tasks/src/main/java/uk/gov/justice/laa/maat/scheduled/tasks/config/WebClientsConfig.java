@@ -32,7 +32,7 @@ public class WebClientsConfig {
     public static final int MAX_IN_MEMORY_SIZE = 10485760;
     private static final String CCLF_API_WEB_CLIENT_NAME = "crownCourtLitigatorFeesApiWebClient";
 
-    @Bean
+   /* @Bean
     WebClientCustomizer webClientCustomizer() {
         ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
                 .maxConnections(500)
@@ -56,7 +56,7 @@ public class WebClientsConfig {
         };
     }
 
-    @Bean(CCLF_API_WEB_CLIENT_NAME)
+    @Bean
     WebClient crownCourtLitigatorFeesApiWebClient(WebClient.Builder clientBuilder,
                                                   ServicesConfiguration servicesConfiguration,
                                                   ClientRegistrationRepository clientRegistrations,
@@ -91,5 +91,5 @@ public class WebClientsConfig {
         filters.add(WebClientFilters.errorResponseHandler());
         filters.add(WebClientFilters.handleNotFoundResponse());
         filters.add(WebClientFilters.logResponse());
-    }
+    }*/
 }
