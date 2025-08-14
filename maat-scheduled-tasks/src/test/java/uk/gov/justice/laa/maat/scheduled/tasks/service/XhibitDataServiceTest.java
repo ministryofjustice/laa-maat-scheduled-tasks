@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,7 +44,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceExcept
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.CopyObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.DeleteObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.GetObjectRequestArgumentMatcher;
-import uk.gov.justice.laa.maat.scheduled.tasks.matchers.ListObjectsV2RequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
 @ExtendWith(MockitoExtension.class)

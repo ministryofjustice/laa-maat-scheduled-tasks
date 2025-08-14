@@ -21,12 +21,32 @@ public class TrialDataService {
     public void populateTrialData() {
         log.info("Starting to populate Trial Data in to Hub.");
 
+        populateRecordSheets(RecordSheetType.TRIAL);
+    }
+
+    public void processTrialDataInToMaat() {
+        log.info("Starting to process Trial Data in to MAAT.");
+        // TODO
+    }
+
+    public void populateAppealData() {
+        log.info("Starting to populate Appeal Data in to Hub.");
+
+        populateRecordSheets(RecordSheetType.APPEAL);
+    }
+
+    public void processAppealDataInToMaat() {
+        log.info("Starting to process Appeal Data in to MAAT.");
+        // TODO
+    }
+
+    private void populateRecordSheets(RecordSheetType recordSheetType) {
         GetRecordSheetsResponse recordSheetsResponse;
         String continuationToken = null;
 
         do {
             recordSheetsResponse = xhibitDataService.getRecordSheets(
-                RecordSheetType.TRIAL, continuationToken);
+                recordSheetType, continuationToken);
 
             if (!recordSheetsResponse.getRetrievedRecordSheets().isEmpty()) {
                 List<XhibitTrialDataEntity> entities = recordSheetsResponse.getRetrievedRecordSheets()
@@ -39,32 +59,17 @@ public class TrialDataService {
                 trialDataRepository.saveAll(entities);
 
                 xhibitDataService.markRecordsSheetsAsProcessed(
-                    recordSheetsResponse.getRetrievedRecordSheets(), RecordSheetType.TRIAL);
+                    recordSheetsResponse.getRetrievedRecordSheets(), recordSheetType);
             }
 
             if (!recordSheetsResponse.getErroredRecordSheets().isEmpty()) {
                 xhibitDataService.markRecordSheetsAsErrored(
-                    recordSheetsResponse.getErroredRecordSheets(), RecordSheetType.TRIAL);
+                    recordSheetsResponse.getErroredRecordSheets(), recordSheetType);
             }
 
             continuationToken = recordSheetsResponse.getContinuationToken();
 
         } while (!recordSheetsResponse.allRecordSheetsRetrieved());
-    }
-
-    public void processTrialDataInToMaat() {
-        log.info("Starting to process Trial Data in to MAAT.");
-        // TODO
-    }
-
-    public void populateAppealData() {
-        log.info("Starting to populate Appeal Data in to Hub.");
-        // TODO
-    }
-
-    public void processAppealDataInToMaat() {
-        log.info("Starting to process Appeal Data in to MAAT.");
-        // TODO
     }
 
 }
