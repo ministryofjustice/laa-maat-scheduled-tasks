@@ -13,13 +13,13 @@ public class XhibitBatchesScheduler {
 
     private final TrialDataService trialDataService;
 
-    @Scheduled(cron = "${xhibit-batch.appeal_data_processing.cron_expression}")
+    @Scheduled(cron = "-")
     public void executeAppealDataProcessing() {
         trialDataService.populateAppealData();
         trialDataService.processAppealDataInToMaat();
     }
 
-    @Scheduled(cron = "${xhibit-batch.trial_data_processing.cron_expression}")
+    @Scheduled(cron = "-")
     public void executeTrialDataProcessing() {
         trialDataService.populateTrialData();
         trialDataService.processTrialDataInToMaat();

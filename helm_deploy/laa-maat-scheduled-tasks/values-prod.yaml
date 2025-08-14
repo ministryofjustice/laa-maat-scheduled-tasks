@@ -75,9 +75,9 @@ maat_batch:
 
 xhibit_batch:
   trial_data_processing:
-    cron_expression: '-'
+    cron_expression: '0 0 0 1 1 *'
   appeal_data_processing:
-    cron_expression: '-'
+    cron_expression: '0 0 0 1 1 *'
 
 logging:
   level: INFO
