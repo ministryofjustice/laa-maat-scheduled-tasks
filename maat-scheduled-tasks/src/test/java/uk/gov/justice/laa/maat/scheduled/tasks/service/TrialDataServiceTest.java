@@ -1,13 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,6 +9,18 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
+
+import java.util.Collections;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService.TRIAL_DATA_TO_MAAT_PROCEDURE;
 
 @ExtendWith(MockitoExtension.class)
 class TrialDataServiceTest {
@@ -29,6 +33,9 @@ class TrialDataServiceTest {
 
     @Mock
     private XhibitTrialDataRepository trialDataRepository;
+
+    @Mock
+    private StoredProcedureService storedProcedureService;
 
     @InjectMocks
     private TrialDataService trialDataService;
@@ -114,5 +121,15 @@ class TrialDataServiceTest {
         verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, "test-continuation-token");
         verify(xhibitDataService, times(2)).markRecordsSheetsAsProcessed(any(), any());
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
+    }
+
+    @Test
+    void processTrialDataInToMaat() {
+        when(trialDataRepository.findUnprocessedIds()).thenReturn(List.of(1, 2, 3));
+
+        trialDataService.processTrialDataInToMaat();
+
+        verify(trialDataRepository, times(1)).findUnprocessedIds();
+        verify(storedProcedureService, times(3)).callStoredProcedure(eq(TRIAL_DATA_TO_MAAT_PROCEDURE), anyMap());
     }
 }
