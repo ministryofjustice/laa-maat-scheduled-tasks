@@ -29,6 +29,8 @@ env:
     value: {{ .Values.xhibit_batch.appeal_data_processing.cron_expression }}
   - name: TRIAL_DATA_CRON_EXPRESSION
     value: {{ .Values.xhibit_batch.trial_data_processing.cron_expression }}
+  - name: BILLING_LOG_CLEANUP_CRON_EXPRESSION
+    value: {{ .Values.billing.cleanup_data_log.cron_expression }}
   - name: LOG_LEVEL
     value: {{ .Values.logging.level }}
   - name: AWS_DEFAULT_REGION

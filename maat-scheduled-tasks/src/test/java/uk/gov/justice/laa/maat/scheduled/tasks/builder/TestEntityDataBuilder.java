@@ -6,7 +6,9 @@ import uk.gov.justice.laa.crime.enums.EvidenceFeeLevel;
 import uk.gov.justice.laa.crime.enums.MagCourtOutcome;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtCaseType;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtTrialOutcome;
 
@@ -79,5 +81,13 @@ public class TestEntityDataBuilder {
                 .userModified(USER_NAME)
                 .caseType(CrownCourtCaseType.EITHER_WAY.getValue())
                 .build();
+    }
+    
+    public static BillingDataFeedLogEntity getPopulatedBillingLogEntity(Integer id, LocalDateTime dateCreated) {
+        return BillingDataFeedLogEntity.builder()
+            .id(id)
+            .recordType(BillingDataFeedRecordType.APPLICANT.getValue())
+            .dateCreated((dateCreated != null) ? dateCreated : LocalDateTime.parse("2021-10-09T15:01:25"))
+            .payload("{}").build();
     }
 }
