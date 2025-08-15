@@ -9,20 +9,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import uk.gov.justice.laa.maat.scheduled.tasks.MaatScheduledTasksApplication;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.TestOverrides;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.TestSecurityConfig;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.BillingDataFeedLogRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
 
 @AutoConfigureMockMvc
-@SpringBootTest(classes = {
-    MaatScheduledTasksApplication.class,
-    TestOverrides.class,
-    TestSecurityConfig.class
-})
+@SpringBootTest
 public class BillingDataFeedLogServiceIntegrationTest {
     
     public static final LocalDateTime THRESHOLD_DATE = LocalDateTime.of(2025, 7, 1, 23, 15);
