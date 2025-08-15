@@ -1,4 +1,9 @@
+server:
+  port: 8498
+
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: maat-scheduled-tasks
   datasource:
@@ -7,6 +12,27 @@ spring:
     password:
     driver-class-name: org.h2.Driver
     name: TOGDATA
+  security:
+    oauth2:
+      client:
+        provider:
+          cclf:
+            token-uri: http://localhost:${wiremock.server.port}/oauth2/token
+          ccr:
+            token-uri: http://localhost:${wiremock.server.port}/oauth2/token
+        registration:
+          cclf:
+            client-id: dummy-client
+            client-secret: dummy-secret
+            authorization-grant-type: client_credentials
+          ccr:
+            client-id: dummy-client
+            client-secret: dummy-secret
+            authorization-grant-type: client_credentials
+
+      resource-server:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI}
 
 maat_batch:
   lmr_reports:
@@ -28,8 +54,12 @@ xhibit-batch:
 
 services:
   cclf-api:
-    base-url: http://localhost:${wiremock.server.port}/api/internal/v1/
+    base-url: http://localhost:${wiremock.server.port}/cclf/api/internal/v1
     registrationId: cclf
+
+  ccr-api:
+    base-url: http://localhost:${wiremock.server.port}/ccr/api/internal/v1/
+    registrationId: ccr
 
 resilience4j:
   retry:

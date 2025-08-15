@@ -29,6 +29,36 @@ env:
     value: {{ .Values.xhibit_batch.appeal_data_processing.cron_expression }}
   - name: TRIAL_DATA_CRON_EXPRESSION
     value: {{ .Values.xhibit_batch.trial_data_processing.cron_expression }}
+  - name: JWT_ISSUER_URI
+    value: {{ .Values.jwt.issuerUri }}
+  - name: CCLF_API_BASE_URL
+    value: {{ .Values.cclfApi.baseUrl }}
+  - name: CCLF_API_OAUTH_URL
+    value: {{ .Values.cclfApi.oauthUrl }}
+  - name: CCLF_API_OAUTH_CLIENT_ID
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: CCLF_API_OAUTH_CLIENT_ID
+  - name: CCLF_API_OAUTH_CLIENT_SECRET
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: CCLF_API_OAUTH_CLIENT_SECRET
+  - name: CCR_API_BASE_URL
+    value: {{ .Values.ccrApi.baseUrl }}
+  - name: CCR_API_OAUTH_URL
+    value: {{ .Values.ccrApi.oauthUrl }}
+  - name: CCR_API_OAUTH_CLIENT_ID
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: CCR_API_OAUTH_CLIENT_ID
+  - name: CCR_API_OAUTH_CLIENT_SECRET
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: CCR_API_OAUTH_CLIENT_SECRET
   - name: LOG_LEVEL
     value: {{ .Values.logging.level }}
   - name: AWS_DEFAULT_REGION
