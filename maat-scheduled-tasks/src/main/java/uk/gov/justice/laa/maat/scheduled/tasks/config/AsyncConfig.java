@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 @EnableAsync
 public class AsyncConfig implements AsyncConfigurer {
 
-    @Value("${aws_region}")
+    @Value("${aws.region}")
     private String awsRegion;
     
     @Bean
