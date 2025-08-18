@@ -79,3 +79,5 @@ resilience4j:
           - org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests
           - org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
           - org.springframework.web.reactive.function.client.WebClientResponseException.GatewayTimeout
+
+aws_region: eu-west-2
