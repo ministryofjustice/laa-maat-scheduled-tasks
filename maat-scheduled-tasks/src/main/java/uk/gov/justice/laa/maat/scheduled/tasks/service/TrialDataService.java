@@ -18,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TrialDataService {
 
-    static final String TRIAL_DATA_TO_MAAT_PROCEDURE = "xhibit_file_load.process_trial_record";
+    static final String TRIAL_DATA_TO_MAAT_PROCEDURE = "hub.xhibit_file_load.process_trial_record";
 
     private final XhibitDataService xhibitDataService;
 
@@ -35,7 +35,7 @@ public class TrialDataService {
 
     public void processTrialDataInToMaat() {
         log.info("Starting to process Trial Data in to MAAT.");
-        List<Integer> unprocessedIds = trialDataRepository.findUnprocessedIds();
+        List<Integer> unprocessedIds = trialDataRepository.findAllUnprocessedIds();
         for (Integer id : unprocessedIds) {
             storedProcedureService.callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", id));
         }

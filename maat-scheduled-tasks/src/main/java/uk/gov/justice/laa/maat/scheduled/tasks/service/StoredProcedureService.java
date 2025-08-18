@@ -6,10 +6,10 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.StoredProcedureQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
 
 import java.util.Collections;
 import java.util.Map;
@@ -24,17 +24,17 @@ public class StoredProcedureService {
     @PersistenceContext
     private EntityManager entityManager;
 
-
-    @Async
     @Transactional
     public void callStoredProcedure(String storedProcedureName) {
-        callStoredProcedure(storedProcedureName, Collections.emptyMap());
+        createAndExecuteStoredProcedure(storedProcedureName, Collections.emptyMap());
     }
 
-    @Async
     @Transactional
     public void callStoredProcedure(String storedProcedureName, Map<String, Object> parameterMap) {
-        log.info("Running async on thread: {}", Thread.currentThread().getName());
+        createAndExecuteStoredProcedure(storedProcedureName, parameterMap);
+    }
+
+    private void createAndExecuteStoredProcedure(String storedProcedureName, Map<String, Object> parameterMap) {
         if (!StringUtils.hasText(storedProcedureName)) {
             throw new IllegalArgumentException(EMPTY_PROCEDURE_NAME_MESSAGE
             );
@@ -52,7 +52,7 @@ public class StoredProcedureService {
             log.info("Completed stored procedure: {}", storedProcedureName);
         } catch (Exception e) {
             log.error("Error executing stored procedure {}: {}", storedProcedureName, e.getMessage());
-            throw new RuntimeException("Failed to execute stored procedure: " + storedProcedureName, e);
+            throw new StoredProcedureException("Failed to execute stored procedure: " + storedProcedureName, e);
         }
     }
 }

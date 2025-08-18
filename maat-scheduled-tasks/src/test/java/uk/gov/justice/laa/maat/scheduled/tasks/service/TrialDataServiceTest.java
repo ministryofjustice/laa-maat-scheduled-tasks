@@ -125,11 +125,11 @@ class TrialDataServiceTest {
 
     @Test
     void processTrialDataInToMaat() {
-        when(trialDataRepository.findUnprocessedIds()).thenReturn(List.of(1, 2, 3));
+        when(trialDataRepository.findAllUnprocessedIds()).thenReturn(List.of(1, 2, 3));
 
         trialDataService.processTrialDataInToMaat();
 
-        verify(trialDataRepository, times(1)).findUnprocessedIds();
+        verify(trialDataRepository, times(1)).findAllUnprocessedIds();
         verify(storedProcedureService, times(3)).callStoredProcedure(eq(TRIAL_DATA_TO_MAAT_PROCEDURE), anyMap());
     }
 }

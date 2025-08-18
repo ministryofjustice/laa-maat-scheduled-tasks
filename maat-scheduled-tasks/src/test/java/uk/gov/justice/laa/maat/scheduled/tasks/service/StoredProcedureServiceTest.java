@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
 
 import java.util.Map;
 
@@ -63,14 +64,14 @@ class StoredProcedureServiceTest {
     }
 
     @Test
-    void testCallStoredProcedure_executionFails_throwsRuntimeException() {
+    void testCallStoredProcedure_executionFails_throwsStoredProcedureException() {
         // Arrange
         String procedureName = "faulty_procedure";
         when(entityManager.createStoredProcedureQuery(procedureName)).thenReturn(storedProcedureQuery);
         when(storedProcedureQuery.execute()).thenThrow(new RuntimeException("DB error"));
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        StoredProcedureException exception = assertThrows(StoredProcedureException.class, () ->
                 storedProcedureService.callStoredProcedure(procedureName)
         );
         assertTrue(exception.getMessage().contains("Failed to execute stored procedure"));
