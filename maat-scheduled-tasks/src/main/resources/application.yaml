@@ -76,6 +76,10 @@ xhibit-batch:
 
   s3-data-bucket-name: ${S3_DATA_BUCKET_NAME}
 
+billing:
+  cleanup_data_feed_log:
+    cron_expression: ${BILLING_LOG_CLEANUP_CRON_EXPRESSION}
+  
 sentry:
   dsn: ${SENTRY_DSN}
   environment: ${SENTRY_ENV}
