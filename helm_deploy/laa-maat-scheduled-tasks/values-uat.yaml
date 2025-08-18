@@ -100,3 +100,14 @@ actuator:
     periodSeconds: 10
     timeoutSeconds: 10
     failureThreshold: 5
+
+jwt:
+  issuerUri: https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_uKC0C8X8e
+
+cclfApi:
+  baseUrl: https://cclf-uat.apps.live.cloud-platform.service.justice.gov.uk/cclf/api/v1
+  oauthUrl: https://cclf-uat.auth.eu-west-2.amazoncognito.com/oauth2/token
+
+ccrApi:
+  baseUrl: https://ccr-uat.apps.live.cloud-platform.service.justice.gov.uk/ccr/api/v1
+  oauthUrl: https://ccr-uat.auth.eu-west-2.amazoncognito.com/oauth2/token

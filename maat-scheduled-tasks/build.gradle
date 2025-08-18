@@ -19,8 +19,10 @@ def versions = [
 		ojdbcVersion			: "21.7.0.0",
 		mapstructVersion		: "1.6.3",
 		crimeCommonsClasses		: "4.11.1",
-		resilience4j            : "2.3.0",
-        awsSdkVersion			: "2.32.14"
+		resilience4j			: "2.3.0",
+		wmStubRunnerVersion		: "4.3.0",
+		commonsLang3Version		: "3.18.0",
+		awsSdkVersion			: "2.32.14"
 ]
 
 configurations {
@@ -52,6 +54,7 @@ dependencies {
 	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "org.mapstruct:mapstruct:$versions.mapstructVersion"
 	implementation "uk.gov.justice.service.laa-crime:crime-commons-classes:$versions.crimeCommonsClasses"
+	implementation "org.apache.commons:commons-lang3:$versions.commonsLang3Version"
 
 	compileOnly "org.projectlombok:lombok"
 
@@ -62,7 +65,10 @@ dependencies {
 	testImplementation "io.projectreactor:reactor-test"
 	testImplementation "com.h2database:h2"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+	testImplementation "org.springframework.cloud:spring-cloud-starter-contract-stub-runner:$versions.wmStubRunnerVersion"
 
+	testCompileOnly "org.projectlombok:lombok"
+	testAnnotationProcessor "org.projectlombok:lombok"
 }
 
 tasks.named('test') {

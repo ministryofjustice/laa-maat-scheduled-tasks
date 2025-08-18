@@ -16,7 +16,9 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 @AllArgsConstructor
 public class GetRecordSheetsResponse {
 
+    @Builder.Default
     private List<XhibitRecordSheetDTO> retrievedRecordSheets = new ArrayList<>();
+    @Builder.Default
     private List<XhibitRecordSheetDTO> erroredRecordSheets = new ArrayList<>();
 
     private String continuationToken;
