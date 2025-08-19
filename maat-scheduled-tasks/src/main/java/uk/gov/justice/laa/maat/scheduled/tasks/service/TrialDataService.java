@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,15 +10,22 @@ import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitAppealDataReposi
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TrialDataService {
 
+    static final String TRIAL_DATA_TO_MAAT_PROCEDURE = "hub.xhibit_file_load.process_trial_record";
+
     private final XhibitDataService xhibitDataService;
 
     private final XhibitAppealDataRepository appealDataRepository;
     private final XhibitTrialDataRepository trialDataRepository;
+
+    private final StoredProcedureService storedProcedureService;
 
     public void populateTrialData() {
         log.info("Starting to populate Trial Data in to Hub.");
@@ -29,7 +35,10 @@ public class TrialDataService {
 
     public void processTrialDataInToMaat() {
         log.info("Starting to process Trial Data in to MAAT.");
-        // TODO
+        List<Integer> unprocessedIds = trialDataRepository.findAllUnprocessedIds();
+        for (Integer id : unprocessedIds) {
+            storedProcedureService.callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", id));
+        }
     }
 
     public void populateAppealData() {

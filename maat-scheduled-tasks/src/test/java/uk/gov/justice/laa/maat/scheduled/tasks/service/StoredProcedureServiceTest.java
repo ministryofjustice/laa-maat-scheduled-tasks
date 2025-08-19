@@ -1,12 +1,16 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -60,16 +64,32 @@ class StoredProcedureServiceTest {
     }
 
     @Test
-    void testCallStoredProcedure_executionFails_throwsRuntimeException() {
+    void testCallStoredProcedure_executionFails_throwsStoredProcedureException() {
         // Arrange
         String procedureName = "faulty_procedure";
         when(entityManager.createStoredProcedureQuery(procedureName)).thenReturn(storedProcedureQuery);
         when(storedProcedureQuery.execute()).thenThrow(new RuntimeException("DB error"));
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        StoredProcedureException exception = assertThrows(StoredProcedureException.class, () ->
                 storedProcedureService.callStoredProcedure(procedureName)
         );
         assertTrue(exception.getMessage().contains("Failed to execute stored procedure"));
+    }
+
+    @Test
+    void testCallStoredProcedure_withParameters_registeredAndSetSuccessfully() {
+        String procedureName = "my_procedure";
+        Map<String, Object> parameterMap = Map.of("param1", "value1", "param2", 3);
+
+        when(entityManager.createStoredProcedureQuery(procedureName)).thenReturn(storedProcedureQuery);
+
+        storedProcedureService.callStoredProcedure(procedureName, parameterMap);
+
+        verify(storedProcedureQuery).registerStoredProcedureParameter("param1", String.class, ParameterMode.IN);
+        verify(storedProcedureQuery).registerStoredProcedureParameter("param2", Integer.class, ParameterMode.IN);
+        verify(storedProcedureQuery).setParameter("param1", "value1");
+        verify(storedProcedureQuery).setParameter("param2", 3);
+        verify(storedProcedureQuery).execute();
     }
 }
