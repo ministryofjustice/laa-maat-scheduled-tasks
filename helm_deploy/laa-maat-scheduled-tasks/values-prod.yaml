@@ -78,7 +78,7 @@ xhibit_batch:
     cron_expression: '0 0 0 1 1 *'
   appeal_data_processing:
     cron_expression: '0 0 0 1 1 *'
-
+    
 logging:
   level: INFO
 

@@ -7,7 +7,7 @@ spring:
   application:
     name: maat-scheduled-tasks
   datasource:
-    url: jdbc:h2:mem:mla;MODE=Oracle;DB_CLOSE_DELAY=-1;IGNORE_CATALOGS=TRUE;NON_KEYWORDS=VALUE
+    url: jdbc:h2:mem:mla;MODE=Oracle;DB_CLOSE_DELAY=-1;IGNORE_CATALOGS=TRUE;NON_KEYWORDS=VALUE;INIT=CREATE SCHEMA IF NOT EXISTS togdata\;SET SCHEMA togdata
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -52,6 +52,10 @@ xhibit-batch:
   appeal_data_processing:
     cron_expression: 0 0 9 * * *
 
+billing:
+  cleanup_data_feed_log:
+    cron_expression: 0 0 9 * * *
+
 services:
   cclf-api:
     base-url: http://localhost:${wiremock.server.port}/cclf/api/internal/v1
@@ -75,3 +79,6 @@ resilience4j:
           - org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests
           - org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
           - org.springframework.web.reactive.function.client.WebClientResponseException.GatewayTimeout
+
+aws:
+  region: eu-west-2
