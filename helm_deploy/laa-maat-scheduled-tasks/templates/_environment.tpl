@@ -30,7 +30,10 @@ env:
   - name: TRIAL_DATA_CRON_EXPRESSION
     value: {{ .Values.xhibit_batch.trial_data_processing.cron_expression }}
   - name: BILLING_LOG_CLEANUP_CRON_EXPRESSION
-    value: {{ .Values.billing.cleanup_data_feed_log.cron_expression }}
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: BILLING_LOG_CLEANUP_CRON_EXPRESSION
   - name: JWT_ISSUER_URI
     value: {{ .Values.jwt.issuerUri }}
   - name: CCLF_API_BASE_URL

@@ -78,10 +78,6 @@ xhibit_batch:
     cron_expression: '0 0 5 ? * MON-FRI'
   appeal_data_processing:
     cron_expression: '0 0 5 ? * MON-FRI'
-
-billing:
-  cleanup_data_feed_log:
-    cron_expression: '0 0 1 ? * MON-FRI'
     
 logging:
   level: DEBUG
