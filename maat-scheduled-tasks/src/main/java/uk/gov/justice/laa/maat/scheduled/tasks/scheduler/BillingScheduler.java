@@ -17,6 +17,11 @@ public class BillingScheduler {
     public static final Integer OLDER_THAN_DAYS = 30;
     
     private final BillingDataFeedLogService billingDataFeedLogService;
+
+    @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
+    public void extractCCLFBillingData() {
+        log.info("Starting extract for cclf billing data...");
+    }
     
     @Scheduled(cron = "${billing.cleanup_data_feed_log.cron_expression}")
     public void cleanupBillingDataFeedLog() {
