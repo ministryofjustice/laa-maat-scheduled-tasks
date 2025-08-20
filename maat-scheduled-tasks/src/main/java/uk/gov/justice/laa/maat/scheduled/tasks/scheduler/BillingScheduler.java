@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
@@ -33,6 +34,7 @@ public class BillingScheduler {
     private final RepOrderBillingService repOrderBillingService;
     private final ApplicantBillingService applicantBillingService;
     private final ApplicantHistoryBillingService applicantHistoryBillingService;
+    private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
 
     @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
     public void extractCCLFBillingData() {
@@ -44,7 +46,10 @@ public class BillingScheduler {
             List<ApplicantBillingDTO> applicants = applicantBillingService.findAllApplicantsForBilling();
             List<ApplicantHistoryBillingDTO> applicantHistories = applicantHistoryBillingService.extractApplicantHistory();
 
-            // TODO: Construct a request object and send request off to billing api
+            // TODO: Need to check for empty list and send only if list is not empty do this individually, or if rep orders empty then abort or sends???
+            crownCourtLitigatorFeesApiClient.updateRepOrders(repOrders);
+            crownCourtLitigatorFeesApiClient.updateApplicants(applicants);
+            crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistories);
 
             repOrderBillingService.resetRepOrdersSentForBilling(
                 ResetRepOrderBillingDTO.builder().userModified(USER_MODIFIED)
