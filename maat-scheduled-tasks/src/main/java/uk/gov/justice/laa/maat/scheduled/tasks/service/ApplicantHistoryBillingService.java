@@ -4,9 +4,13 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 
@@ -16,9 +20,38 @@ import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillin
 public class ApplicantHistoryBillingService {
 
     private final ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
+    private final BillingDataFeedLogService billingDataFeedLogService;
+    private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
 
-    public List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
+    @Transactional
+    public void sendApplicantHistoryToBilling(String userModified) {
+        List<ApplicantHistoryBillingDTO> applicantHistories = extractApplicantHistory();
+
+        if (!applicantHistories.isEmpty()) {
+            List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
+                .toList();
+
+            int rowsReset = resetApplicantHistory(
+                ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
+
+            if (rowsReset != ids.size()) {
+                throw new MAATScheduledTasksException(String.format(
+                    "Number of applicant history rows reset - %s does not equal the number of rows retrieved - %s.",
+                    rowsReset, ids));
+            }
+
+            // TODO: Don't think we can get the request body as declaritive web client, would this be good enough???
+            billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY,
+                applicantHistories.toString());
+
+            // TODO: Transactional should rollback as the declaritive web client throws a WebClientResponseException though get reviewed!!!
+            crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistories);
+            log.info("Extracted applicant history data has been sent to the billing team.");
+        }
+    }
+
+    private List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
         List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
         log.info("Application histories successfully extracted for billing data.");
 
@@ -27,12 +60,12 @@ public class ApplicantHistoryBillingService {
             .map(applicantHistoryBillingMapper::mapEntityToDTO)
             .toList();
     }
-    
-    public void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
+
+    private int resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
         List<Integer> ids = resetBillingDTO.getIds();
 
         log.info("Resetting CCLF flag for extracted applicant histories...");
-        applicantHistoryBillingRepository.resetApplicantHistory(
+        return applicantHistoryBillingRepository.resetApplicantHistory(
             resetBillingDTO.getUserModified(), ids);
     }
 }

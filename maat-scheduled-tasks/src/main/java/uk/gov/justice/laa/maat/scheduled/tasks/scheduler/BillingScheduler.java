@@ -34,37 +34,24 @@ public class BillingScheduler {
     private final RepOrderBillingService repOrderBillingService;
     private final ApplicantBillingService applicantBillingService;
     private final ApplicantHistoryBillingService applicantHistoryBillingService;
-    private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
 
     @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
     public void extractCCLFBillingData() {
         log.info("Starting extract for cclf billing data...");
+
         try {
             maatReferenceService.populateMaatReferences();
 
-            List<RepOrderBillingDTO> repOrders = repOrderBillingService.getRepOrdersForBilling();
-            List<ApplicantBillingDTO> applicants = applicantBillingService.findAllApplicantsForBilling();
-            List<ApplicantHistoryBillingDTO> applicantHistories = applicantHistoryBillingService.extractApplicantHistory();
-
-            // TODO: Need to check for empty list and send only if list is not empty do this individually, or if rep orders empty then abort or sends???
-            crownCourtLitigatorFeesApiClient.updateRepOrders(repOrders);
-            crownCourtLitigatorFeesApiClient.updateApplicants(applicants);
-            crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistories);
-
-            repOrderBillingService.resetRepOrdersSentForBilling(
-                ResetRepOrderBillingDTO.builder().userModified(USER_MODIFIED)
-                    .ids(repOrders.stream().map(RepOrderBillingDTO::getId).toList()).build());
-            applicantBillingService.resetApplicantBilling(
-                ResetApplicantBillingDTO.builder().userModified(USER_MODIFIED)
-                    .ids(applicants.stream().map(ApplicantBillingDTO::getId).toList()).build());
-            applicantHistoryBillingService.resetApplicantHistory(
-                ResetBillingDTO.builder().userModified(USER_MODIFIED).ids(
-                        applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId).toList())
-                    .build());
+            applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+            applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+            repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
             maatReferenceService.deleteMaatReferences();
         } catch () {
-
+            // TODO: What to do if exception encountered, exit code, 500???
+            // Generic SQL/DB exceptions
+            // Handle api client exceptions
+            // MAATScheduledTasksException maat refs table already populated
         }
     }
 
