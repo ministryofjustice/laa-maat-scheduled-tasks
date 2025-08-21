@@ -83,5 +83,10 @@ env:
         secretKeyRef:
             name: maat-scheduled-tasks-env-variables
             key: DATASOURCE_URL
+  - name: S3_DATA_BUCKET_NAME
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: AWS_S3_XHIBIT_DATA_BUCKET_NAME
 
 {{- end -}}
