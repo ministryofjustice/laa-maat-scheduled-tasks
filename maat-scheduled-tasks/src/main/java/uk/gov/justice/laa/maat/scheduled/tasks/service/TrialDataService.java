@@ -19,6 +19,7 @@ import java.util.Map;
 public class TrialDataService {
 
     static final String TRIAL_DATA_TO_MAAT_PROCEDURE = "hub.xhibit_file_load.process_trial_record";
+    static final String APPEAL_DATA_TO_MAAT_PROCEDURE = "hub.xhibit_file_load.process_appeal_record";
 
     private final XhibitDataService xhibitDataService;
 
@@ -49,7 +50,10 @@ public class TrialDataService {
 
     public void processAppealDataInToMaat() {
         log.info("Starting to process Appeal Data in to MAAT.");
-        // TODO
+        List<Integer> unprocessedIds = appealDataRepository.findAllUnprocessedIds();
+        for (Integer id : unprocessedIds) {
+            storedProcedureService.callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", id));
+        }
     }
 
     private void populateRecordSheets(RecordSheetType recordSheetType) {
