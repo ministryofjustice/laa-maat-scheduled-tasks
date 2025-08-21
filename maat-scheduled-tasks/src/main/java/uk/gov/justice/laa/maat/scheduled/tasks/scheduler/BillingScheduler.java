@@ -14,6 +14,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
@@ -37,21 +38,18 @@ public class BillingScheduler {
 
     @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
     public void extractCCLFBillingData() {
-        log.info("Starting extract for cclf billing data...");
-
         try {
+            log.info("Starting extract for cclf billing data...");
             maatReferenceService.populateMaatReferences();
 
             applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
             applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
             repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
-
+        } catch (Exception exception) {
+            // TODO: Double check what to do if exception raised for scheduled tasks
+            log.error(exception.getMessage());
+        } finally {
             maatReferenceService.deleteMaatReferences();
-        } catch () {
-            // TODO: What to do if exception encountered, exit code, 500???
-            // Generic SQL/DB exceptions
-            // Handle api client exceptions
-            // MAATScheduledTasksException maat refs table already populated
         }
     }
 

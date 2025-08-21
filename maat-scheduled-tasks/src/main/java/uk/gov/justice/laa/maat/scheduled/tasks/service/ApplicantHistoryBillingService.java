@@ -10,7 +10,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 
@@ -32,17 +31,12 @@ public class ApplicantHistoryBillingService {
             List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
                 .toList();
 
-            int rowsReset = resetApplicantHistory(
+            resetApplicantHistory(
                 ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
 
-            if (rowsReset != ids.size()) {
-                throw new MAATScheduledTasksException(String.format(
-                    "Number of applicant history rows reset - %s does not equal the number of rows retrieved - %s.",
-                    rowsReset, ids));
-            }
-
             // TODO: Don't think we can get the request body as declaritive web client, would this be good enough???
-            billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY,
+            billingDataFeedLogService.saveBillingDataFeed(
+                BillingDataFeedRecordType.APPLICANT_HISTORY,
                 applicantHistories.toString());
 
             // TODO: Transactional should rollback as the declaritive web client throws a WebClientResponseException though get reviewed!!!
@@ -61,11 +55,9 @@ public class ApplicantHistoryBillingService {
             .toList();
     }
 
-    private int resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
-        List<Integer> ids = resetBillingDTO.getIds();
-
-        log.info("Resetting CCLF flag for extracted applicant histories...");
-        return applicantHistoryBillingRepository.resetApplicantHistory(
-            resetBillingDTO.getUserModified(), ids);
+    private void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
+        log.info("Resetting CCLF flag for extracted applicant histories.");
+        applicantHistoryBillingRepository.resetApplicantHistory(resetBillingDTO.getUserModified(),
+            resetBillingDTO.getIds());
     }
 }

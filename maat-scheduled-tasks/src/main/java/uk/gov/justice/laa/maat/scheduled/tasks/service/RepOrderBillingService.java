@@ -10,12 +10,9 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
-import uk.gov.justice.laa.maat.scheduled.tasks.repository.BillingDataFeedLogRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
 
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -34,14 +31,8 @@ public class RepOrderBillingService {
         if (!repOrders.isEmpty()) {
             List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
 
-            int rowsReset = resetRepOrdersSentForBilling(
+            resetRepOrdersSentForBilling(
                 ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
-
-            if (rowsReset != ids.size()) {
-                throw new MAATScheduledTasksException(String.format(
-                    "Number of rep order rows reset - %s does not equal the number of rows retrieved - %s.",
-                    rowsReset, ids));
-            }
 
             // TODO: Don't think we can get the request body as declaritive web client, would this be good enough???
             billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
@@ -61,8 +52,8 @@ public class RepOrderBillingService {
             .toList();
     }
 
-    private int resetRepOrdersSentForBilling(ResetRepOrderBillingDTO resetRepOrderBillingDTO) {
-        return repOrderBillingRepository.resetBillingFlagForRepOrderIds(
+    private void resetRepOrdersSentForBilling(ResetRepOrderBillingDTO resetRepOrderBillingDTO) {
+        repOrderBillingRepository.resetBillingFlagForRepOrderIds(
             resetRepOrderBillingDTO.getUserModified(), resetRepOrderBillingDTO.getIds());
     }
 
