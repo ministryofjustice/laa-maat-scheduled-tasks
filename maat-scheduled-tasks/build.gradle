@@ -1,5 +1,3 @@
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.3'
@@ -39,6 +37,7 @@ dependencies {
 	implementation platform("io.sentry:sentry-bom:$versions.sentryVersion")
 	implementation platform("software.amazon.awssdk:bom:$versions.awsSdkVersion")
 
+	implementation "software.amazon.awssdk:sts"
 	implementation "software.amazon.awssdk:s3"
 	implementation "io.sentry:sentry-spring-boot-starter-jakarta"
 	implementation "io.sentry:sentry-logback"
