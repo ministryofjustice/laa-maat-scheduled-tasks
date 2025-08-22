@@ -1,12 +1,25 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
+import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
+import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
+import uk.gov.justice.laa.maat.scheduled.tasks.service.MaatReferenceService;
+import uk.gov.justice.laa.maat.scheduled.tasks.service.RepOrderBillingService;
 
 @Slf4j
 @Component
@@ -15,14 +28,36 @@ import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService
 public class BillingScheduler {
 
     public static final Integer OLDER_THAN_DAYS = 30;
-    
+    private static final String USER_MODIFIED = "scheduled"; // TODO: Whats the userModified going to be (limit of 10 on rep orders)???
+
     private final BillingDataFeedLogService billingDataFeedLogService;
-    
+    private final MaatReferenceService maatReferenceService;
+    private final RepOrderBillingService repOrderBillingService;
+    private final ApplicantBillingService applicantBillingService;
+    private final ApplicantHistoryBillingService applicantHistoryBillingService;
+
+    @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
+    public void extractCCLFBillingData() {
+        try {
+            log.info("Starting extract for cclf billing data...");
+            maatReferenceService.populateMaatReferences();
+
+            applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+            applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+            repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+        } catch (Exception exception) {
+            // TODO: Double check what to do if exception raised for scheduled tasks
+            log.error(exception.getMessage());
+        } finally {
+            maatReferenceService.deleteMaatReferences();
+        }
+    }
+
     @Scheduled(cron = "${billing.cleanup_data_feed_log.cron_expression}")
     public void cleanupBillingDataFeedLog() {
         log.info("Starting billing data feed log cleanup...");
         LocalDateTime dateThreshold = LocalDateTime.now().minusDays(OLDER_THAN_DAYS);
-        
+
         Long logsDeleted = billingDataFeedLogService.deleteLogsBeforeDate(dateThreshold);
         log.info("Billing data feed log cleanup completed. {} entries deleted.", logsDeleted);
     }
