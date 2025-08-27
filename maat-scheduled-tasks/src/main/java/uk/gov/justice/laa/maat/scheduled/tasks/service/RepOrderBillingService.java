@@ -34,11 +34,9 @@ public class RepOrderBillingService {
             resetRepOrdersSentForBilling(
                 ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
 
-            // TODO: Don't think we can get the request body as declaritive web client, would this be good enough???
             billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
                 repOrders.toString());
-
-            // TODO: Transactional should rollback as the declaritive web client throws a WebClientResponseException get reviewed!!!
+            
             crownCourtLitigatorFeesApiClient.updateRepOrders(repOrders);
             log.info("Extracted rep order data has been sent to the billing team.");
         }

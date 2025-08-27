@@ -78,6 +78,7 @@ xhibit-batch:
 
 billing:
   cclf_extract:
+    user_modified: "system"
     cron_expression: ${BILLING_CCLF_EXTRACT_CRON_EXPRESSION}
   cleanup_data_feed_log:
     cron_expression: ${BILLING_LOG_CLEANUP_CRON_EXPRESSION}

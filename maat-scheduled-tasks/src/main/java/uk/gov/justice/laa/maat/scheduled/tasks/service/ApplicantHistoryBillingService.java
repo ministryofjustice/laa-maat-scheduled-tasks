@@ -34,12 +34,10 @@ public class ApplicantHistoryBillingService {
             resetApplicantHistory(
                 ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
 
-            // TODO: Don't think we can get the request body as declaritive web client, would this be good enough???
             billingDataFeedLogService.saveBillingDataFeed(
                 BillingDataFeedRecordType.APPLICANT_HISTORY,
                 applicantHistories.toString());
 
-            // TODO: Transactional should rollback as the declaritive web client throws a WebClientResponseException though get reviewed!!!
             crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistories);
             log.info("Extracted applicant history data has been sent to the billing team.");
         }

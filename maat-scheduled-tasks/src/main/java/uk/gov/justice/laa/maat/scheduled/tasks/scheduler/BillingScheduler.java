@@ -1,20 +1,11 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
@@ -28,7 +19,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.service.RepOrderBillingService;
 public class BillingScheduler {
 
     public static final Integer OLDER_THAN_DAYS = 30;
-    private static final String USER_MODIFIED = "scheduled"; // TODO: Whats the userModified going to be (limit of 10 on rep orders)???
+    private static final String USER_MODIFIED = "${billing.cclf_extract.user_modified}";
 
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final MaatReferenceService maatReferenceService;
@@ -46,7 +37,6 @@ public class BillingScheduler {
             applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
             repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
         } catch (Exception exception) {
-            // TODO: Double check what to do if exception raised for scheduled tasks
             log.error(exception.getMessage());
         } finally {
             maatReferenceService.deleteMaatReferences();
