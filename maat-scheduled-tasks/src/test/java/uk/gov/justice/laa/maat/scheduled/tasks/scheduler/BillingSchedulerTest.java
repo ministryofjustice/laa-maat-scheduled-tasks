@@ -7,11 +7,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
@@ -26,6 +28,8 @@ public class BillingSchedulerTest {
     private BillingScheduler scheduler;
 
     @Mock
+    private BillingConfiguration billingConfiguration;
+    @Mock
     private MaatReferenceService maatReferenceService;
     @Mock
     private ApplicantBillingService applicantBillingService;
@@ -38,6 +42,8 @@ public class BillingSchedulerTest {
 
     @Test
     void givenNoExceptions_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformed() {
+        when(billingConfiguration.getUserModified()).thenReturn("test");
+
         scheduler.extractCCLFBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
