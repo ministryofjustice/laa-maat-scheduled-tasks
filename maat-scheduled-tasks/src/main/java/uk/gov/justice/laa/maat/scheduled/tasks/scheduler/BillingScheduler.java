@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
@@ -19,8 +20,8 @@ import uk.gov.justice.laa.maat.scheduled.tasks.service.RepOrderBillingService;
 public class BillingScheduler {
 
     public static final Integer OLDER_THAN_DAYS = 30;
-    private static final String USER_MODIFIED = "${billing.cclf_extract.user_modified}";
 
+    private final BillingConfiguration billingConfiguration;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final MaatReferenceService maatReferenceService;
     private final RepOrderBillingService repOrderBillingService;
@@ -33,9 +34,10 @@ public class BillingScheduler {
             log.info("Starting extract for cclf billing data...");
             maatReferenceService.populateMaatReferences();
 
-            applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
-            applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
-            repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+            applicantBillingService.sendApplicantsToBilling(billingConfiguration.getUserModified());
+            applicantHistoryBillingService.sendApplicantHistoryToBilling(
+                billingConfiguration.getUserModified());
+            repOrderBillingService.sendRepOrdersToBilling(billingConfiguration.getUserModified());
         } catch (Exception exception) {
             log.error(exception.getMessage());
         } finally {
