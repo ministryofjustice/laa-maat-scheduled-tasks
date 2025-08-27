@@ -1,21 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +29,23 @@ import uk.gov.justice.laa.maat.scheduled.tasks.matchers.CopyObjectRequestArgumen
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.DeleteObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.GetObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceTest {
@@ -151,13 +152,11 @@ class XhibitDataServiceTest {
 
     @Test
     void givenRecordSheets_whenMarkRecordSheetsAsProcessedIsInvoked_thenRecordSheetsAreUpdated() {
-        List<XhibitRecordSheetDTO> recordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
-
         setupCopyResponse("trial/file1.xml", "processed/trial/file1.xml", true);
         setupCopyResponse("trial/file2.xml", "processed/trial/file2.xml", true);
         setupDeleteResponse();
 
-        xhibitDataService.markRecordsSheetsAsProcessed(recordSheets, RecordSheetType.TRIAL);
+        xhibitDataService.markRecordsSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
 
         verify(s3Client, times(1)).copyObject(argThat(
             new CopyObjectRequestArgumentMatcher("trial/file1.xml", "processed/trial/file1.xml")));
@@ -171,13 +170,11 @@ class XhibitDataServiceTest {
 
     @Test
     void givenErrorCopyingOneFile_whenMarkRecordSheetsAsProcessedIsInvoked_thenPartialRecordSheetsAreUpdated() {
-        List<XhibitRecordSheetDTO> recordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
-
         setupCopyResponse("trial/file1.xml", "processed/trial/file1.xml", false);
         setupCopyResponse("trial/file2.xml", "processed/trial/file2.xml", true);
         setupDeleteResponse();
 
-        xhibitDataService.markRecordsSheetsAsProcessed(recordSheets, RecordSheetType.TRIAL);
+        xhibitDataService.markRecordsSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
 
         verify(s3Client, times(2)).copyObject(ArgumentMatchers.any(CopyObjectRequest.class));
         verify(s3Client, never()).deleteObject(argThat(
@@ -188,12 +185,10 @@ class XhibitDataServiceTest {
 
     @Test
     void markRecordSheetsAsProcessed_throwsException_whenUnhandledAwsExceptionOccurs() {
-        List<XhibitRecordSheetDTO> recordSheets = List.of(xhibitRecordSheet1);
-
         setupCopyResponse("trial/file1.xml", "processed/trial/file1.xml", true);
         doThrow(SdkClientException.class).when(s3Client).deleteObject(ArgumentMatchers.any(DeleteObjectRequest.class));
 
-        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.markRecordsSheetsAsProcessed(recordSheets, RecordSheetType.TRIAL));
+        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.markRecordsSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename()), RecordSheetType.TRIAL));
     }
 
     private void setupCopyResponse(String sourceKey, String destinationKey, boolean successful) {

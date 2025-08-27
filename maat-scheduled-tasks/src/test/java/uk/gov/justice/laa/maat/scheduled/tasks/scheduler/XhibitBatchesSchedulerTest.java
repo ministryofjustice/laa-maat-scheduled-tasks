@@ -26,9 +26,7 @@ class XhibitBatchesSchedulerTest {
 
         // Then
         verify(trialDataService, times(1))
-                .populateTrialData();
-        verify(trialDataService, times(1))
-                .processTrialDataInToMaat();
+            .populateAndProcessTrialDataInToMaat();
     }
 
     @Test
@@ -38,9 +36,7 @@ class XhibitBatchesSchedulerTest {
 
         // Then
         verify(trialDataService, times(1))
-                .populateAppealData();
-        verify(trialDataService, times(1))
-                .processAppealDataInToMaat();
+            .populateAndProcessAppealDataInToMaat();
     }
 
 }
