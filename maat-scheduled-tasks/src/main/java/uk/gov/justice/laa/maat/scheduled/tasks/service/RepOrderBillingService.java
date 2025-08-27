@@ -36,7 +36,7 @@ public class RepOrderBillingService {
 
             billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
                 repOrders.toString());
-            
+
             crownCourtLitigatorFeesApiClient.updateRepOrders(repOrders);
             log.info("Extracted rep order data has been sent to the billing team.");
         }
