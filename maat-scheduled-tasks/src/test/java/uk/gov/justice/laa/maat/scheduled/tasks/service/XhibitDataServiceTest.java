@@ -50,6 +50,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceTest {
 
+    private static final String OBJECT_PREFIX = "trial/";
     @Mock
     private S3Client s3Client;
 
@@ -81,17 +82,17 @@ class XhibitDataServiceTest {
     }
 
     @Test
-    void getRecordSheets_whenNoDataFound_thenReturnsEmptyList() {
+    void buildRecordSheets_Response_whenNoDataFound_thenReturnsEmptyList() {
         when(listObjectsV2Response.contents()).thenReturn(Collections.emptyList());
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.buildRecordSheetsResponse(new GetRecordSheetsResponse(), OBJECT_PREFIX);
 
         assertTrue(recordSheetsResponse.getRetrievedRecordSheets().isEmpty());
     }
 
     @Test
-    void getRecordSheets_whenDataFound_thenReturnsRecordSheets() {
+    void buildRecordSheets_whenDataFound_thenReturnsRecordSheetsResponse() {
         when(listObjectsV2Response.contents()).thenReturn(List.of(
             S3Object.builder().key("trial/file1.xml").build(),
             S3Object.builder().key("trial/file2.xml").build()
@@ -105,13 +106,13 @@ class XhibitDataServiceTest {
         setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.buildRecordSheetsResponse(new GetRecordSheetsResponse(), OBJECT_PREFIX);
 
         assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
     }
 
     @Test
-    void getRecordSheets_returnsErroredRecordSheets_whenDataCannotBeRetrieved() {
+    void buildRecordSheets_returnsErroredRecordSheets_Response_whenDataCannotBeRetrieved() {
         when(listObjectsV2Response.contents()).thenReturn(List.of(
             S3Object.builder().key("trial/file1.xml").build(),
             S3Object.builder().key("trial/file2.xml").build(),
@@ -128,7 +129,7 @@ class XhibitDataServiceTest {
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
         setupErrorFileResponse("trial/file3.xml");
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.buildRecordSheetsResponse(new GetRecordSheetsResponse(), OBJECT_PREFIX);
 
         assertEquals(expectedSuccessfulRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
         assertEquals(expectedErroredRecordSheets, recordSheetsResponse.getErroredRecordSheets().stream().map(
@@ -136,15 +137,15 @@ class XhibitDataServiceTest {
     }
 
     @Test
-    void getRecordSheets_throwsException_whenUnhandledAwsExceptionOccurs() {
+    void buildRecordSheets_Response_throwsException_whenUnhandledAwsExceptionOccurs() {
         doThrow(SdkClientException.class).when(s3Client).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class));
 
-        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null));
+        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.buildRecordSheetsResponse(new GetRecordSheetsResponse(), OBJECT_PREFIX));
     }
 
     @Test
     void givenNoRecordSheets_whenMarkRecordSheetsAsProcessedIsInvoked_thenNoRecordSheetsAreUpdated() {
-        xhibitDataService.markRecordsSheetsAsProcessed(Collections.emptyList(), RecordSheetType.TRIAL);
+        xhibitDataService.markRecordSheetsAsProcessed(Collections.emptyList(), RecordSheetType.TRIAL);
 
         verify(s3Client, never()).copyObject(ArgumentMatchers.any(CopyObjectRequest.class));
         verify(s3Client, never()).deleteObject(ArgumentMatchers.any(DeleteObjectRequest.class));
@@ -156,7 +157,7 @@ class XhibitDataServiceTest {
         setupCopyResponse("trial/file2.xml", "processed/trial/file2.xml", true);
         setupDeleteResponse();
 
-        xhibitDataService.markRecordsSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
+        xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
 
         verify(s3Client, times(1)).copyObject(argThat(
             new CopyObjectRequestArgumentMatcher("trial/file1.xml", "processed/trial/file1.xml")));
@@ -174,7 +175,7 @@ class XhibitDataServiceTest {
         setupCopyResponse("trial/file2.xml", "processed/trial/file2.xml", true);
         setupDeleteResponse();
 
-        xhibitDataService.markRecordsSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
+        xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
 
         verify(s3Client, times(2)).copyObject(ArgumentMatchers.any(CopyObjectRequest.class));
         verify(s3Client, never()).deleteObject(argThat(
@@ -188,7 +189,7 @@ class XhibitDataServiceTest {
         setupCopyResponse("trial/file1.xml", "processed/trial/file1.xml", true);
         doThrow(SdkClientException.class).when(s3Client).deleteObject(ArgumentMatchers.any(DeleteObjectRequest.class));
 
-        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.markRecordsSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename()), RecordSheetType.TRIAL));
+        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1), RecordSheetType.TRIAL));
     }
 
     private void setupCopyResponse(String sourceKey, String destinationKey, boolean successful) {
