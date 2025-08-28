@@ -52,14 +52,13 @@ class TrialDataServiceTest {
 
     @Test
     void givenNoUnprocessedRecordSheets_whenPopulateAndProcessTrialDataIsInvoked_thenNoDataInToMaatIsPopulated() {
-        when(getRecordSheetsResponse.allRecordSheetsRetrieved()).thenReturn(true);
-        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null)).thenReturn(getRecordSheetsResponse);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL)).thenReturn(getRecordSheetsResponse);
 
         trialDataService.populateAndProcessTrialDataInToMaat();
 
         verify(trialDataRepository, never()).saveAll(any());
-        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, null);
-        verify(xhibitDataService, never()).markRecordsSheetsAsProcessed(any(), any());
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL);
+        verify(xhibitDataService, never()).markRecordSheetsAsProcessed(any(), any());
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
         verify(storedProcedureService, never()).callStoredProcedure(any(), any());
     }
@@ -68,9 +67,8 @@ class TrialDataServiceTest {
     void givenUnprocessRecordSheetsThatAreSuccessfullyRetrieved_whenPopulateAndProcessTrialDataIsInvoked_thenDataInToMaatIsPopulated() {
         when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(List.of(xhibitRecordSheet1, xhibitRecordSheet2));
         when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(Collections.emptyList());
-        when(getRecordSheetsResponse.allRecordSheetsRetrieved()).thenReturn(true);
 
-        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null)).thenReturn(getRecordSheetsResponse);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL)).thenReturn(getRecordSheetsResponse);
         when(trialDataRepository.findAll()).thenReturn(List.of(
             XhibitTrialDataEntity.builder().id(1).filename(xhibitRecordSheet1.getFilename()).data(xhibitRecordSheet1.getData()).build(),
             XhibitTrialDataEntity.builder().id(2).filename(xhibitRecordSheet2.getFilename()).data(xhibitRecordSheet2.getData()).build()
@@ -79,10 +77,10 @@ class TrialDataServiceTest {
         trialDataService.populateAndProcessTrialDataInToMaat();
 
         verify(trialDataRepository, times(1)).saveAll(any());
-        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, null);
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL);
         verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", 1));
         verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", 2));
-        verify(xhibitDataService, times(1)).markRecordsSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
+        verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
     }
 
@@ -90,36 +88,28 @@ class TrialDataServiceTest {
     void givenUnprocessedRecordSheetsThatCannotBeRetrieved_whenPopulateAndProcessTrialDataIsInvoked_thenNoDataInToMaatIsPopulated() {
         when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(Collections.emptyList());
         when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(List.of(xhibitRecordSheet1, xhibitRecordSheet2));
-        when(getRecordSheetsResponse.allRecordSheetsRetrieved()).thenReturn(true);
 
-        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null)).thenReturn(getRecordSheetsResponse);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL)).thenReturn(getRecordSheetsResponse);
 
         trialDataService.populateAndProcessTrialDataInToMaat();
 
         verify(trialDataRepository, never()).saveAll(any());
-        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, null);
-        verify(xhibitDataService, never()).markRecordsSheetsAsProcessed(any(), any());
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL);
+        verify(xhibitDataService, never()).markRecordSheetsAsProcessed(any(), any());
         verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(any(), any());
     }
 
     @Test
     void givenMultiplePagesOfUnprocessedRecordSheets_whenPopulateAndProcessTrialDataIsInvoked_thenDataInToMaatIsPopulated() {
-        GetRecordSheetsResponse firstResponse = GetRecordSheetsResponse.builder()
-            .retrievedRecordSheets(List.of(xhibitRecordSheet1))
-            .erroredRecordSheets(Collections.emptyList())
-            .continuationToken("test-continuation-token")
-            .allRecordSheetsRetrieved(false)
-            .build();
-
-        GetRecordSheetsResponse secondResponse = GetRecordSheetsResponse.builder()
-            .retrievedRecordSheets(List.of(xhibitRecordSheet2))
+        GetRecordSheetsResponse response = GetRecordSheetsResponse.builder()
+            .retrievedRecordSheets(List.of(xhibitRecordSheet1, xhibitRecordSheet2))
             .erroredRecordSheets(Collections.emptyList())
             .continuationToken(null)
             .allRecordSheetsRetrieved(true)
             .build();
 
-        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null)).thenReturn(firstResponse);
-        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, "test-continuation-token")).thenReturn(secondResponse);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL)).thenReturn(response);
+        when(xhibitDataService.getRecordSheets(RecordSheetType.TRIAL)).thenReturn(response);
         when(trialDataRepository.findAll()).thenReturn(List.of(
             XhibitTrialDataEntity.builder().id(1).filename(xhibitRecordSheet1.getFilename()).data(xhibitRecordSheet1.getData()).build(),
             XhibitTrialDataEntity.builder().id(2).filename(xhibitRecordSheet2.getFilename()).data(xhibitRecordSheet2.getData()).build()
@@ -127,12 +117,11 @@ class TrialDataServiceTest {
 
         trialDataService.populateAndProcessTrialDataInToMaat();
 
-        verify(trialDataRepository, times(2)).saveAll(any());
-        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, null);
-        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL, "test-continuation-token");
+        verify(trialDataRepository, times(1)).saveAll(any());
+        verify(xhibitDataService, times(1)).getRecordSheets(RecordSheetType.TRIAL);
         verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", 1));
         verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", 2));
-        verify(xhibitDataService, times(1)).markRecordsSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
+        verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
     }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.maat.scheduled.tasks.service.AppealDataService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService;
 
 import static org.mockito.Mockito.times;
@@ -15,7 +16,8 @@ class XhibitBatchesSchedulerTest {
 
     @InjectMocks
     private XhibitBatchesScheduler scheduler;
-
+    @Mock
+    private AppealDataService appealDataService;
     @Mock
     private TrialDataService trialDataService;
 
@@ -35,7 +37,7 @@ class XhibitBatchesSchedulerTest {
         scheduler.executeAppealDataProcessing();
 
         // Then
-        verify(trialDataService, times(1))
+        verify(appealDataService, times(1))
             .populateAndProcessAppealDataInToMaat();
     }
 
