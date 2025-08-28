@@ -13,7 +13,7 @@ java {
 }
 
 def versions = [
-		sentryVersion			: "8.13.0",
+		sentryVersion			: "8.20.0",
 		ojdbcVersion			: "21.7.0.0",
 		mapstructVersion		: "1.6.3",
 		crimeCommonsClasses		: "4.11.1",
