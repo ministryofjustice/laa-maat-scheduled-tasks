@@ -27,20 +27,22 @@ public class ApplicantHistoryBillingService {
     public void sendApplicantHistoryToBilling(String userModified) {
         List<ApplicantHistoryBillingDTO> applicantHistories = extractApplicantHistory();
 
-        if (!applicantHistories.isEmpty()) {
-            List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
-                .toList();
-
-            resetApplicantHistory(
-                ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
-
-            billingDataFeedLogService.saveBillingDataFeed(
-                BillingDataFeedRecordType.APPLICANT_HISTORY,
-                applicantHistories.toString());
-
-            crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistories);
-            log.info("Extracted applicant history data has been sent to the billing team.");
+        if (applicantHistories.isEmpty()) {
+            return;
         }
+
+        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
+            .toList();
+
+        resetApplicantHistory(
+            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
+
+        billingDataFeedLogService.saveBillingDataFeed(
+            BillingDataFeedRecordType.APPLICANT_HISTORY,
+            applicantHistories.toString());
+
+        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistories);
+        log.info("Extracted applicant history data has been sent to the billing team.");
     }
 
     private List<ApplicantHistoryBillingDTO> extractApplicantHistory() {

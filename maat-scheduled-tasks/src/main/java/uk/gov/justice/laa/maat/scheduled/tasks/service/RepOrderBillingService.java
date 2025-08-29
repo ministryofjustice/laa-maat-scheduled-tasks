@@ -28,18 +28,20 @@ public class RepOrderBillingService {
     public void sendRepOrdersToBilling(String userModified) {
         List<RepOrderBillingDTO> repOrders = getRepOrdersForBilling();
 
-        if (!repOrders.isEmpty()) {
-            List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
-
-            resetRepOrdersSentForBilling(
-                ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
-
-            billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
-                repOrders.toString());
-
-            crownCourtLitigatorFeesApiClient.updateRepOrders(repOrders);
-            log.info("Extracted rep order data has been sent to the billing team.");
+        if (repOrders.isEmpty()) {
+            return;
         }
+
+        List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
+
+        resetRepOrdersSentForBilling(
+            ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
+
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
+            repOrders.toString());
+
+        crownCourtLitigatorFeesApiClient.updateRepOrders(repOrders);
+        log.info("Extracted rep order data has been sent to the billing team.");
     }
 
     private List<RepOrderBillingDTO> getRepOrdersForBilling() {

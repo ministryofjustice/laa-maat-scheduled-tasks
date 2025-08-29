@@ -28,18 +28,20 @@ public class ApplicantBillingService {
     public void sendApplicantsToBilling(String userModified) {
         List<ApplicantBillingDTO> applicants = findAllApplicantsForBilling();
 
-        if (!applicants.isEmpty()) {
-            List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
-
-            resetApplicantBilling(
-                ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
-
-            billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
-                applicants.toString());
-
-            crownCourtLitigatorFeesApiClient.updateApplicants(applicants);
-            log.info("Extracted applicant data has been sent to the billing team.");
+        if (applicants.isEmpty()) {
+            return;
         }
+
+        List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
+
+        resetApplicantBilling(
+            ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
+
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
+            applicants.toString());
+
+        crownCourtLitigatorFeesApiClient.updateApplicants(applicants);
+        log.info("Extracted applicant data has been sent to the billing team.");
     }
 
     private List<ApplicantBillingDTO> findAllApplicantsForBilling() {

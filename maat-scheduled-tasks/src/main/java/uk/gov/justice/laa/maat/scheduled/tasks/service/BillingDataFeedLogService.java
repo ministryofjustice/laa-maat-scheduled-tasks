@@ -19,10 +19,11 @@ public class BillingDataFeedLogService {
     private final BillingDataFeedLogRepository billingDataFeedLogRepository;
 
     public void saveBillingDataFeed(BillingDataFeedRecordType recordType, String payload) {
-        BillingDataFeedLogEntity entity = new BillingDataFeedLogEntity();
-        entity.setRecordType(recordType.getValue());
-        entity.setDateCreated(LocalDateTime.now());
-        entity.setPayload(payload);
+        BillingDataFeedLogEntity entity = BillingDataFeedLogEntity.builder()
+            .recordType(recordType.getValue())
+            .dateCreated(LocalDateTime.now())
+            .payload(payload)
+            .build();
         billingDataFeedLogRepository.save(entity);
     }
     

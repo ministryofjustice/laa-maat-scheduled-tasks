@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
-@RequiredArgsConstructor
 @ConfigurationProperties(prefix = "billing")
 public class BillingConfiguration {
 
