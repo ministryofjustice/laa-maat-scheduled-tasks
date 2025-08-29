@@ -60,24 +60,6 @@ aws_region: eu-west-2
 host_env: test
 sentry:
   sampleRate: 0.05
-
-maat_batch:
-  lmr_reports:
-    cron_expression:  '0 0 1 * * ?'
-  evidence_reminder_letter:
-    cron_expression:  '0 0 21 ? * MON-FRI'
-  inactive_users:
-    cron_expression: '0 0 13 ? * SAT'
-  fa_fix:
-    cron_expression: '0 30 20 * * ?'
-  central_print:
-    cron_expression: '0 30 21 ? * MON-FRI'
-
-xhibit_batch:
-  trial_data_processing:
-    cron_expression: '0 0 5 ? * MON-FRI'
-  appeal_data_processing:
-    cron_expression: '0 0 5 ? * MON-FRI'
     
 logging:
   level: INFO
