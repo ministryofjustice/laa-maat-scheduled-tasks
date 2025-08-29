@@ -21,7 +21,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  name: "maat-scheduled-tasks"
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
@@ -61,24 +61,6 @@ host_env: production
 sentry:
   sampleRate: 1.0
 
-maat_batch:
-  lmr_reports:
-    cron_expression:  '0 0 1 * * ?'
-  evidence_reminder_letter:
-    cron_expression:  '0 0 21 ? * MON-FRI'
-  inactive_users:
-    cron_expression: '0 0 13 ? * SAT'
-  fa_fix:
-    cron_expression: '0 30 20 * * ?'
-  central_print:
-    cron_expression: '0 30 21 ? * MON-FRI'
-
-xhibit_batch:
-  trial_data_processing:
-    cron_expression: '0 0 0 1 1 *'
-  appeal_data_processing:
-    cron_expression: '0 0 0 1 1 *'
-    
 logging:
   level: INFO
 

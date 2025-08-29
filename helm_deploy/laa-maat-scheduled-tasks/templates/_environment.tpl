@@ -16,19 +16,40 @@ env:
   - name: SENTRY_SAMPLE_RATE
     value: {{ .Values.sentry.sampleRate | quote }}
   - name: LMR_REPORTS
-    value: {{ .Values.maat_batch.lmr_reports.cron_expression }}
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: LMR_REPORTS
   - name: EVIDENCE_REMINDER_LETTER
-    value: {{ .Values.maat_batch.evidence_reminder_letter.cron_expression }}
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: EVIDENCE_REMINDER_LETTER
   - name: INACTIVATE_USERS
-    value: {{ .Values.maat_batch.inactive_users.cron_expression }}
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: INACTIVATE_USERS
   - name: FA_FIX
-    value: {{ .Values.maat_batch.fa_fix.cron_expression }}
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: FA_FIX
   - name: CENTRAL_PRINT
-    value: {{ .Values.maat_batch.central_print.cron_expression }}
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: CENTRAL_PRINT
   - name: APPEAL_DATA_CRON_EXPRESSION
-    value: {{ .Values.xhibit_batch.appeal_data_processing.cron_expression }}
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: APPEAL_DATA_CRON_EXPRESSION
   - name: TRIAL_DATA_CRON_EXPRESSION
-    value: {{ .Values.xhibit_batch.trial_data_processing.cron_expression }}
+    valueFrom:
+    secretKeyRef:
+        name: maat-scheduled-tasks-env-variables
+        key: TRIAL_DATA_CRON_EXPRESSION
   - name: BILLING_CCLF_EXTRACT_CRON_EXPRESSION
     valueFrom:
       secretKeyRef:
@@ -73,6 +94,11 @@ env:
     value: {{ .Values.logging.level }}
   - name: AWS_DEFAULT_REGION
     value: {{ .Values.aws_region }}
+  - name: AWS_S3_XHIBIT_DATA_BUCKET_NAME
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: AWS_S3_XHIBIT_DATA_BUCKET_NAME
   - name: DATASOURCE_USERNAME
     valueFrom:
         secretKeyRef:
@@ -88,5 +114,10 @@ env:
         secretKeyRef:
             name: maat-scheduled-tasks-env-variables
             key: DATASOURCE_URL
+  - name: S3_DATA_BUCKET_NAME
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: AWS_S3_XHIBIT_DATA_BUCKET_NAME
 
 {{- end -}}
