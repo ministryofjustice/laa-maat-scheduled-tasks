@@ -29,7 +29,6 @@ public interface ApplicantBillingRepository extends JpaRepository<ApplicantBilli
     List<ApplicantBillingEntity> findAllApplicantsForBilling();
 
     @Modifying
-    @Transactional
     @Query(value = """
         UPDATE TOGDATA.applicants
         SET     send_to_cclf = NULL,

@@ -34,7 +34,7 @@ public class WebClientsConfig {
     private static final String CCLF_API_WEB_CLIENT_NAME = "crownCourtLitigatorFeesApiWebClient";
     private static final String CCR_API_WEB_CLIENT_NAME = "crownCourtRemunerationApiWebClient";
 
-   /* @Bean
+    @Bean
     WebClientCustomizer webClientCustomizer() {
         ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
                 .maxConnections(500)
@@ -84,7 +84,7 @@ public class WebClientsConfig {
         return httpServiceProxyFactory.createClient(CrownCourtLitigatorFeesApiClient.class);
     }
 
-    @Bean(CCR_API_WEB_CLIENT_NAME)
+    /*@Bean(CCR_API_WEB_CLIENT_NAME)
     WebClient crownCourtRemunerationApiWebClient(WebClient.Builder clientBuilder,
                                                   ServicesConfiguration servicesConfiguration,
                                                   ClientRegistrationRepository clientRegistrations,
@@ -108,7 +108,7 @@ public class WebClientsConfig {
         HttpServiceProxyFactory httpServiceProxyFactory =
                 HttpServiceProxyFactory.builderFor(WebClientAdapter.create(webClient)).build();
         return httpServiceProxyFactory.createClient(CrownCourtRemunerationApiClient.class);
-    }
+    }*/
 
     private void configureFilters(List<ExchangeFilterFunction> filters,
                                   ServletOAuth2AuthorizedClientExchangeFilterFunction oauthFilter,
@@ -119,5 +119,5 @@ public class WebClientsConfig {
         filters.add(WebClientFilters.errorResponseHandler());
         filters.add(WebClientFilters.handleNotFoundResponse());
         filters.add(WebClientFilters.logResponse());
-    }*/
+    }
 }
