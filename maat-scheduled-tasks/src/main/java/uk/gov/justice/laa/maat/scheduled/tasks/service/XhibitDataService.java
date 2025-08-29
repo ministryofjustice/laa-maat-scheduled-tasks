@@ -1,13 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.Map;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
@@ -24,13 +18,15 @@ import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
-import software.amazon.awssdk.services.s3.model.ObjectNotInActiveTierErrorException;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
+
+import java.text.MessageFormat;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -41,7 +37,19 @@ public class XhibitDataService {
 
     private final XhibitConfiguration xhibitConfiguration;
 
-    public GetRecordSheetsResponse getRecordSheets(RecordSheetType recordSheetType, String continuationToken) {
+    public GetRecordSheetsResponse getRecordSheets(RecordSheetType recordSheetType) {
+        GetRecordSheetsResponse recordSheetsResponse;
+        String continuationToken = null;
+
+        do {
+            recordSheetsResponse = buildRecordSheetsResponse(recordSheetType, continuationToken);
+            continuationToken = recordSheetsResponse.getContinuationToken();
+        } while (!recordSheetsResponse.allRecordSheetsRetrieved());
+
+        return recordSheetsResponse;
+    }
+
+    GetRecordSheetsResponse buildRecordSheetsResponse(RecordSheetType recordSheetType, String continuationToken) {
         try {
             GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
 
@@ -96,23 +104,23 @@ public class XhibitDataService {
         }
     }
 
-    public void markRecordsSheetsAsProcessed(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
-        renameRecordSheets(recordSheets, recordSheetType, RecordSheetStatus.PROCESSED);
+    public void markRecordSheetsAsProcessed(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
+        List<String> fileNames = recordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList();
+        renameRecordSheets(fileNames, recordSheetType, RecordSheetStatus.PROCESSED);
     }
 
     public void markRecordSheetsAsErrored(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
-        renameRecordSheets(recordSheets, recordSheetType, RecordSheetStatus.ERRORED);
+        List<String> fileNames = recordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList();
+        renameRecordSheets(fileNames, recordSheetType, RecordSheetStatus.ERRORED);
     }
 
-    private void renameRecordSheets(List<XhibitRecordSheetDTO> recordSheets,
+    private void renameRecordSheets(List<String> fileNames,
         RecordSheetType recordSheetType, RecordSheetStatus recordSheetStatus) {
         String sourceKeyPrefix = getPrefixString(recordSheetType);
         String destinationKeyPrefix = getPrefixString(recordSheetType, recordSheetStatus);
 
         try {
-            recordSheets.forEach(recordSheet -> {
-                String fileName = recordSheet.getFilename();
-
+            fileNames.forEach(fileName -> {
                 CopyObjectRequest copyObjectrequest = CopyObjectRequest.builder()
                     .sourceBucket(xhibitConfiguration.getS3DataBucketName())
                     .sourceKey(sourceKeyPrefix + fileName)
@@ -128,14 +136,14 @@ public class XhibitDataService {
                 CopyObjectResponse copyObjectResponse = s3Client.copyObject(copyObjectrequest);
                 if (copyObjectResponse == null || copyObjectResponse.copyObjectResult() == null
                     || !StringUtils.hasLength( copyObjectResponse.copyObjectResult().eTag())) {
-                    log.warn("Failed to copy record sheet {} with source key {}, skipping delete", recordSheet.getFilename(), copyObjectrequest.sourceKey());
+                    log.warn("Failed to copy record sheet {} with source key {}, skipping delete", fileName, copyObjectrequest.sourceKey());
 
                     return;
                 }
 
                 DeleteObjectResponse deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
                 if (!deleteObjectResponse.sdkHttpResponse().isSuccessful()) {
-                    log.warn("Failed to delete record sheet {} with source key {}", recordSheet.getFilename(), deleteObjectRequest.key());
+                    log.warn("Failed to delete record sheet {} with source key {}", fileName, deleteObjectRequest.key());
                 }
             });
         } catch (SdkClientException | AwsServiceException ex) {
