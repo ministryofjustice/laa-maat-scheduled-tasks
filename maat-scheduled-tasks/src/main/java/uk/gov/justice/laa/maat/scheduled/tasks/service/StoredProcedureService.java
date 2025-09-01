@@ -13,6 +13,8 @@ import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureExceptio
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,33 +28,49 @@ public class StoredProcedureService {
 
     @Transactional
     public void callStoredProcedure(String storedProcedureName) {
-        createAndExecuteStoredProcedure(storedProcedureName, Collections.emptyMap());
+        createAndExecuteStoredProcedure(storedProcedureName, Collections.emptyMap(), Collections.emptyMap());
     }
 
     @Transactional
-    public void callStoredProcedure(String storedProcedureName, Map<String, Object> parameterMap) {
-        createAndExecuteStoredProcedure(storedProcedureName, parameterMap);
+    public void callStoredProcedure(String storedProcedureName, Map<String, Object> inputParams, Map<String, Class<?>> outputParams) {
+        createAndExecuteStoredProcedure(storedProcedureName, inputParams, outputParams);
     }
 
-    private void createAndExecuteStoredProcedure(String storedProcedureName, Map<String, Object> parameterMap) {
+    private void createAndExecuteStoredProcedure(String storedProcedureName, Map<String, Object> inputParams, Map<String, Class<?>> outputParams) {
         if (!StringUtils.hasText(storedProcedureName)) {
-            throw new IllegalArgumentException(EMPTY_PROCEDURE_NAME_MESSAGE
-            );
+            throw new IllegalArgumentException(EMPTY_PROCEDURE_NAME_MESSAGE);
         }
 
         StoredProcedureQuery storedProcedureQuery = entityManager.createStoredProcedureQuery(storedProcedureName);
-        for (var entry : parameterMap.entrySet()) {
+        for (var entry : inputParams.entrySet()) {
             storedProcedureQuery.registerStoredProcedureParameter(entry.getKey(), entry.getValue().getClass(), ParameterMode.IN);
             storedProcedureQuery.setParameter(entry.getKey(), entry.getValue());
+        }
+        for (var entry : outputParams.entrySet()) {
+            storedProcedureQuery.registerStoredProcedureParameter(entry.getKey(), entry.getValue(), ParameterMode.OUT);
         }
 
         try {
             log.info("Executing stored procedure: {}", storedProcedureName);
             storedProcedureQuery.execute();
-            log.info("Completed stored procedure: {}", storedProcedureName);
+            log.info("Completed stored procedure: { procedure: {} outputParameters: {} }",
+                storedProcedureName,
+                getOutputParamValues(outputParams, storedProcedureQuery));
         } catch (Exception e) {
-            log.error("Error executing stored procedure {}: {}", storedProcedureName, e.getMessage());
+            log.error("Error executing stored procedure { procedure: {}, outputParameters: {}, exception: {} }",
+                storedProcedureName,
+                getOutputParamValues(outputParams, storedProcedureQuery),
+                e.getMessage());
             throw new StoredProcedureException("Failed to execute stored procedure: " + storedProcedureName, e);
         }
+    }
+
+    private Map<String, String> getOutputParamValues(Map<String, Class<?>> outputParams, StoredProcedureQuery storedProcedureQuery) {
+        return outputParams.keySet()
+            .stream()
+            .collect(Collectors.toMap(
+                Function.identity(),
+                k -> String.valueOf(storedProcedureQuery.getOutputParameterValue(k))
+            ));
     }
 }

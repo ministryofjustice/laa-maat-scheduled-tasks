@@ -18,6 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AppealDataService {
 
+    static final Map<String, Class<?>> OUTPUT_PARAMS = Map.of("p_error_code", String.class, "p_err_msg", String.class);
     static final String APPEAL_DATA_TO_MAAT_PROCEDURE = "hub.xhibit_file_load.process_appeal_record";
 
     private final XhibitDataService xhibitDataService;
@@ -50,8 +51,10 @@ public class AppealDataService {
             log.info("No appeal data found to process, aborting");
             return;
         }
+
         for (XhibitAppealDataEntity record : toProcess) {
-            storedProcedureService.callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", record.getId()));
+            Map<String, Object> inputParams = Map.of("id", record.getId());
+            storedProcedureService.callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, inputParams, OUTPUT_PARAMS);
         }
         log.info("Processed appeal data in to MAAT. { records: {} }", toProcess.size());
 
