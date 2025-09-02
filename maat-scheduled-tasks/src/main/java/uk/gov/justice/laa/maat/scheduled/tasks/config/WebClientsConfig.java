@@ -10,6 +10,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
@@ -59,13 +64,35 @@ public class WebClientsConfig {
     }
 
     @Bean
+    public OAuth2AuthorizedClientManager authorizedClientManager(
+        ClientRegistrationRepository clientRegistrationRepository,
+        OAuth2AuthorizedClientService clientService) {
+
+        OAuth2AuthorizedClientProvider authorizedClientProvider =
+            OAuth2AuthorizedClientProviderBuilder.builder()
+                .refreshToken()
+                .clientCredentials()
+                .build();
+
+        AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
+            new AuthorizedClientServiceOAuth2AuthorizedClientManager(clientRegistrationRepository, clientService);
+
+        authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+
+        return authorizedClientManager;
+    }
+
+    @Bean
     WebClient crownCourtLitigatorFeesApiWebClient(WebClient.Builder clientBuilder,
                                                   ServicesConfiguration servicesConfiguration,
                                                   ClientRegistrationRepository clientRegistrations,
-                                                  OAuth2AuthorizedClientRepository authorizedClients,
+                                                  OAuth2AuthorizedClientService clientService,
+//                                                  OAuth2AuthorizedClientRepository authorizedClients,
                                                   RetryRegistry retryRegistry) {
+//        ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Filter =
+//                new ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients);
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Filter =
-                new ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients);
+                new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager(clientRegistrations, clientService));
         oauth2Filter.setDefaultClientRegistrationId(servicesConfiguration.getCclfApi().getRegistrationId());
 
         Resilience4jRetryFilter retryFilter = new Resilience4jRetryFilter(retryRegistry, CCLF_API_WEB_CLIENT_NAME);
