@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitAppealDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
-import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitAppealDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
 import java.util.List;
@@ -16,18 +16,18 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TrialDataService {
+public class AppealDataService {
 
     static final Map<String, Class<?>> OUTPUT_PARAMS = Map.of("p_error_code", String.class, "p_err_msg", String.class);
-    static final String TRIAL_DATA_TO_MAAT_PROCEDURE = "hub.xhibit_file_load.process_trial_record";
+    static final String APPEAL_DATA_TO_MAAT_PROCEDURE = "hub.xhibit_file_load.process_appeal_record";
 
     private final XhibitDataService xhibitDataService;
-    private final XhibitTrialDataRepository trialDataRepository;
+    private final XhibitAppealDataRepository appealDataRepository;
     private final StoredProcedureService storedProcedureService;
 
     @Transactional
-    public void populateAndProcessTrialDataInToMaat() {
-        RecordSheetType recordSheetType = RecordSheetType.TRIAL;
+    public void populateAndProcessAppealDataInToMaat() {
+        RecordSheetType recordSheetType = RecordSheetType.APPEAL;
 
         GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(recordSheetType);
 
@@ -39,32 +39,31 @@ public class TrialDataService {
 
         List<XhibitRecordSheetDTO> recordSheets = recordSheetsResponse.getRetrievedRecordSheets();
         if (recordSheets.isEmpty()) {
-            log.info("No trial data found to process, aborting");
+            log.info("No appeal data found to process, aborting");
             return;
         }
 
         saveRecordSheets(recordSheets);
-        log.info("Populated trial data in to hub.");
+        log.info("Populated appeal data in to hub.");
 
-        List<XhibitTrialDataEntity> toProcess = trialDataRepository.findAll();
+        List<XhibitAppealDataEntity> toProcess = appealDataRepository.findAll();
         if (toProcess.isEmpty()) {
-            log.info("No trial data found to process, aborting");
+            log.info("No appeal data found to process, aborting");
             return;
         }
 
-        for (XhibitTrialDataEntity record : toProcess) {
+        for (XhibitAppealDataEntity record : toProcess) {
             Map<String, Object> inputParams = Map.of("id", record.getId());
-            storedProcedureService.callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, inputParams, OUTPUT_PARAMS);
+            storedProcedureService.callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, inputParams, OUTPUT_PARAMS);
         }
-        log.info("Processed trial data in to MAAT. { records: {} }", toProcess.size());
+        log.info("Processed appeal data in to MAAT. { records: {} }", toProcess.size());
 
         xhibitDataService.markRecordSheetsAsProcessed(recordSheets, recordSheetType);
-        log.info("Marked trial record sheets as processed.");
+        log.info("Marked appeal record sheets as processed.");
     }
 
     private void saveRecordSheets(List<XhibitRecordSheetDTO> recordSheets) {
-        List<XhibitTrialDataEntity> entities = recordSheets.stream().map(XhibitTrialDataEntity::fromDto).toList();
-        trialDataRepository.saveAll(entities);
+        List<XhibitAppealDataEntity> entities = recordSheets.stream().map(XhibitAppealDataEntity::fromDto).toList();
+        appealDataRepository.saveAll(entities);
     }
-
 }

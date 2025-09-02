@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 
 @Builder
 @AllArgsConstructor
@@ -26,13 +27,17 @@ public class XhibitAppealDataEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "xhibit_appeal_data_gen_seq")
     private Integer id;
 
-    @Column(name = "STATUS")
-    private String status;
-
     @Column(name = "FILENAME")
     private String filename;
 
     @Column(name = "XML_CLOB")
     @Lob
     private String data;
+
+    public static XhibitAppealDataEntity fromDto(XhibitRecordSheetDTO dto) {
+        return builder()
+            .filename(dto.getFilename())
+            .data(dto.getData())
+            .build();
+    }
 }
