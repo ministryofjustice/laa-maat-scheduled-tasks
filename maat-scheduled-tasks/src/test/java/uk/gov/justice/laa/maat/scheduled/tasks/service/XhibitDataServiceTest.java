@@ -195,7 +195,7 @@ class XhibitDataServiceTest {
         setupCopyResponse("trial/file2.xml", "processed/trial/file2.xml", true);
         setupDeleteResponse();
 
-        xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
+        xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
 
         verify(s3Client, times(1)).copyObject(argThat(
             new CopyObjectRequestArgumentMatcher("trial/file1.xml", "processed/trial/file1.xml")));
@@ -213,7 +213,7 @@ class XhibitDataServiceTest {
         setupCopyResponse("trial/file2.xml", "processed/trial/file2.xml", true);
         setupDeleteResponse();
 
-        xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
+        xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
 
         verify(s3Client, times(2)).copyObject(ArgumentMatchers.any(CopyObjectRequest.class));
         verify(s3Client, never()).deleteObject(argThat(
@@ -227,7 +227,7 @@ class XhibitDataServiceTest {
         setupCopyResponse("trial/file1.xml", "processed/trial/file1.xml", true);
         doThrow(SdkClientException.class).when(s3Client).deleteObject(ArgumentMatchers.any(DeleteObjectRequest.class));
 
-        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1), RecordSheetType.TRIAL));
+        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename()), RecordSheetType.TRIAL));
     }
 
     private void setupCopyResponse(String sourceKey, String destinationKey, boolean successful) {
