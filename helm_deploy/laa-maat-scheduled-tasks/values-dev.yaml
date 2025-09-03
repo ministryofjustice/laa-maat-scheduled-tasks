@@ -87,7 +87,7 @@ jwt:
   issuerUri: https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_JODrSUTLu
 
 cclfApi:
-  baseUrl: https://cclf-dev.apps.live.cloud-platform.service.justice.gov.uk/cclf/api/v1
+  baseUrl: https://laa-crown-court-litigator-fees-app.laa-crown-court-litigator-fees-dev.svc.cluster.local/cclf/api/v1
   oauthUrl: https://cclf-dev.auth.eu-west-2.amazoncognito.com/oauth2/token
 
 ccrApi:

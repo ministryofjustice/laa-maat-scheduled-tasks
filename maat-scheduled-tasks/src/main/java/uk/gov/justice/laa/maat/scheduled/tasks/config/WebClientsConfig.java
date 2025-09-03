@@ -37,8 +37,6 @@ public class WebClientsConfig {
     private static final String CCLF_API_WEB_CLIENT_NAME = "crownCourtLitigatorFeesApiWebClient";
     private static final String CCR_API_WEB_CLIENT_NAME = "crownCourtRemunerationApiWebClient";
 
-    private final ServicesConfiguration servicesConfiguration;
-
     @Bean
     WebClientCustomizer webClientCustomizer() {
         ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
