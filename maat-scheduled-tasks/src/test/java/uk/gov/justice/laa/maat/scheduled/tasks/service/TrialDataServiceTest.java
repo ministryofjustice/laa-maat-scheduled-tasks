@@ -8,20 +8,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService.OUTPUT_PARAMS;
+import static uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService.OUTPUT_PARAMETERS;
 import static uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService.TRIAL_DATA_TO_MAAT_PROCEDURE;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,11 +65,16 @@ class TrialDataServiceTest {
         verify(xhibitDataService, times(1)).getAllRecordSheets(RecordSheetType.TRIAL);
         verify(xhibitDataService, never()).markRecordSheetsAsProcessed(any(), any());
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
-        verify(storedProcedureService, never()).callStoredProcedure(any(), any(), anyMap());
+        verify(storedProcedureService, never()).callStoredProcedure(any(), any());
     }
 
     @Test
     void givenUnprocessRecordSheetsThatAreSuccessfullyRetrieved_whenPopulateAndProcessTrialDataIsInvoked_thenDataInToMaatIsPopulated() {
+        List<StoredProcedureParameter<?>> procedureParameters1 = new ArrayList<>(OUTPUT_PARAMETERS);
+        procedureParameters1.add(StoredProcedureParameter.inputParameter("id", 1));
+        List<StoredProcedureParameter<?>> procedureParameters2 = new ArrayList<>(OUTPUT_PARAMETERS);
+        procedureParameters2.add(StoredProcedureParameter.inputParameter("id", 2));
+
         when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(List.of(xhibitRecordSheet1, xhibitRecordSheet2));
         when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(Collections.emptyList());
 
@@ -80,9 +88,9 @@ class TrialDataServiceTest {
 
         verify(trialDataRepository, times(1)).saveAll(any());
         verify(xhibitDataService, times(1)).getAllRecordSheets(RecordSheetType.TRIAL);
-        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", 1), OUTPUT_PARAMS);
-        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", 2), OUTPUT_PARAMS);
-        verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
+        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, procedureParameters1);
+        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, procedureParameters2);
+        verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
     }
 
@@ -110,6 +118,11 @@ class TrialDataServiceTest {
             .allRecordSheetsRetrieved(true)
             .build();
 
+        List<StoredProcedureParameter<?>> procedureParameters1 = new ArrayList<>(OUTPUT_PARAMETERS);
+        procedureParameters1.add(StoredProcedureParameter.inputParameter("id", 1));
+        List<StoredProcedureParameter<?>> procedureParameters2 = new ArrayList<>(OUTPUT_PARAMETERS);
+        procedureParameters2.add(StoredProcedureParameter.inputParameter("id", 2));
+
         when(xhibitDataService.getAllRecordSheets(RecordSheetType.TRIAL)).thenReturn(response);
         when(xhibitDataService.getAllRecordSheets(RecordSheetType.TRIAL)).thenReturn(response);
         when(trialDataRepository.findAll()).thenReturn(List.of(
@@ -121,9 +134,36 @@ class TrialDataServiceTest {
 
         verify(trialDataRepository, times(1)).saveAll(any());
         verify(xhibitDataService, times(1)).getAllRecordSheets(RecordSheetType.TRIAL);
-        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", 1), OUTPUT_PARAMS);
-        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, Map.of("id", 2), OUTPUT_PARAMS);
-        verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
+        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, procedureParameters1);
+        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, procedureParameters2);
+        verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename(), xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
+    }
+
+    @Test
+    void givenStoredProcedureFailures_whenHandlingExceptions_FailedRecordsAreMarked() {
+        List<StoredProcedureParameter<?>> procedureParameters1 = new ArrayList<>(OUTPUT_PARAMETERS);
+        procedureParameters1.add(StoredProcedureParameter.inputParameter("id", 1));
+        List<StoredProcedureParameter<?>> procedureParameters2 = new ArrayList<>(OUTPUT_PARAMETERS);
+        procedureParameters2.add(StoredProcedureParameter.inputParameter("id", 2));
+
+        when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(List.of(xhibitRecordSheet1, xhibitRecordSheet2));
+        when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(Collections.emptyList());
+
+        when(xhibitDataService.getAllRecordSheets(RecordSheetType.TRIAL)).thenReturn(getRecordSheetsResponse);
+        when(trialDataRepository.findAll()).thenReturn(List.of(
+            XhibitTrialDataEntity.builder().id(1).filename(xhibitRecordSheet1.getFilename()).data(xhibitRecordSheet1.getData()).build(),
+            XhibitTrialDataEntity.builder().id(2).filename(xhibitRecordSheet2.getFilename()).data(xhibitRecordSheet2.getData()).build()
+        ));
+
+        doNothing().when(storedProcedureService).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, procedureParameters1);
+        doThrow(StoredProcedureException.class).when(storedProcedureService).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, procedureParameters2);
+
+        trialDataService.populateAndProcessTrialDataInToMaat();
+
+        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, procedureParameters1);
+        verify(storedProcedureService, times(1)).callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, procedureParameters2);
+        verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename()), RecordSheetType.TRIAL);
+        verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(List.of(xhibitRecordSheet2.getFilename()), RecordSheetType.TRIAL);
     }
 }
