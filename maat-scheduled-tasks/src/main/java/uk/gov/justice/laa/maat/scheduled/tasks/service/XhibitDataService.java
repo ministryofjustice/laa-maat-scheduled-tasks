@@ -48,7 +48,7 @@ public class XhibitDataService {
         return recordSheetsResponse;
     }
 
-    GetRecordSheetsResponse buildRecordSheetsResponse(GetRecordSheetsResponse recordSheetsResponse, String objectKeyPrefix) {
+    private GetRecordSheetsResponse buildRecordSheetsResponse(GetRecordSheetsResponse recordSheetsResponse, String objectKeyPrefix) {
         String continuationToken = recordSheetsResponse.getContinuationToken();
         ListObjectsV2Request.Builder listObjectsRequestBuilder = ListObjectsV2Request.builder()
             .bucket(xhibitConfiguration.getS3DataBucketName())
