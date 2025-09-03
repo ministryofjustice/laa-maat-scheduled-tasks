@@ -52,6 +52,8 @@ xhibit-batch:
   appeal_data_processing:
     cron_expression: 0 0 9 * * *
 
+  s3-page-size: 1
+
 billing:
   cleanup_data_feed_log:
     cron_expression: 0 0 9 * * *

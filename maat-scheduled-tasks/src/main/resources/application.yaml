@@ -75,6 +75,7 @@ xhibit-batch:
   object-key-errored-prefix: "errored"
 
   s3-data-bucket-name: ${AWS_S3_XHIBIT_DATA_BUCKET_NAME}
+  s3-page-size: ${AWS_S3_PAGE_SIZE}
 
 billing:
   cleanup_data_feed_log:
