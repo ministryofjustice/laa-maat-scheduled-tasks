@@ -93,3 +93,6 @@ cclfApi:
 ccrApi:
   baseUrl: https://ccr-dev.apps.live.cloud-platform.service.justice.gov.uk/ccr/api/v1
   oauthUrl: https://ccr-dev.auth.eu-west-2.amazoncognito.com/oauth2/token
+
+xhibitBatch:
+  fetchSize: 1

@@ -89,6 +89,8 @@ env:
     value: {{ .Values.logging.level }}
   - name: AWS_DEFAULT_REGION
     value: {{ .Values.aws_region }}
+  - name: XHIBIT_BATCH_FETCH_SIZE
+    value: {{ .Values.xhibitBatch.fetchSize }}
   - name: AWS_S3_XHIBIT_DATA_BUCKET_NAME
     valueFrom:
         secretKeyRef:
