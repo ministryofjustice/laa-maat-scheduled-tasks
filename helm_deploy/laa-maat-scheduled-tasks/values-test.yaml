@@ -95,4 +95,4 @@ ccrApi:
   oauthUrl: https://ccr-staging.auth.eu-west-2.amazoncognito.com/oauth2/token
 
 xhibitBatch:
-  s3PageSize: 1
+  fetchSize: 1

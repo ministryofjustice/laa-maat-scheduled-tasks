@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +23,6 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.CopyObjectRequestArgumentMatcher;
@@ -50,8 +48,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService.OUTPUT_PARAMS;
-import static uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService.TRIAL_DATA_TO_MAAT_PROCEDURE;
 
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceTest {
@@ -86,7 +82,7 @@ class XhibitDataServiceTest {
         lenient().when(xhibitConfiguration.getObjectKeyProcessedPrefix()).thenReturn("processed");
         lenient().when(xhibitConfiguration.getObjectKeyErroredPrefix()).thenReturn("errored");
         lenient().when(xhibitConfiguration.getS3DataBucketName()).thenReturn("bucket");
-        lenient().when(xhibitConfiguration.getS3PageSize()).thenReturn(1);
+        lenient().when(xhibitConfiguration.getFetchSize()).thenReturn(1);
     }
 
     @Test

@@ -26,5 +26,5 @@ public class XhibitConfiguration {
     private final String s3DataBucketName;
 
     @NotNull
-    private final int s3PageSize;
+    private final int fetchSize;
 }
