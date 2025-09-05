@@ -1,22 +1,21 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 
 import java.util.List;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedApplicantBillingEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantDTO;
@@ -24,41 +23,46 @@ import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuild
 @ExtendWith(MockitoExtension.class)
 class ApplicantBillingServiceTest {
 
-    private static final int TEST_ID_1 = 1;
-    private static final int TEST_ID_2 = 2;
+    private static final int TEST_ID = 1;
+    private static final String USER_MODIFIED = "TEST";
 
     @Mock
     private ApplicantBillingRepository applicantBillingRepository;
     @Mock
     private ApplicantMapper applicantMapper;
+    @Mock
+    private BillingDataFeedLogService billingDataFeedLogService;
+    @Mock
+    private CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     @InjectMocks
     private ApplicantBillingService applicantBillingService;
 
     @Test
-    void givenApplicantData_WhenExtracted_ThenMappedCorrectlyToDTOList() {
-        ApplicantBillingEntity entity1 = getPopulatedApplicantBillingEntity(TEST_ID_1);
-        ApplicantBillingEntity entity2 = getPopulatedApplicantBillingEntity(TEST_ID_2);
+    void giveCCLFDataAvailable_whenSendApplicantsToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
+        ApplicantBillingEntity entity = getPopulatedApplicantBillingEntity(TEST_ID);
+        ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
 
-        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity1, entity2));
+        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity));
+        when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
+        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
 
-        ApplicantBillingDTO dto1 = getApplicantDTO(TEST_ID_1);
-        ApplicantBillingDTO dto2 = getApplicantDTO(TEST_ID_2);
+        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 
-        when(applicantMapper.mapEntityToDTO(entity1)).thenReturn(dto1);
-        when(applicantMapper.mapEntityToDTO(entity2)).thenReturn(dto2);
-
-        assertEquals(List.of(dto1, dto2), applicantBillingService.findAllApplicantsForBilling());
-        verify(applicantBillingRepository, times(1)).findAllApplicantsForBilling();
+        verify(applicantBillingRepository).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
+        verify(crownCourtLitigatorFeesApiClient).updateApplicants(any(UpdateApplicantsRequest.class));
     }
 
     @Test
-    void givenValidData_whenResetApplicantBillingIsInvoked_shouldCallResetApplicantBillingOnRepository() {
-        ResetApplicantBillingDTO resetApplicantBillingDTO = TestModelDataBuilder.getResetApplicantBillingDTO();
-        when(applicantBillingRepository.resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified()))
-            .thenReturn(2);
-        
-        applicantBillingService.resetApplicantBilling(resetApplicantBillingDTO);
+    void givenNoCCLFDataAvailable_whenSendApplicantsToBillingIsInvoked_thenNoActionsPerformed() {
+        ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
 
-        verify(applicantBillingRepository).resetApplicantBilling(resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
+        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
+
+        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+
+        verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
+        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(any(UpdateApplicantsRequest.class));
     }
 }

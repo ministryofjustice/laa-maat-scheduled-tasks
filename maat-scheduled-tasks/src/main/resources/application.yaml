@@ -77,6 +77,9 @@ xhibit-batch:
   s3-data-bucket-name: ${AWS_S3_XHIBIT_DATA_BUCKET_NAME}
 
 billing:
+  user-modified: "system"
+  cclf_extract:
+    cron_expression: ${BILLING_CCLF_EXTRACT_CRON_EXPRESSION}
   cleanup_data_feed_log:
     cron_expression: ${BILLING_LOG_CLEANUP_CRON_EXPRESSION}
   
