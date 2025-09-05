@@ -13,6 +13,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 
 import java.util.List;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 
 @Slf4j
 @Service
@@ -40,7 +41,10 @@ public class ApplicantBillingService {
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
             applicants.toString());
 
-        crownCourtLitigatorFeesApiClient.updateApplicants(applicants);
+        UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
+            .defendants(applicants).build();
+
+        crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
         log.info("Extracted applicant data has been sent to the billing team.");
     }
 
