@@ -9,6 +9,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
 import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
@@ -65,13 +66,7 @@ public class TrialDataService {
         List<String> successfulProcedureFilenames = new ArrayList<>();
         List<String> failedProcedureFilenames = new ArrayList<>();
         for (XhibitTrialDataEntity record : toProcess) {
-            Collection<StoredProcedureParameter<?>> parameters = getProcedureParameters(record);
-            try {
-                storedProcedureService.callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, parameters);
-                successfulProcedureFilenames.add(record.getFilename());
-            } catch (StoredProcedureException e) {
-                failedProcedureFilenames.add(record.getFilename());
-            }
+            processTrialRecord(record, failedProcedureFilenames, successfulProcedureFilenames);
         }
 
         if (!failedProcedureFilenames.isEmpty()) {
@@ -79,14 +74,40 @@ public class TrialDataService {
             log.info("Marked errored record sheets from failed stored procedure { records: {} }.", failedProcedureFilenames.size());
         }
 
-        log.info("Processed trial data in to MAAT. { records: {} }", successfulProcedureFilenames.size());
+        if (!successfulProcedureFilenames.isEmpty()) {
+            log.info("Processed trial data in to MAAT. { records: {} }", successfulProcedureFilenames.size());
+        }
 
         xhibitDataService.markRecordSheetsAsProcessed(successfulProcedureFilenames, recordSheetType);
         log.info("Marked trial record sheets as processed.");
     }
 
-    private static Collection<StoredProcedureParameter<?>> getProcedureParameters(XhibitTrialDataEntity record) {
-        Collection<StoredProcedureParameter<?>> parameters = new ArrayList<>(OUTPUT_PARAMETERS);
+    private void processTrialRecord(XhibitTrialDataEntity record, List<String> failedProcedureFilenames, List<String> successfulProcedureFilenames) {
+        List<StoredProcedureParameter<?>> parameters = getProcedureParameters(record);
+        try {
+            StoredProcedureResponse storedProcedureResponse = storedProcedureService.callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, parameters);
+            if (isErrored(storedProcedureResponse)) {
+                log.error("Trial data stored procedure returned an error: { procedure: {}, recordId: {}, errorCode: {}, errorMessage: {} }",
+                    TRIAL_DATA_TO_MAAT_PROCEDURE,
+                    record.getId(),
+                    storedProcedureResponse.getValue("p_error_code"),
+                    storedProcedureResponse.getValue("p_err_msg")
+                );
+                failedProcedureFilenames.add(record.getFilename());
+            } else {
+                successfulProcedureFilenames.add(record.getFilename());
+            }
+        } catch (StoredProcedureException e) {
+            failedProcedureFilenames.add(record.getFilename());
+        }
+    }
+
+    private static boolean isErrored(StoredProcedureResponse storedProcedureResponse) {
+        return storedProcedureResponse.hasValue("p_err_msg") && storedProcedureResponse.hasValue("p_error_code");
+    }
+
+    private static List<StoredProcedureParameter<?>> getProcedureParameters(XhibitTrialDataEntity record) {
+        List<StoredProcedureParameter<?>> parameters = new ArrayList<>(OUTPUT_PARAMETERS);
         parameters.add(inputParameter("id", record.getId()));
         return parameters;
     }
@@ -95,5 +116,4 @@ public class TrialDataService {
         List<XhibitTrialDataEntity> entities = recordSheets.stream().map(XhibitTrialDataEntity::fromDto).toList();
         trialDataRepository.saveAll(entities);
     }
-
 }

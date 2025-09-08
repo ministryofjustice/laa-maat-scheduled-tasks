@@ -10,6 +10,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitAppealDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
 import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitAppealDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
 
@@ -18,13 +19,14 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.outputParameter;
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.populatedOutParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.service.AppealDataService.APPEAL_DATA_TO_MAAT_PROCEDURE;
 import static uk.gov.justice.laa.maat.scheduled.tasks.service.AppealDataService.OUTPUT_PARAMETERS;
 
@@ -66,7 +68,7 @@ class AppealDataServiceTest {
         verify(xhibitDataService, times(1)).getAllRecordSheets(RecordSheetType.APPEAL);
         verify(xhibitDataService, never()).markRecordSheetsAsProcessed(any(), any());
         verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
-        verify(storedProcedureService, never()).callStoredProcedure(any(), anyCollection());
+        verify(storedProcedureService, never()).callStoredProcedure(any(), anyList());
     }
 
     @Test
@@ -84,6 +86,7 @@ class AppealDataServiceTest {
             XhibitAppealDataEntity.builder().id(1).filename(xhibitRecordSheet1.getFilename()).data(xhibitRecordSheet1.getData()).build(),
             XhibitAppealDataEntity.builder().id(2).filename(xhibitRecordSheet2.getFilename()).data(xhibitRecordSheet2.getData()).build()
         ));
+        when(storedProcedureService.callStoredProcedure(any(), anyList())).thenReturn(new StoredProcedureResponse(List.of()));
 
         appealDataService.populateAndProcessAppealDataInToMaat();
 
@@ -130,6 +133,7 @@ class AppealDataServiceTest {
             XhibitAppealDataEntity.builder().id(1).filename(xhibitRecordSheet1.getFilename()).data(xhibitRecordSheet1.getData()).build(),
             XhibitAppealDataEntity.builder().id(2).filename(xhibitRecordSheet2.getFilename()).data(xhibitRecordSheet2.getData()).build()
         ));
+        when(storedProcedureService.callStoredProcedure(any(), anyList())).thenReturn(new StoredProcedureResponse(List.of()));
 
         appealDataService.populateAndProcessAppealDataInToMaat();
 
@@ -157,7 +161,7 @@ class AppealDataServiceTest {
             XhibitAppealDataEntity.builder().id(2).filename(xhibitRecordSheet2.getFilename()).data(xhibitRecordSheet2.getData()).build()
         ));
 
-        doNothing().when(storedProcedureService).callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, procedureParameters1);
+        when(storedProcedureService.callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, procedureParameters1)).thenReturn(new StoredProcedureResponse(List.of()));
         doThrow(StoredProcedureException.class).when(storedProcedureService).callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, procedureParameters2);
 
         appealDataService.populateAndProcessAppealDataInToMaat();
@@ -166,5 +170,26 @@ class AppealDataServiceTest {
         verify(storedProcedureService, times(1)).callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, procedureParameters2);
         verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1.getFilename()), RecordSheetType.APPEAL);
         verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(List.of(xhibitRecordSheet2.getFilename()), RecordSheetType.APPEAL);
+    }
+
+    @Test
+    void givenStoredProcedureResponse_whenContainsErrorCodeOutput_thenMarkFailed() {
+        List<StoredProcedureParameter<?>> procedureParameters = new ArrayList<>(AppealDataService.OUTPUT_PARAMETERS);
+        procedureParameters.add(StoredProcedureParameter.inputParameter("id", 1));
+        StoredProcedureResponse errorResponse = new StoredProcedureResponse(List.of(
+            populatedOutParameter(outputParameter("p_error_code", String.class), "23"),
+            populatedOutParameter(outputParameter("p_err_msg", String.class), "error message")
+        ));
+
+        when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(List.of(xhibitRecordSheet1));
+        when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(Collections.emptyList());
+        when(xhibitDataService.getAllRecordSheets(RecordSheetType.APPEAL)).thenReturn(getRecordSheetsResponse);
+        when(appealDataRepository.findAll()).thenReturn(List.of(
+            XhibitAppealDataEntity.builder().id(1).filename(xhibitRecordSheet1.getFilename()).data(xhibitRecordSheet1.getData()).build()
+        ));
+        when(storedProcedureService.callStoredProcedure(APPEAL_DATA_TO_MAAT_PROCEDURE, procedureParameters)).thenReturn(errorResponse);
+
+        appealDataService.populateAndProcessAppealDataInToMaat();
+        verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(List.of(xhibitRecordSheet1.getFilename()), RecordSheetType.APPEAL);
     }
 }

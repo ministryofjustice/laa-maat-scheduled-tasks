@@ -28,5 +28,29 @@ public final class StoredProcedureParameter<T> {
         Class<T> type = (Class<T>) value.getClass();
         return new StoredProcedureParameter<>(name, type, value, ParameterMode.INOUT);
     }
+
+    @SuppressWarnings("unchecked")
+    public static <T> StoredProcedureParameter<T> safePopulate(StoredProcedureParameter<?> parameter, Object value) {
+        if (value == null) {
+            return (StoredProcedureParameter<T>) parameter;
+        }
+        if (!parameter.getType().isInstance(value)) {
+            String typeMismatchError = "Type mismatch for parameter: %s, expected: %s, but got: %s"
+                .formatted(
+                    parameter.getName(),
+                    parameter.getType().getSimpleName(),
+                    value.getClass().getSimpleName()
+                );
+            throw new IllegalArgumentException(typeMismatchError);
+        }
+
+        Class<T> type = (Class<T>) parameter.getType();
+        T castedValue = type.cast(value);
+        return parameterWithValue((StoredProcedureParameter<T>) parameter, castedValue);
+    }
+
+    static <T> StoredProcedureParameter<T> parameterWithValue(StoredProcedureParameter<T> parameter, T value) {
+        return new StoredProcedureParameter<>(parameter.name, parameter.type, value, parameter.mode);
+    }
 }
 

@@ -11,11 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
 import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.populatedOutParameter;
 
 @Service
 @RequiredArgsConstructor
@@ -34,11 +36,11 @@ public class StoredProcedureService {
     }
 
     @Transactional
-    public void callStoredProcedure(String name, Collection<StoredProcedureParameter<?>> parameters) {
-        createAndExecuteStoredProcedure(name, parameters);
+    public StoredProcedureResponse callStoredProcedure(String storedProcedureName, List<StoredProcedureParameter<?>> parameters) {
+        return createAndExecuteStoredProcedure(storedProcedureName, parameters);
     }
 
-    private void createAndExecuteStoredProcedure(String name, Collection<StoredProcedureParameter<?>> parameters) {
+    private StoredProcedureResponse createAndExecuteStoredProcedure(String name, List<StoredProcedureParameter<?>> parameters) {
         if (!StringUtils.hasText(name)) {
             throw new IllegalArgumentException(EMPTY_PROCEDURE_NAME_MESSAGE);
         }
@@ -47,19 +49,15 @@ public class StoredProcedureService {
 
         try {
             storedProcedureQuery.execute();
-            log.info("Completed stored procedure: { procedure: {} outputParameters: {} }",
-                name,
-                getOutputParamValues(storedProcedureQuery, parameters));
+            log.info("Completed stored procedure: { procedure: {} }", name);
+            return getStoredProcedureResponse(storedProcedureQuery, parameters);
         } catch (Exception e) {
-            log.error("Error executing stored procedure { procedure: {}, outputParameters: {} }",
-                name,
-                getOutputParamValues(storedProcedureQuery, parameters),
-                e);
+            log.error("Error executing stored procedure { procedure: {} }", name, e);
             throw new StoredProcedureException(STORED_PROCEDURE_FAILURE_MESSAGE + name, e);
         }
     }
 
-    private StoredProcedureQuery getStoredProcedureQuery(String name, Collection<StoredProcedureParameter<?>> parameters) {
+    private StoredProcedureQuery getStoredProcedureQuery(String name, List<StoredProcedureParameter<?>> parameters) {
         StoredProcedureQuery storedProcedureQuery = entityManager.createStoredProcedureQuery(name);
         for (StoredProcedureParameter<?> parameter : parameters) {
             String parameterName = parameter.getName();
@@ -73,12 +71,16 @@ public class StoredProcedureService {
         return storedProcedureQuery;
     }
 
-    private Map<String, String> getOutputParamValues(StoredProcedureQuery storedProcedureQuery, Collection<StoredProcedureParameter<?>> parameters) {
-        return parameters.stream()
+    private StoredProcedureResponse getStoredProcedureResponse(StoredProcedureQuery storedProcedureQuery, List<StoredProcedureParameter<?>> parameters) {
+        List<StoredProcedureParameter<?>> outputParametersWithValues = parameters.stream()
             .filter(p -> p.getMode() == ParameterMode.OUT || p.getMode() == ParameterMode.INOUT)
-            .collect(Collectors.toMap(
-                StoredProcedureParameter::getName,
-                p -> String.valueOf(storedProcedureQuery.getOutputParameterValue(p.getName()))
-            ));
+            .map(p -> {
+                @SuppressWarnings("unchecked")
+                StoredProcedureParameter<Object> param = (StoredProcedureParameter<Object>) p;
+                Object value = storedProcedureQuery.getOutputParameterValue(p.getName());
+                return populatedOutParameter(param, value);
+            })
+            .collect(Collectors.toList());
+        return new StoredProcedureResponse(outputParametersWithValues);
     }
 }

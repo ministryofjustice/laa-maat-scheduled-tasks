@@ -10,19 +10,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
 import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
 
-import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inOutParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inputParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.outputParameter;
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.populatedOutParameter;
 
 @ExtendWith(MockitoExtension.class)
 class StoredProcedureServiceTest {
@@ -86,7 +86,7 @@ class StoredProcedureServiceTest {
     @Test
     void testCalledStoredProcedure_withParameters_registeredAndExecutedSuccessfully() {
         String procedureName = "my_procedure";
-        Collection<StoredProcedureParameter<?>> parameters = List.of(
+        List<StoredProcedureParameter<?>> parameters = List.of(
             inputParameter("inParam1", "value1"),
             inputParameter("inParam2", 3),
             outputParameter("outParam1", String.class),
@@ -119,23 +119,26 @@ class StoredProcedureServiceTest {
     }
 
     @Test
-    void executedStoredProcedure_outputParams_valuesRetrievedForLogging() {
+    void executedStoredProcedure_outputParams_populatedAndReturnedInResponse() {
         String procedureName = "my_procedure";
-        Collection<StoredProcedureParameter<?>> parameters = List.of(
-            inputParameter("inParam1", "value1"),
-            outputParameter("outParam1", String.class),
-            inOutParameter("inOutParam1", "inOutValue")
+        List<StoredProcedureParameter<?>> parameters = List.of(
+            outputParameter("outParam1", Integer.class),
+            outputParameter("outParam2", String.class),
+            outputParameter("outParam3", Object.class)
         );
 
         when(entityManager.createStoredProcedureQuery(procedureName)).thenReturn(storedProcedureQuery);
-        when(storedProcedureQuery.getOutputParameterValue("outParam1")).thenReturn("returnValue");
-        when(storedProcedureQuery.getOutputParameterValue("inOutParam1")).thenReturn("inOutValue");
+        when(storedProcedureQuery.getOutputParameterValue("outParam1")).thenReturn(3);
+        when(storedProcedureQuery.getOutputParameterValue("outParam2")).thenReturn("outValue");
+        when(storedProcedureQuery.getOutputParameterValue("outParam3")).thenReturn(null);
 
-        storedProcedureService.callStoredProcedure(procedureName, parameters);
-
-        verify(storedProcedureQuery).execute();
-        verify(storedProcedureQuery).getOutputParameterValue("outParam1");
-        verify(storedProcedureQuery).getOutputParameterValue("inOutParam1");
-        verify(storedProcedureQuery, never()).getOutputParameterValue("inParam");
+        StoredProcedureResponse expectedResponse = new StoredProcedureResponse(
+            List.of(
+                populatedOutParameter(outputParameter("outParam1", Integer.class), 3),
+                populatedOutParameter(outputParameter("outParam2", String.class), "outValue"),
+                populatedOutParameter(outputParameter("outParam3", Object.class), null)
+            )
+        );
+        assertEquals(expectedResponse, storedProcedureService.callStoredProcedure(procedureName, parameters));
     }
 }
