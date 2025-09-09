@@ -48,19 +48,23 @@ public class XhibitDataService {
         return recordSheetsResponse;
     }
 
-    GetRecordSheetsResponse buildRecordSheetsResponse(GetRecordSheetsResponse recordSheetsResponse, String objectKeyPrefix) {
+    private GetRecordSheetsResponse buildRecordSheetsResponse(GetRecordSheetsResponse recordSheetsResponse, String objectKeyPrefix) {
         String continuationToken = recordSheetsResponse.getContinuationToken();
         ListObjectsV2Request.Builder listObjectsRequestBuilder = ListObjectsV2Request.builder()
             .bucket(xhibitConfiguration.getS3DataBucketName())
+            .maxKeys(xhibitConfiguration.getFetchSize())
             .prefix(objectKeyPrefix);
+
         if (continuationToken != null) {
             listObjectsRequestBuilder.continuationToken(continuationToken);
         }
+
         ListObjectsV2Request listObjectsV2Request = listObjectsRequestBuilder.build();
 
         try {
             ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsV2Request);
             List<S3Object> contents = listObjectsResponse.contents();
+
             if (contents.isEmpty()) {
                 recordSheetsResponse.allRecordSheetsRetrieved(true);
                 return recordSheetsResponse;
@@ -70,6 +74,7 @@ public class XhibitDataService {
                 String filename = key.substring(objectKeyPrefix.length());
                 XhibitRecordSheetDTOBuilder recordSheetDTOBuilder = XhibitRecordSheetDTO.builder()
                     .filename(filename);
+
                 try {
                     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                         .bucket(xhibitConfiguration.getS3DataBucketName())
@@ -87,9 +92,11 @@ public class XhibitDataService {
 
             recordSheetsResponse.allRecordSheetsRetrieved(!listObjectsResponse.isTruncated());
             recordSheetsResponse.setContinuationToken(listObjectsResponse.nextContinuationToken());
+
             return recordSheetsResponse;
         } catch (SdkClientException | AwsServiceException ex) {
             log.error("AWS S3 error: {}", ex.getMessage());
+
             throw new XhibitDataServiceException(ex.getMessage());
         }
     }
@@ -132,6 +139,7 @@ public class XhibitDataService {
                 }
 
                 DeleteObjectResponse deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
+
                 if (!deleteObjectResponse.sdkHttpResponse().isSuccessful()) {
                     log.warn("Failed to delete record sheet {} with source key {}", filename, deleteObjectRequest.key());
                 }

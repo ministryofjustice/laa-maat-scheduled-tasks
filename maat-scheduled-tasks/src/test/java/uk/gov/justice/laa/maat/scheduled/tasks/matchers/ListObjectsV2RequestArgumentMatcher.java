@@ -12,6 +12,7 @@ public class ListObjectsV2RequestArgumentMatcher implements ArgumentMatcher<List
 
     @Override
     public boolean matches(ListObjectsV2Request listObjectsV2Request) {
-        return continuationToken.equals(listObjectsV2Request.continuationToken());
+        return (continuationToken == null && listObjectsV2Request.continuationToken() == null)
+            || continuationToken.equals(listObjectsV2Request.continuationToken());
     }
 }
