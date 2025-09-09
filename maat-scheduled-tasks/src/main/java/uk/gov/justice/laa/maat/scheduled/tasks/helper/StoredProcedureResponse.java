@@ -7,7 +7,7 @@ public record StoredProcedureResponse(List<StoredProcedureParameter<?>> outputs)
     public boolean hasValue(String parameterName) {
         return outputs.stream()
             .filter(p -> p.getName().equals(parameterName))
-            .anyMatch(p -> p.getValue() != null);
+            .anyMatch(StoredProcedureParameter::hasValue);
     }
 
     public Object getValue(String parameterName) {

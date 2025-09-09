@@ -26,7 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.outputParameter;
-import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.populatedOutParameter;
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.safePopulate;
 import static uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService.OUTPUT_PARAMETERS;
 import static uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService.TRIAL_DATA_TO_MAAT_PROCEDURE;
 
@@ -177,8 +177,8 @@ class TrialDataServiceTest {
         List<StoredProcedureParameter<?>> procedureParameters = new ArrayList<>(OUTPUT_PARAMETERS);
         procedureParameters.add(StoredProcedureParameter.inputParameter("id", 1));
         StoredProcedureResponse errorResponse = new StoredProcedureResponse(List.of(
-            populatedOutParameter(outputParameter("p_error_code", String.class), "23"),
-            populatedOutParameter(outputParameter("p_err_msg", String.class), "error message")
+            safePopulate(outputParameter("p_error_code", String.class), "23"),
+            safePopulate(outputParameter("p_err_msg", String.class), "error message")
         ));
 
         when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(List.of(xhibitRecordSheet1));

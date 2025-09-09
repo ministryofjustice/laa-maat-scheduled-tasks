@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.StoredProcedureQuery;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.populatedOutParameter;
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.safePopulate;
 
 @Service
 @RequiredArgsConstructor
@@ -61,10 +60,8 @@ public class StoredProcedureService {
         StoredProcedureQuery storedProcedureQuery = entityManager.createStoredProcedureQuery(name);
         for (StoredProcedureParameter<?> parameter : parameters) {
             String parameterName = parameter.getName();
-            ParameterMode parameterMode = parameter.getMode();
-
-            storedProcedureQuery.registerStoredProcedureParameter(parameterName, parameter.getType(), parameterMode);
-            if (parameterMode == ParameterMode.IN || parameterMode == ParameterMode.INOUT) {
+            storedProcedureQuery.registerStoredProcedureParameter(parameterName, parameter.getType(), parameter.getMode());
+            if (parameter.isInputParameter()) {
                 storedProcedureQuery.setParameter(parameterName, parameter.getValue());
             }
         }
@@ -73,13 +70,8 @@ public class StoredProcedureService {
 
     private StoredProcedureResponse getStoredProcedureResponse(StoredProcedureQuery storedProcedureQuery, List<StoredProcedureParameter<?>> parameters) {
         List<StoredProcedureParameter<?>> outputParametersWithValues = parameters.stream()
-            .filter(p -> p.getMode() == ParameterMode.OUT || p.getMode() == ParameterMode.INOUT)
-            .map(p -> {
-                @SuppressWarnings("unchecked")
-                StoredProcedureParameter<Object> param = (StoredProcedureParameter<Object>) p;
-                Object value = storedProcedureQuery.getOutputParameterValue(p.getName());
-                return populatedOutParameter(param, value);
-            })
+            .filter(StoredProcedureParameter::isOutputParameter)
+            .map(p -> safePopulate(p, storedProcedureQuery.getOutputParameterValue(p.getName())))
             .collect(Collectors.toList());
         return new StoredProcedureResponse(outputParametersWithValues);
     }

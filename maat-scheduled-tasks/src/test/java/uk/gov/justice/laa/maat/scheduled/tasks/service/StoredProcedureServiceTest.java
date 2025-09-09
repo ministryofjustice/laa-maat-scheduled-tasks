@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inOutParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inputParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.outputParameter;
-import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.populatedOutParameter;
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.safePopulate;
 
 @ExtendWith(MockitoExtension.class)
 class StoredProcedureServiceTest {
@@ -134,9 +134,9 @@ class StoredProcedureServiceTest {
 
         StoredProcedureResponse expectedResponse = new StoredProcedureResponse(
             List.of(
-                populatedOutParameter(outputParameter("outParam1", Integer.class), 3),
-                populatedOutParameter(outputParameter("outParam2", String.class), "outValue"),
-                populatedOutParameter(outputParameter("outParam3", Object.class), null)
+                safePopulate(outputParameter("outParam1", Integer.class), 3),
+                safePopulate(outputParameter("outParam2", String.class), "outValue"),
+                safePopulate(outputParameter("outParam3", Object.class), null)
             )
         );
         assertEquals(expectedResponse, storedProcedureService.callStoredProcedure(procedureName, parameters));

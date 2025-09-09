@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inOutParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inputParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.outputParameter;
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.safePopulate;
 
 class StoredProcedureParameterTest {
 
@@ -39,5 +41,19 @@ class StoredProcedureParameterTest {
         assertEquals(Boolean.class, param.getType());
         assertEquals(true, param.getValue());
         assertEquals(ParameterMode.INOUT, param.getMode());
+    }
+
+    @Test
+    void badValueTypeThrowsException() {
+        StoredProcedureParameter<Boolean> outParam = outputParameter("userId", Boolean.class);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> safePopulate(outParam, "notBoolean"));
+        String expectedMessage = "Type mismatch for parameter: userId, expected: Boolean, but got: String";
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @Test
+    void nullParameterValue_ReturnsOriginalParameter() {
+        StoredProcedureParameter<String> outParam = outputParameter("userId", String.class);
+        assertEquals(outParam, safePopulate(outParam, null));
     }
 }

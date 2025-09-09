@@ -52,5 +52,17 @@ public final class StoredProcedureParameter<T> {
     static <T> StoredProcedureParameter<T> parameterWithValue(StoredProcedureParameter<T> parameter, T value) {
         return new StoredProcedureParameter<>(parameter.name, parameter.type, value, parameter.mode);
     }
+
+    public boolean isOutputParameter() {
+        return mode == ParameterMode.OUT || mode == ParameterMode.INOUT;
+    }
+
+    public boolean isInputParameter() {
+        return mode == ParameterMode.IN || mode == ParameterMode.INOUT;
+    }
+
+    public boolean hasValue() {
+        return value != null;
+    }
 }
 
