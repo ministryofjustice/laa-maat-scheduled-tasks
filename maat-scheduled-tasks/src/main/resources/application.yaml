@@ -50,6 +50,9 @@ spring:
         jwt:
           issuer-uri: ${JWT_ISSUER_URI}
 
+httpRequest:
+  scope: ${SCOPE_API}
+
 maat_batch:
   lmr_reports:
     cron_expression:  ${LMR_REPORTS}

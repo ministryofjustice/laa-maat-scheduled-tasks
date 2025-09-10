@@ -32,7 +32,10 @@ spring:
 
       resource-server:
         jwt:
-          issuer-uri: ${JWT_ISSUER_URI}
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:9999}
+
+httpRequest:
+  scope: maat-scheduled-tasks-dev
 
 maat_batch:
   lmr_reports:
