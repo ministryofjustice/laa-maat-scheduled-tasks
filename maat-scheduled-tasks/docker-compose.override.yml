@@ -20,10 +20,8 @@ services:
       - app.env
 
     ports:
-      - "8499:8499"
-      - "8510:8510"
       - "8484:8484"
-    command: java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8383 -jar app.jar
+    command: java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8484 -jar app.jar
 
 networks:
   local-container-network:
