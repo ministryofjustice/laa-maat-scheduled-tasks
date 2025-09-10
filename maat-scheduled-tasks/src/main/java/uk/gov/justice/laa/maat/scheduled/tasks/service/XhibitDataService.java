@@ -52,7 +52,7 @@ public class XhibitDataService {
         String continuationToken = recordSheetsResponse.getContinuationToken();
         ListObjectsV2Request.Builder listObjectsRequestBuilder = ListObjectsV2Request.builder()
             .bucket(xhibitConfiguration.getS3DataBucketName())
-            .maxKeys(xhibitConfiguration.getFetchSize())
+            .maxKeys(Integer.parseInt(xhibitConfiguration.getFetchSize()))
             .prefix(objectKeyPrefix);
 
         if (continuationToken != null) {

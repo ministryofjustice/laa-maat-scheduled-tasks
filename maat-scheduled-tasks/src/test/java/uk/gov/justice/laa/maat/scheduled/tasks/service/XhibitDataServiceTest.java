@@ -82,7 +82,7 @@ class XhibitDataServiceTest {
         lenient().when(xhibitConfiguration.getObjectKeyProcessedPrefix()).thenReturn("processed");
         lenient().when(xhibitConfiguration.getObjectKeyErroredPrefix()).thenReturn("errored");
         lenient().when(xhibitConfiguration.getS3DataBucketName()).thenReturn("bucket");
-        lenient().when(xhibitConfiguration.getFetchSize()).thenReturn(1);
+        lenient().when(xhibitConfiguration.getFetchSize()).thenReturn("1");
     }
 
     @Test
