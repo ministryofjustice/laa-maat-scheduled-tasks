@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -13,5 +14,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 @AllArgsConstructor
 @NoArgsConstructor
 public final class UpdateApplicantsRequest implements Serializable {
+    @JsonProperty("defendants")
     List<ApplicantBillingDTO> defendants;
 }

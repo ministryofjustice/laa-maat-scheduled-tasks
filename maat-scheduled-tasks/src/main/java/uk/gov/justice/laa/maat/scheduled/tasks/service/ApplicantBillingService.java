@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,8 +27,10 @@ public class ApplicantBillingService {
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantMapper applicantMapper;
 
+    private final ObjectMapper objectMapper;
+
     @Transactional
-    public void sendApplicantsToBilling(String userModified) {
+    public void sendApplicantsToBilling(String userModified) throws JsonProcessingException {
         List<ApplicantBillingDTO> applicants = findAllApplicantsForBilling();
 
         if (applicants.isEmpty()) {
@@ -43,6 +47,8 @@ public class ApplicantBillingService {
 
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
             .defendants(applicants).build();
+
+        String requestString = objectMapper.writeValueAsString(applicantsRequest);
 
         crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
         log.info("Extracted applicant data has been sent to the billing team.");
