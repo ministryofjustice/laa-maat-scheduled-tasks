@@ -34,6 +34,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMap
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder;
 import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantHistoryBillingServiceTest {
@@ -65,7 +66,8 @@ class ApplicantHistoryBillingServiceTest {
 
         verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED, List.of(TEST_ID));
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(List.of(dto));
+        verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any(
+            UpdateApplicantHistoriesRequest.class));
     }
 
     @Test
@@ -78,7 +80,8 @@ class ApplicantHistoryBillingServiceTest {
 
         verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(USER_MODIFIED, List.of(TEST_ID));
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicantsHistory(List.of(dto));
+        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicantsHistory(any(
+            UpdateApplicantHistoriesRequest.class));
     }
 }
 

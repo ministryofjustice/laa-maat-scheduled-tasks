@@ -14,6 +14,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
 
 import java.util.List;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
 
 @Slf4j
 @Service
@@ -40,7 +41,10 @@ public class RepOrderBillingService {
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
             repOrders.toString());
 
-        crownCourtLitigatorFeesApiClient.updateRepOrders(repOrders);
+        UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
+            .repOrders(repOrders).build();
+
+        crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
         log.info("Extracted rep order data has been sent to the billing team.");
     }
 

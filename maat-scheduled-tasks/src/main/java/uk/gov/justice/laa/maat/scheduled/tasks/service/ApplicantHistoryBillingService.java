@@ -12,6 +12,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEnt
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
 
 @Slf4j
 @Service
@@ -41,7 +42,10 @@ public class ApplicantHistoryBillingService {
             BillingDataFeedRecordType.APPLICANT_HISTORY,
             applicantHistories.toString());
 
-        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistories);
+        UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
+            .defendantHistories(applicantHistories).build();
+
+        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
         log.info("Extracted applicant history data has been sent to the billing team.");
     }
 
