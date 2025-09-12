@@ -39,6 +39,17 @@ runs:
                 ]
               },
               {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "action_id": "deployment_link",
+                    "text": { "type": "plain_text", "text": "View Run" },
+                    "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              },
+              {
                 "type": "section",
                 "fields": [
                   {
