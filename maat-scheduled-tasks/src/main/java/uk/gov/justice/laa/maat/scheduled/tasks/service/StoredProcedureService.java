@@ -23,8 +23,8 @@ import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedurePara
 @Slf4j
 public class StoredProcedureService {
 
-    public static final String EMPTY_PROCEDURE_NAME_MESSAGE = "Stored procedure name cannot be null or empty";
-    public static final String STORED_PROCEDURE_FAILURE_MESSAGE = "Failed to execute stored procedure: ";
+    private static final String EMPTY_PROCEDURE_NAME_MESSAGE = "Stored procedure name cannot be null or empty";
+    private static final String STORED_PROCEDURE_FAILURE_MESSAGE = "Failed to execute stored procedure: ";
 
     @PersistenceContext
     private EntityManager entityManager;

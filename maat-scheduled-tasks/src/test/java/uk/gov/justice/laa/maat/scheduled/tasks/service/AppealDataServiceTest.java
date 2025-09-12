@@ -107,7 +107,7 @@ class AppealDataServiceTest {
 
         appealDataService.populateAndProcessAppealDataInToMaat();
 
-        verify(appealDataRepository, never()).saveAll(any());
+        verify(appealDataRepository, times(1)).saveAll(Collections.emptyList());
         verify(xhibitDataService, times(1)).getAllRecordSheets(RecordSheetType.APPEAL);
         verify(xhibitDataService, never()).markRecordSheetsAsProcessed(any(), any());
         verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(any(), any());

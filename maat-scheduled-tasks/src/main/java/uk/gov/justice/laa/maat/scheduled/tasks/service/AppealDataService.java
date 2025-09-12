@@ -40,46 +40,34 @@ public class AppealDataService {
         RecordSheetType recordSheetType = RecordSheetType.APPEAL;
 
         GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(recordSheetType);
-
-        List<XhibitRecordSheetDTO> erroredRecordSheets = recordSheetsResponse.getErroredRecordSheets();
-        if (!erroredRecordSheets.isEmpty()) {
-            List<String> filenames = erroredRecordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList();
-            xhibitDataService.markRecordSheetsAsErrored(filenames, recordSheetType);
-            log.info("Marked errored record sheets { records: {} }.", erroredRecordSheets.size());
-        }
-
         List<XhibitRecordSheetDTO> recordSheets = recordSheetsResponse.getRetrievedRecordSheets();
-        if (recordSheets.isEmpty()) {
-            log.info("No appeal data found to process, aborting");
+        List<XhibitRecordSheetDTO> erroredRecordSheets = recordSheetsResponse.getErroredRecordSheets();
+
+        if (recordSheets.isEmpty() && erroredRecordSheets.isEmpty()) {
+            log.info("No trial data found to process, aborting");
             return;
         }
+
+        List<String> processedFilenames = new ArrayList<>();
+        List<String> erroredFilenames = new ArrayList<>(erroredRecordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList());
 
         saveRecordSheets(recordSheets);
         log.info("Populated appeal data in to hub.");
 
         List<XhibitAppealDataEntity> toProcess = appealDataRepository.findAll();
-        if (toProcess.isEmpty()) {
-            log.info("No appeal data found to process, aborting");
-            return;
-        }
-
-        List<String> successfulProcedureFilenames = new ArrayList<>();
-        List<String> failedProcedureFilenames = new ArrayList<>();
         for (XhibitAppealDataEntity record : toProcess) {
-            processAppealRecord(record, failedProcedureFilenames, successfulProcedureFilenames);
+            processAppealRecord(record, erroredFilenames, processedFilenames);
         }
 
-        if (!failedProcedureFilenames.isEmpty()) {
-            xhibitDataService.markRecordSheetsAsErrored(failedProcedureFilenames, recordSheetType);
-            log.info("Marked errored record sheets from failed stored procedure { records: {} }.", failedProcedureFilenames.size());
+        if (!erroredFilenames.isEmpty()) {
+            xhibitDataService.markRecordSheetsAsErrored(erroredFilenames, recordSheetType);
+            log.info("Marked appeal record sheets as errored { records: {} }.", erroredFilenames.size());
         }
 
-        if (!successfulProcedureFilenames.isEmpty()) {
-            log.info("Processed appeal data in to MAAT. { records: {} }", successfulProcedureFilenames.size());
+        if (!processedFilenames.isEmpty()) {
+            xhibitDataService.markRecordSheetsAsProcessed(processedFilenames, recordSheetType);
+            log.info("Marked appeal record sheets as processed. {records: {} }.", processedFilenames.size());
         }
-
-        xhibitDataService.markRecordSheetsAsProcessed(successfulProcedureFilenames, recordSheetType);
-        log.info("Marked appeal record sheets as processed.");
     }
 
     private void processAppealRecord(XhibitAppealDataEntity record, List<String> failedProcedureFilenames, List<String> successfulProcedureFilenames) {

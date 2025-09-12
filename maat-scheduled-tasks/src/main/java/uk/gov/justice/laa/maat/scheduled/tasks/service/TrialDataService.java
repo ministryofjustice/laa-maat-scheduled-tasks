@@ -40,46 +40,34 @@ public class TrialDataService {
         RecordSheetType recordSheetType = RecordSheetType.TRIAL;
 
         GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(recordSheetType);
-
-        List<XhibitRecordSheetDTO> erroredRecordSheets = recordSheetsResponse.getErroredRecordSheets();
-        if (!erroredRecordSheets.isEmpty()) {
-            List<String> filenames = erroredRecordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList();
-            xhibitDataService.markRecordSheetsAsErrored(filenames, recordSheetType);
-            log.info("Marked errored record sheets { records: {} }.", erroredRecordSheets.size());
-        }
-
         List<XhibitRecordSheetDTO> recordSheets = recordSheetsResponse.getRetrievedRecordSheets();
-        if (recordSheets.isEmpty()) {
+        List<XhibitRecordSheetDTO> erroredRecordSheets = recordSheetsResponse.getErroredRecordSheets();
+
+        if (recordSheets.isEmpty() && erroredRecordSheets.isEmpty()) {
             log.info("No trial data found to process, aborting");
             return;
         }
+
+        List<String> processedFilenames = new ArrayList<>();
+        List<String> erroredFilenames = new ArrayList<>(erroredRecordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList());
 
         saveRecordSheets(recordSheets);
         log.info("Populated trial data in to hub.");
 
         List<XhibitTrialDataEntity> toProcess = trialDataRepository.findAll();
-        if (toProcess.isEmpty()) {
-            log.info("No trial data found to process, aborting");
-            return;
-        }
-
-        List<String> successfulProcedureFilenames = new ArrayList<>();
-        List<String> failedProcedureFilenames = new ArrayList<>();
         for (XhibitTrialDataEntity record : toProcess) {
-            processTrialRecord(record, failedProcedureFilenames, successfulProcedureFilenames);
+            processTrialRecord(record, erroredFilenames, processedFilenames);
         }
 
-        if (!failedProcedureFilenames.isEmpty()) {
-            xhibitDataService.markRecordSheetsAsErrored(failedProcedureFilenames, recordSheetType);
-            log.info("Marked errored record sheets from failed stored procedure { records: {} }.", failedProcedureFilenames.size());
+        if (!erroredFilenames.isEmpty()) {
+            xhibitDataService.markRecordSheetsAsErrored(erroredFilenames, recordSheetType);
+            log.info("Marked trial record sheets as errored { records: {} }.", erroredFilenames.size());
         }
 
-        if (!successfulProcedureFilenames.isEmpty()) {
-            log.info("Processed trial data in to MAAT. { records: {} }", successfulProcedureFilenames.size());
+        if (!processedFilenames.isEmpty()) {
+            xhibitDataService.markRecordSheetsAsProcessed(processedFilenames, recordSheetType);
+            log.info("Marked trial record sheets as processed. {records: {} }.", processedFilenames.size());
         }
-
-        xhibitDataService.markRecordSheetsAsProcessed(successfulProcedureFilenames, recordSheetType);
-        log.info("Marked trial record sheets as processed.");
     }
 
     private void processTrialRecord(XhibitTrialDataEntity record, List<String> failedProcedureFilenames, List<String> successfulProcedureFilenames) {

@@ -107,7 +107,7 @@ class TrialDataServiceTest {
 
         trialDataService.populateAndProcessTrialDataInToMaat();
 
-        verify(trialDataRepository, never()).saveAll(any());
+        verify(trialDataRepository, times(1)).saveAll(Collections.emptyList());
         verify(xhibitDataService, times(1)).getAllRecordSheets(RecordSheetType.TRIAL);
         verify(xhibitDataService, never()).markRecordSheetsAsProcessed(any(), any());
         verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(any(), any());
