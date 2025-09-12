@@ -98,3 +98,7 @@ ccrApi:
 
 xhibitBatch:
   fetchSize: 1
+
+spring:
+  profiles:
+    active: uat

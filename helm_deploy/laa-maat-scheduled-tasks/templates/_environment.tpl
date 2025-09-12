@@ -94,6 +94,8 @@ env:
             key: CCR_API_OAUTH_CLIENT_SECRET
   - name: LOG_LEVEL
     value: {{ .Values.logging.level }}
+  - name: SPRING_PROFILES_ACTIVE
+    value: {{ .Values.spring.profiles.active }}
   - name: AWS_DEFAULT_REGION
     value: {{ .Values.aws_region }}
   - name: XHIBIT_BATCH_FETCH_SIZE
