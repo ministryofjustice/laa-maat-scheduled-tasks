@@ -101,9 +101,6 @@ services:
     base-url: ${CCLF_API_BASE_URL}
     registrationId: cclf
 
-scheduled-tasks:
-  scope: ${SCOPE_SCHEDULED_TASKS}
-
 resilience4j:
   retry:
     configs:

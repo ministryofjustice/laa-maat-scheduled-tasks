@@ -1,6 +1,11 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.config;
 
+import io.github.resilience4j.retry.RetryRegistry;
+import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.reactive.function.client.WebClientCustomizer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -100,7 +105,7 @@ public class WebClientsConfig {
         return httpServiceProxyFactory.createClient(CrownCourtLitigatorFeesApiClient.class);
     }
 
-    @Bean(CCR_API_WEB_CLIENT_NAME)
+    /*@Bean(CCR_API_WEB_CLIENT_NAME)
     WebClient crownCourtRemunerationApiWebClient(WebClient.Builder clientBuilder,
                                                   ServicesConfiguration servicesConfiguration,
                                                   ClientRegistrationRepository clientRegistrations,
@@ -124,7 +129,7 @@ public class WebClientsConfig {
         HttpServiceProxyFactory httpServiceProxyFactory =
                 HttpServiceProxyFactory.builderFor(WebClientAdapter.create(webClient)).build();
         return httpServiceProxyFactory.createClient(CrownCourtRemunerationApiClient.class);
-    }
+    }*/
 
     private void configureFilters(List<ExchangeFilterFunction> filters,
                                   ServletOAuth2AuthorizedClientExchangeFilterFunction oauthFilter,

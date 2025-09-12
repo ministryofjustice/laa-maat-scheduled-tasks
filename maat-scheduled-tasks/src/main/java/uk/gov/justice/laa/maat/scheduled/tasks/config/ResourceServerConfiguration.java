@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.server.resource.web.access.BearerToke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
+@Configuration
 @EnableWebSecurity
 public class ResourceServerConfiguration {
 

@@ -82,8 +82,6 @@ env:
     value: {{ .Values.ccrApi.baseUrl }}
   - name: CCR_API_OAUTH_URL
     value: {{ .Values.ccrApi.oauthUrl }}
-  - name: SCOPE_SCHEDULED_TASKS
-    value: {{ .Values.scheduledTasks.scope }}
   - name: CCR_API_OAUTH_CLIENT_ID
     valueFrom:
         secretKeyRef:
