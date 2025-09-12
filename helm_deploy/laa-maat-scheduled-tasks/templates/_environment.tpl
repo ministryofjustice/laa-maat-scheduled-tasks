@@ -15,6 +15,8 @@ env:
     value: {{ .Values.host_env }}
   - name: SENTRY_SAMPLE_RATE
     value: {{ .Values.sentry.sampleRate | quote }}
+  - name: SCOPE_API
+    value: {{ .Values.scope }}
   - name: LMR_REPORTS
     valueFrom:
         secretKeyRef:
@@ -96,6 +98,8 @@ env:
     value: {{ .Values.logging.level }}
   - name: AWS_DEFAULT_REGION
     value: {{ .Values.aws_region }}
+  - name: XHIBIT_BATCH_FETCH_SIZE
+    value: {{ .Values.xhibitBatch.fetchSize | quote }}
   - name: AWS_S3_XHIBIT_DATA_BUCKET_NAME
     valueFrom:
         secretKeyRef:
@@ -116,10 +120,5 @@ env:
         secretKeyRef:
             name: maat-scheduled-tasks-env-variables
             key: DATASOURCE_URL
-  - name: S3_DATA_BUCKET_NAME
-    valueFrom:
-        secretKeyRef:
-            name: maat-scheduled-tasks-env-variables
-            key: AWS_S3_XHIBIT_DATA_BUCKET_NAME
 
 {{- end -}}

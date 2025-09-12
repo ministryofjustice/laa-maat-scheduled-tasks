@@ -86,6 +86,8 @@ actuator:
 jwt:
   issuerUri: https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_JODrSUTLu
 
+scope: maat-scheduled-tasks-dev
+
 cclfApi:
   baseUrl: http://laa-crown-court-litigator-fees-app.laa-crown-court-litigator-fees-dev.svc.cluster.local/cclf/api/v1
   oauthUrl: https://cclf-dev.auth.eu-west-2.amazoncognito.com/oauth2/token
@@ -94,5 +96,5 @@ ccrApi:
   baseUrl: https://ccr-dev.apps.live.cloud-platform.service.justice.gov.uk/ccr/api/v1
   oauthUrl: https://ccr-dev.auth.eu-west-2.amazoncognito.com/oauth2/token
 
-scheduledTasks:
-  scope: maat-scheduled-tasks-dev
+xhibitBatch:
+  fetchSize: 1

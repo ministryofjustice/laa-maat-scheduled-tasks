@@ -50,6 +50,9 @@ spring:
         jwt:
           issuer-uri: ${JWT_ISSUER_URI}
 
+httpRequest:
+  scope: ${SCOPE_API}
+
 maat_batch:
   lmr_reports:
     cron_expression:  ${LMR_REPORTS}
@@ -75,6 +78,7 @@ xhibit-batch:
   object-key-errored-prefix: "errored"
 
   s3-data-bucket-name: ${AWS_S3_XHIBIT_DATA_BUCKET_NAME}
+  fetch-size: ${XHIBIT_BATCH_FETCH_SIZE}
 
 billing:
   user-modified: "system"

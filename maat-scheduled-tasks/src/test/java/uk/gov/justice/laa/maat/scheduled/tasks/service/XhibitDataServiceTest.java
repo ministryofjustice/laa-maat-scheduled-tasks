@@ -1,21 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,10 +28,31 @@ import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceExcept
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.CopyObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.DeleteObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.GetObjectRequestArgumentMatcher;
+import uk.gov.justice.laa.maat.scheduled.tasks.matchers.ListObjectsV2RequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceTest {
+
+    private static final String OBJECT_PREFIX = "trial/";
 
     @Mock
     private S3Client s3Client;
@@ -77,25 +82,28 @@ class XhibitDataServiceTest {
         lenient().when(xhibitConfiguration.getObjectKeyProcessedPrefix()).thenReturn("processed");
         lenient().when(xhibitConfiguration.getObjectKeyErroredPrefix()).thenReturn("errored");
         lenient().when(xhibitConfiguration.getS3DataBucketName()).thenReturn("bucket");
+        lenient().when(xhibitConfiguration.getFetchSize()).thenReturn("1");
     }
 
     @Test
-    void getRecordSheets_whenNoDataFound_thenReturnsEmptyList() {
+    void givenNoRecordSheetsExist_whenGetRecordSheetsResponseIsInvoked_thenNoRecordSheetsReturned() {
         when(listObjectsV2Response.contents()).thenReturn(Collections.emptyList());
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(RecordSheetType.TRIAL);
 
         assertTrue(recordSheetsResponse.getRetrievedRecordSheets().isEmpty());
+        assertTrue(recordSheetsResponse.getErroredRecordSheets().isEmpty());
+        assertTrue(recordSheetsResponse.allRecordSheetsRetrieved());
     }
 
     @Test
-    void getRecordSheets_whenDataFound_thenReturnsRecordSheets() {
+    void givenRecordSheetsExist_whenGetRecordSheetsResponseIsInvoked_thenRecordSheetsAreReturned() {
         when(listObjectsV2Response.contents()).thenReturn(List.of(
             S3Object.builder().key("trial/file1.xml").build(),
             S3Object.builder().key("trial/file2.xml").build()
         ));
-        when(listObjectsV2Response.isTruncated()).thenReturn(true);
+        when(listObjectsV2Response.isTruncated()).thenReturn(false);
         when(listObjectsV2Response.nextContinuationToken()).thenReturn(null);
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
@@ -104,19 +112,19 @@ class XhibitDataServiceTest {
         setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(RecordSheetType.TRIAL);
 
         assertEquals(expectedRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
     }
 
     @Test
-    void getRecordSheets_returnsErroredRecordSheets_whenDataCannotBeRetrieved() {
+    void givenRecordSheetsExistThatCannotBeRetrieved_whenGetRecordSheetsResponseIsInvoked_thenPartialRecordSheetsReturned() {
         when(listObjectsV2Response.contents()).thenReturn(List.of(
             S3Object.builder().key("trial/file1.xml").build(),
             S3Object.builder().key("trial/file2.xml").build(),
             S3Object.builder().key("trial/file3.xml").build()
         ));
-        when(listObjectsV2Response.isTruncated()).thenReturn(true);
+        when(listObjectsV2Response.isTruncated()).thenReturn(false);
         when(listObjectsV2Response.nextContinuationToken()).thenReturn(null);
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
@@ -127,7 +135,7 @@ class XhibitDataServiceTest {
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
         setupErrorFileResponse("trial/file3.xml");
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null);
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(RecordSheetType.TRIAL);
 
         assertEquals(expectedSuccessfulRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
         assertEquals(expectedErroredRecordSheets, recordSheetsResponse.getErroredRecordSheets().stream().map(
@@ -135,15 +143,47 @@ class XhibitDataServiceTest {
     }
 
     @Test
-    void getRecordSheets_throwsException_whenUnhandledAwsExceptionOccurs() {
+    void givenUnhandledAwsExceptionThrown_whenGetRecordSheetsResponseIsInvoked_thenXhibitDataServiceExceptionIsThrown() {
         doThrow(SdkClientException.class).when(s3Client).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class));
 
-        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.getRecordSheets(RecordSheetType.TRIAL, null));
+        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.getAllRecordSheets(RecordSheetType.TRIAL));
+    }
+
+    @Test
+    void givenMultiplePagesOfRecordSheets_whenGetRecordSheetsResponseIsInvoked_thenAllRecordSheetsReturned() {
+        ListObjectsV2Response firstResponse = ListObjectsV2Response.builder()
+            .contents(List.of(S3Object.builder().key("trial/file1.xml").build()))
+            .isTruncated(true)
+            .nextContinuationToken("test-continuation-token")
+            .build();
+
+        ListObjectsV2Response secondResponse = ListObjectsV2Response.builder()
+            .contents(List.of(S3Object.builder().key("trial/file2.xml").build()))
+            .isTruncated(false)
+            .nextContinuationToken(null)
+            .build();
+
+        doReturn(firstResponse).when(s3Client).listObjectsV2(argThat(new ListObjectsV2RequestArgumentMatcher(null)));
+        doReturn(secondResponse).when(s3Client).listObjectsV2(argThat(new ListObjectsV2RequestArgumentMatcher("test-continuation-token")));
+
+        List<XhibitRecordSheetDTO> expectedSuccessfulRecordSheets = List.of(xhibitRecordSheet2);
+        List<String> expectedErroredRecordSheets = List.of("file1.xml");
+
+        setupErrorFileResponse("trial/file1.xml");
+        setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
+
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(RecordSheetType.TRIAL);
+
+        assertEquals(expectedSuccessfulRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
+        assertEquals(expectedErroredRecordSheets, recordSheetsResponse.getErroredRecordSheets().stream().map(
+            XhibitRecordSheetDTO::getFilename).toList());
+
+        verify(s3Client, times(2)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class));
     }
 
     @Test
     void givenNoRecordSheets_whenMarkRecordSheetsAsProcessedIsInvoked_thenNoRecordSheetsAreUpdated() {
-        xhibitDataService.markRecordsSheetsAsProcessed(Collections.emptyList(), RecordSheetType.TRIAL);
+        xhibitDataService.markRecordSheetsAsProcessed(Collections.emptyList(), RecordSheetType.TRIAL);
 
         verify(s3Client, never()).copyObject(ArgumentMatchers.any(CopyObjectRequest.class));
         verify(s3Client, never()).deleteObject(ArgumentMatchers.any(DeleteObjectRequest.class));
@@ -151,13 +191,11 @@ class XhibitDataServiceTest {
 
     @Test
     void givenRecordSheets_whenMarkRecordSheetsAsProcessedIsInvoked_thenRecordSheetsAreUpdated() {
-        List<XhibitRecordSheetDTO> recordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
-
         setupCopyResponse("trial/file1.xml", "processed/trial/file1.xml", true);
         setupCopyResponse("trial/file2.xml", "processed/trial/file2.xml", true);
         setupDeleteResponse();
 
-        xhibitDataService.markRecordsSheetsAsProcessed(recordSheets, RecordSheetType.TRIAL);
+        xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
 
         verify(s3Client, times(1)).copyObject(argThat(
             new CopyObjectRequestArgumentMatcher("trial/file1.xml", "processed/trial/file1.xml")));
@@ -171,13 +209,11 @@ class XhibitDataServiceTest {
 
     @Test
     void givenErrorCopyingOneFile_whenMarkRecordSheetsAsProcessedIsInvoked_thenPartialRecordSheetsAreUpdated() {
-        List<XhibitRecordSheetDTO> recordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
-
         setupCopyResponse("trial/file1.xml", "processed/trial/file1.xml", false);
         setupCopyResponse("trial/file2.xml", "processed/trial/file2.xml", true);
         setupDeleteResponse();
 
-        xhibitDataService.markRecordsSheetsAsProcessed(recordSheets, RecordSheetType.TRIAL);
+        xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1, xhibitRecordSheet2), RecordSheetType.TRIAL);
 
         verify(s3Client, times(2)).copyObject(ArgumentMatchers.any(CopyObjectRequest.class));
         verify(s3Client, never()).deleteObject(argThat(
@@ -188,12 +224,10 @@ class XhibitDataServiceTest {
 
     @Test
     void markRecordSheetsAsProcessed_throwsException_whenUnhandledAwsExceptionOccurs() {
-        List<XhibitRecordSheetDTO> recordSheets = List.of(xhibitRecordSheet1);
-
         setupCopyResponse("trial/file1.xml", "processed/trial/file1.xml", true);
         doThrow(SdkClientException.class).when(s3Client).deleteObject(ArgumentMatchers.any(DeleteObjectRequest.class));
 
-        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.markRecordsSheetsAsProcessed(recordSheets, RecordSheetType.TRIAL));
+        assertThrows(XhibitDataServiceException.class, () -> xhibitDataService.markRecordSheetsAsProcessed(List.of(xhibitRecordSheet1), RecordSheetType.TRIAL));
     }
 
     private void setupCopyResponse(String sourceKey, String destinationKey, boolean successful) {

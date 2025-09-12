@@ -5,7 +5,6 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,18 +16,16 @@ import org.springframework.security.oauth2.server.resource.web.access.BearerToke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-@Configuration
-@Order(1)
 @EnableWebSecurity
 public class ResourceServerConfiguration {
 
-    @Value("${scheduled-tasks.scope}")
-    private String scheduledTasksScope;
+    @Value("${httpRequest.scope}")
+    private String maatScheduledTasksScope;
 
     @Bean
     protected BearerTokenAuthenticationEntryPoint bearerTokenAuthenticationEntryPoint() {
         BearerTokenAuthenticationEntryPoint bearerTokenAuthenticationEntryPoint = new BearerTokenAuthenticationEntryPoint();
-        bearerTokenAuthenticationEntryPoint.setRealmName("MAAT Scheduled Tasks");
+        bearerTokenAuthenticationEntryPoint.setRealmName("Crime MAAT Scheduled Tasks API");
         return bearerTokenAuthenticationEntryPoint;
     }
 
@@ -44,7 +41,7 @@ public class ResourceServerConfiguration {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/oauth2/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/api/**").hasAuthority("SCOPE_" + scheduledTasksScope + "/standard")
+                .requestMatchers("/api/**").hasAuthority("SCOPE_" + maatScheduledTasksScope + "/standard")
                 .anyRequest().authenticated())
             .oauth2ResourceServer((oauth2) -> oauth2
                 .accessDeniedHandler(bearerTokenAccessDeniedHandler())

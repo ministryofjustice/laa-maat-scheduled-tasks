@@ -86,6 +86,8 @@ actuator:
 jwt:
   issuerUri: https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_JCDC3oGQz
 
+scope: maat-scheduled-tasks-test
+
 cclfApi:
   baseUrl: https://cclf-staging.apps.live.cloud-platform.service.justice.gov.uk/cclf/api/v1
   oauthUrl: https://cclf-staging.auth.eu-west-2.amazoncognito.com/oauth2/token
@@ -94,5 +96,5 @@ ccrApi:
   baseUrl: https://ccr-staging.apps.live.cloud-platform.service.justice.gov.uk/ccr/api/v1
   oauthUrl: https://ccr-staging.auth.eu-west-2.amazoncognito.com/oauth2/token
 
-scheduledTasks:
-  scope: maat-scheduled-tasks-test
+xhibitBatch:
+  fetchSize: 1

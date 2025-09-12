@@ -1,17 +1,10 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.Map;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
-import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
@@ -19,18 +12,21 @@ import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
-import software.amazon.awssdk.services.s3.model.ObjectNotInActiveTierErrorException;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO.XhibitRecordSheetDTOBuilder;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
+
+import java.text.MessageFormat;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -41,48 +37,57 @@ public class XhibitDataService {
 
     private final XhibitConfiguration xhibitConfiguration;
 
-    public GetRecordSheetsResponse getRecordSheets(RecordSheetType recordSheetType, String continuationToken) {
+    public GetRecordSheetsResponse getAllRecordSheets(RecordSheetType recordSheetType) {
+        GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
+        String objectKeyPrefix = getPrefixString(recordSheetType);
+
+        do {
+            recordSheetsResponse = buildRecordSheetsResponse(recordSheetsResponse, objectKeyPrefix);
+        } while (!recordSheetsResponse.allRecordSheetsRetrieved());
+
+        return recordSheetsResponse;
+    }
+
+    private GetRecordSheetsResponse buildRecordSheetsResponse(GetRecordSheetsResponse recordSheetsResponse, String objectKeyPrefix) {
+        String continuationToken = recordSheetsResponse.getContinuationToken();
+        ListObjectsV2Request.Builder listObjectsRequestBuilder = ListObjectsV2Request.builder()
+            .bucket(xhibitConfiguration.getS3DataBucketName())
+            .maxKeys(Integer.parseInt(xhibitConfiguration.getFetchSize()))
+            .prefix(objectKeyPrefix);
+
+        if (continuationToken != null) {
+            listObjectsRequestBuilder.continuationToken(continuationToken);
+        }
+
+        ListObjectsV2Request listObjectsV2Request = listObjectsRequestBuilder.build();
+
         try {
-            GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
+            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsV2Request);
+            List<S3Object> contents = listObjectsResponse.contents();
 
-            String objectKeyPrefix = getPrefixString(recordSheetType);
-
-            ListObjectsV2Request.Builder listObjectsRequestBuilder = ListObjectsV2Request.builder()
-                .bucket(xhibitConfiguration.getS3DataBucketName())
-                .prefix(objectKeyPrefix);
-
-            if (continuationToken != null) {
-                listObjectsRequestBuilder.continuationToken(continuationToken);
-            }
-
-            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(
-                listObjectsRequestBuilder.build());
-
-            if (listObjectsResponse.contents().isEmpty()) {
+            if (contents.isEmpty()) {
+                recordSheetsResponse.allRecordSheetsRetrieved(true);
                 return recordSheetsResponse;
             }
 
-            listObjectsResponse.contents().forEach(s3Object -> {
+            contents.stream().map(S3Object::key).forEach(key -> {
+                String filename = key.substring(objectKeyPrefix.length());
+                XhibitRecordSheetDTOBuilder recordSheetDTOBuilder = XhibitRecordSheetDTO.builder()
+                    .filename(filename);
+
                 try {
-                    ResponseBytes<GetObjectResponse> objectResponse = s3Client.getObjectAsBytes(
-                        GetObjectRequest.builder()
-                            .bucket(xhibitConfiguration.getS3DataBucketName())
-                            .key(s3Object.key())
-                            .build());
+                    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                        .bucket(xhibitConfiguration.getS3DataBucketName())
+                        .key(key)
+                        .build();
 
-                    String trialDataXml = objectResponse.asUtf8String();
+                    String data = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
+                    recordSheetDTOBuilder.data(data);
 
-                    recordSheetsResponse.getRetrievedRecordSheets()
-                        .add(XhibitRecordSheetDTO.builder()
-                            .filename(s3Object.key().split(objectKeyPrefix)[1])
-                            .data(trialDataXml)
-                            .build());
+                    recordSheetsResponse.getRetrievedRecordSheets().add(recordSheetDTOBuilder.build());
                 } catch (NoSuchKeyException | InvalidObjectStateException ex) {
-                    recordSheetsResponse.getErroredRecordSheets().add(XhibitRecordSheetDTO.builder()
-                        .filename(s3Object.key().split(objectKeyPrefix)[1])
-                        .build());
+                    recordSheetsResponse.getErroredRecordSheets().add(recordSheetDTOBuilder.build());
                 }
-
             });
 
             recordSheetsResponse.allRecordSheetsRetrieved(!listObjectsResponse.isTruncated());
@@ -96,46 +101,47 @@ public class XhibitDataService {
         }
     }
 
-    public void markRecordsSheetsAsProcessed(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
-        renameRecordSheets(recordSheets, recordSheetType, RecordSheetStatus.PROCESSED);
+    public void markRecordSheetsAsProcessed(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
+        List<String> filenames = recordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList();
+        renameRecordSheets(filenames, recordSheetType, RecordSheetStatus.PROCESSED);
     }
 
     public void markRecordSheetsAsErrored(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
-        renameRecordSheets(recordSheets, recordSheetType, RecordSheetStatus.ERRORED);
+        List<String> filenames = recordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList();
+        renameRecordSheets(filenames, recordSheetType, RecordSheetStatus.ERRORED);
     }
 
-    private void renameRecordSheets(List<XhibitRecordSheetDTO> recordSheets,
+    private void renameRecordSheets(List<String> filenames,
         RecordSheetType recordSheetType, RecordSheetStatus recordSheetStatus) {
         String sourceKeyPrefix = getPrefixString(recordSheetType);
         String destinationKeyPrefix = getPrefixString(recordSheetType, recordSheetStatus);
 
         try {
-            recordSheets.forEach(recordSheet -> {
-                String fileName = recordSheet.getFilename();
-
-                CopyObjectRequest copyObjectrequest = CopyObjectRequest.builder()
+            filenames.forEach(filename -> {
+                CopyObjectRequest copyObjectRequest = CopyObjectRequest.builder()
                     .sourceBucket(xhibitConfiguration.getS3DataBucketName())
-                    .sourceKey(sourceKeyPrefix + fileName)
+                    .sourceKey(sourceKeyPrefix + filename)
                     .destinationBucket(xhibitConfiguration.getS3DataBucketName())
-                    .destinationKey(destinationKeyPrefix + fileName)
+                    .destinationKey(destinationKeyPrefix + filename)
                     .build();
 
                 DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                     .bucket(xhibitConfiguration.getS3DataBucketName())
-                    .key(sourceKeyPrefix + fileName)
+                    .key(sourceKeyPrefix + filename)
                     .build();
 
-                CopyObjectResponse copyObjectResponse = s3Client.copyObject(copyObjectrequest);
+                CopyObjectResponse copyObjectResponse = s3Client.copyObject(copyObjectRequest);
                 if (copyObjectResponse == null || copyObjectResponse.copyObjectResult() == null
                     || !StringUtils.hasLength( copyObjectResponse.copyObjectResult().eTag())) {
-                    log.warn("Failed to copy record sheet {} with source key {}, skipping delete", recordSheet.getFilename(), copyObjectrequest.sourceKey());
+                    log.warn("Failed to copy record sheet {} with source key {}, skipping delete", filename, copyObjectRequest.sourceKey());
 
                     return;
                 }
 
                 DeleteObjectResponse deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
+
                 if (!deleteObjectResponse.sdkHttpResponse().isSuccessful()) {
-                    log.warn("Failed to delete record sheet {} with source key {}", recordSheet.getFilename(), deleteObjectRequest.key());
+                    log.warn("Failed to delete record sheet {} with source key {}", filename, deleteObjectRequest.key());
                 }
             });
         } catch (SdkClientException | AwsServiceException ex) {

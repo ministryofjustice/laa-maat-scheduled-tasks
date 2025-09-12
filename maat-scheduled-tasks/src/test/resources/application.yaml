@@ -32,12 +32,10 @@ spring:
 
       resource-server:
         jwt:
-          issuer-uri: ${scheduled-tasks.security.issuer-uri}
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:9999}
 
-scheduled-tasks:
+httpRequest:
   scope: maat-scheduled-tasks-dev
-  security:
-    issuer-uri: http://localhost:${server.port}
 
 maat_batch:
   lmr_reports:
@@ -56,6 +54,8 @@ xhibit-batch:
     cron_expression: 0 0 9 * * *
   appeal_data_processing:
     cron_expression: 0 0 9 * * *
+
+  fetch-size: 1
 
 billing:
   user-modified: "test"
