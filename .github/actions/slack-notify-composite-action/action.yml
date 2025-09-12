@@ -1,0 +1,67 @@
+name: Slack channel notification
+description: 'Send notification to Slack channel'
+
+inputs:
+  slack-channel:
+    description: 'The name of the Slack channel to which notifications will be sent. Default - laa-crimeapps-ci'
+    required: false
+    default: 'laa-crimeapps-ci'
+
+runs:
+  using: 'composite'
+  steps:
+    - id: Notify success to Slack
+      if: ${{ success() }}
+      uses: slackapi/slack-github-action@v1
+      with:
+        payload: |
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Deployment Successful! :partying_face:",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  { "type": "mrkdwn", "text": "*Project:* ${{ github.event.repository.name }}" },
+                  { "type": "mrkdwn", "text": "*When:* ${{ github.run_started_at }}" },
+                  { "type": "mrkdwn", "text": "*Branch:* \n${{ github.ref_name }}" },
+                  { "type": "mrkdwn", "text": "*Successful Job:* \n${{ github.job }}" }
+                ]
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "action_id": "deployment_link",
+                    "text": { "type": "plain_text", "text": "View Run" },
+                    "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    - id: Notify failure to Slack (non-main branches only)
+      if: ${{ failure() && github.ref_name != 'main' }}
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,commit,author,ref,workflow,job,took
+        text: |
+          :x: Deployment failed in *${{ github.workflow }}*  
+          *Repo:* ${{ github.repository }}  
+          *Branch:* ${{ github.ref_name }}  
+          *Job:* ${{ github.job }}  
+          *Actor:* ${{ github.actor }}  
+          *Run:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
