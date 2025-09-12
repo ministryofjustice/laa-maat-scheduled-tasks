@@ -15,7 +15,7 @@ env:
     value: {{ .Values.host_env }}
   - name: SENTRY_SAMPLE_RATE
     value: {{ .Values.sentry.sampleRate | quote }}
-  - name: SCOPE_API
+  - name: SCOPE_SCHEDULED_TASKS
     value: {{ .Values.scope }}
   - name: LMR_REPORTS
     valueFrom:
