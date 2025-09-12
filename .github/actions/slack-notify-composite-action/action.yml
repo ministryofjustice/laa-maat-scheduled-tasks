@@ -22,11 +22,21 @@ runs:
           {
             "blocks": [
               {
-                "type": "section",
+                "type": "header",
                 "text": {
-                  "type": "mrkdwn",
-                  "text": "*:white_check_mark: Succeeded GitHub Actions*"
+                  "type": "plain_text",
+                  "text": "Deployment Successful! :partying_face:"
+                  "emoji": true
                 }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  { "type": "mrkdwn", "text": "*Project:* ${{ github.event.repository.name }}" },
+                  { "type": "mrkdwn", "text": "*When:* ${{ github.run_started_at }}" },
+                  { "type": "mrkdwn", "text": "*Branch:* \n${{ github.ref_name }}" },
+                  { "type": "mrkdwn", "text": "*Successful Job:* \n${{ github.job }}" }
+                ]
               },
               {
                 "type": "section",
