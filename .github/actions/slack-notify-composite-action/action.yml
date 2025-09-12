@@ -1,16 +1,19 @@
 name: Slack channel notification
-description: 'Send notification to Slack channel'
+description: "Send notification to Slack channel"
 
 inputs:
   slack-channel:
-    description: 'The name of the Slack channel to which notifications will be sent. Default - laa-crimeapps-ci'
+    description: "The name of the Slack channel to which notifications will be sent. Default - laa-crimeapps-ci"
     required: false
-    default: 'laa-crimeapps-ci'
+    default: "laa-crimeapps-ci"
+  webhook-url:
+    description: "The webhook URL of the Slack channel."
+    required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
-    - id: Notify success to Slack
+    - name: Notify success to Slack
       if: ${{ success() }}
       uses: slackapi/slack-github-action@v1
       with:
@@ -48,9 +51,9 @@ runs:
             ]
           }
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_URL: ${{ inputs.webhook-url }}
 
-    - id: Notify failure to Slack (non-main branches only)
+    - name: Notify failure to Slack (non-main branches only)
       if: ${{ failure() && github.ref_name != 'main' }}
       uses: 8398a7/action-slack@v3
       with:
@@ -64,4 +67,4 @@ runs:
           *Actor:* ${{ github.actor }}  
           *Run:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_URL: ${{ inputs.webhook-url }}
