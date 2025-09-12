@@ -9,21 +9,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.maat.scheduled.tasks.scheduler.BillingScheduler;
+import uk.gov.justice.laa.maat.scheduled.tasks.scheduler.CentralPrintScheduler;
 
 
 @Slf4j
 @RequiredArgsConstructor
 @RestController
 @Profile("!prod") // Only active in non-prod environments
-@RequestMapping("api/internal/v1/trigger-billing-scheduler")
-public class BillingScheduledTasksController {
+@RequestMapping("api/internal/v1/trigger-central-print-scheduler")
+public class CentralPrintScheduledTasksController {
 
   @Autowired
-  BillingScheduler billingScheduler;
+  CentralPrintScheduler centralPrintScheduler;
 
-  @PostMapping("/data-feed-log-cleanup")
-  public ResponseEntity<String> triggerDataFeedLogCleanup() {
-    billingScheduler.cleanupBillingDataFeedLog();
-    return ResponseEntity.ok("Billing data feed log cleanup task triggered.");
+  @PostMapping("/central-print-run")
+  public ResponseEntity<String> triggerCentralPrintJob() {
+    centralPrintScheduler.executeCentralPrintJob();
+    return ResponseEntity.ok("Central print run task triggered.");
   }
 }
