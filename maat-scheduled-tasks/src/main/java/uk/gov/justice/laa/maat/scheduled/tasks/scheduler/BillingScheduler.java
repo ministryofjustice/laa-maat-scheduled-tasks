@@ -42,6 +42,7 @@ public class BillingScheduler {
             log.error("Error running extract for CCLF billing data: {}", exception.getMessage());
         } finally {
             maatReferenceService.deleteMaatReferences();
+            log.info("End of extract for CCLF billing data.");
         }
     }
 
