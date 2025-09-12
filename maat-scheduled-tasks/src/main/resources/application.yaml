@@ -81,6 +81,9 @@ xhibit-batch:
   fetch-size: ${XHIBIT_BATCH_FETCH_SIZE}
 
 billing:
+  user-modified: "system"
+  cclf_extract:
+    cron_expression: ${BILLING_CCLF_EXTRACT_CRON_EXPRESSION}
   cleanup_data_feed_log:
     cron_expression: ${BILLING_LOG_CLEANUP_CRON_EXPRESSION}
   

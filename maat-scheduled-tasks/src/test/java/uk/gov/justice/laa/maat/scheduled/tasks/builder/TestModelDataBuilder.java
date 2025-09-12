@@ -22,11 +22,11 @@ public class TestModelDataBuilder {
 
     private static final String USER_NAME = "test-u";
 
-    public static ApplicantHistoryBillingDTO getApplicantHistoryBillingDTO() {
+    public static ApplicantHistoryBillingDTO getApplicantHistoryBillingDTO(Integer id) {
         return ApplicantHistoryBillingDTO.builder()
-            .id(1)
+            .id(id)
             .asAtDate(LocalDate.parse("2006-10-06"))
-            .applId(716)
+            .applId(id)
             .firstName("test_first")
             .lastName("test_last")
             .otherNames("test")

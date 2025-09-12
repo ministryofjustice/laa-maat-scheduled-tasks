@@ -4,11 +4,15 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
 
 @Slf4j
 @Service
@@ -16,9 +20,36 @@ import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillin
 public class ApplicantHistoryBillingService {
 
     private final ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
+    private final BillingDataFeedLogService billingDataFeedLogService;
+    private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
 
-    public List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
+    @Transactional
+    public void sendApplicantHistoryToBilling(String userModified) {
+        List<ApplicantHistoryBillingDTO> applicantHistories = extractApplicantHistory();
+
+        if (applicantHistories.isEmpty()) {
+            return;
+        }
+
+        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
+            .toList();
+
+        resetApplicantHistory(
+            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
+
+        billingDataFeedLogService.saveBillingDataFeed(
+            BillingDataFeedRecordType.APPLICANT_HISTORY,
+            applicantHistories.toString());
+
+        UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
+            .defendantHistories(applicantHistories).build();
+
+        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+        log.info("Extracted applicant history data has been sent to the billing team.");
+    }
+
+    private List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
         List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
         log.info("Application histories successfully extracted for billing data.");
 
@@ -27,12 +58,10 @@ public class ApplicantHistoryBillingService {
             .map(applicantHistoryBillingMapper::mapEntityToDTO)
             .toList();
     }
-    
-    public void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
-        List<Integer> ids = resetBillingDTO.getIds();
 
-        log.info("Resetting CCLF flag for extracted applicant histories...");
-        applicantHistoryBillingRepository.resetApplicantHistory(
-            resetBillingDTO.getUserModified(), ids);
+    private void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
+        log.info("Resetting CCLF flag for extracted applicant histories.");
+        applicantHistoryBillingRepository.resetApplicantHistory(resetBillingDTO.getUserModified(),
+            resetBillingDTO.getIds());
     }
 }

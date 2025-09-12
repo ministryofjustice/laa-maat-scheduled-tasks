@@ -52,6 +52,11 @@ env:
         secretKeyRef:
             name: maat-scheduled-tasks-env-variables
             key: TRIAL_DATA_CRON_EXPRESSION
+  - name: BILLING_CCLF_EXTRACT_CRON_EXPRESSION
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: BILLING_CCLF_EXTRACT_CRON_EXPRESSION
   - name: BILLING_LOG_CLEANUP_CRON_EXPRESSION
     valueFrom:
         secretKeyRef:

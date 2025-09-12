@@ -58,6 +58,9 @@ xhibit-batch:
   fetch-size: 1
 
 billing:
+  user-modified: "test"
+  cclf_extract:
+    cron_expression: 0 0 9 * * *
   cleanup_data_feed_log:
     cron_expression: 0 0 9 * * *
 

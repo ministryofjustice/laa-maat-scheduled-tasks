@@ -1,6 +1,9 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,18 +20,40 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public final class ApplicantBillingDTO implements Serializable {
 
-    @JsonValue
+    @JsonProperty("id")
     private Integer id;
+
+    @JsonProperty("first_name")
     private String firstName;
+
+    @JsonProperty("last_name")
     private String lastName;
+
+    @JsonProperty("other_names")
     private String otherNames;
+
+    @JsonProperty("dob")
     private LocalDate dob;
+
+    @JsonProperty("gender")
     private String gender;
+
+    @JsonProperty("ni_number")
     private String niNumber;
+
+    @JsonProperty("foreign_id")
     private String foreignId;
+
+    @JsonProperty("date_created")
     private LocalDateTime dateCreated;
+
+    @JsonProperty("user_created")
     private String userCreated;
+
+    @JsonProperty("date_modified")
     private LocalDateTime dateModified;
+
+    @JsonProperty("user_modified")
     private String userModified;
 
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
