@@ -14,6 +14,7 @@ runs:
   using: "composite"
   steps:
     - name: Notify success to Slack
+      id: slack-success
       if: ${{ success() }}
       uses: slackapi/slack-github-action@v1
       with:
@@ -21,30 +22,50 @@ runs:
           {
             "blocks": [
               {
-                "type": "header",
+                "type": "section",
                 "text": {
-                  "type": "plain_text",
-                  "text": "Deployment Successful! :partying_face:",
-                  "emoji": true
+                  "type": "mrkdwn",
+                  "text": "*:white_check_mark: Succeeded GitHub Actions*"
                 }
               },
               {
                 "type": "section",
                 "fields": [
-                  { "type": "mrkdwn", "text": "*Project:* ${{ github.event.repository.name }}" },
-                  { "type": "mrkdwn", "text": "*When:* ${{ github.run_started_at }}" },
-                  { "type": "mrkdwn", "text": "*Branch:* \n${{ github.ref_name }}" },
-                  { "type": "mrkdwn", "text": "*Successful Job:* \n${{ github.job }}" }
-                ]
-              },
-              {
-                "type": "actions",
-                "elements": [
                   {
-                    "type": "button",
-                    "action_id": "deployment_link",
-                    "text": { "type": "plain_text", "text": "View Run" },
-                    "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    "type": "mrkdwn",
+                    "text": "*Repo*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Commit*\n<${{ github.event.head_commit.url }}|${{ env.SHORT_SHA }}>"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Author*\n${{ github.event.head_commit.author.name }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Job*\n`${{ github.job }}`"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Event Name*\n`${{ github.event_name }}`"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Workflow*\n`${{ github.workflow }}`"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Build Logs*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Took*\n`${{ steps.calculate_duration.outputs.duration }} sec`"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Message*\n${{ github.event.head_commit.message }}"
                   }
                 ]
               }
@@ -52,6 +73,7 @@ runs:
           }
       env:
         SLACK_WEBHOOK_URL: ${{ inputs.webhook-url }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
     - name: Notify failure to Slack (non-main branches only)
       if: ${{ failure() && github.ref_name != 'main' }}
@@ -68,3 +90,4 @@ runs:
           *Run:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
       env:
         SLACK_WEBHOOK_URL: ${{ inputs.webhook-url }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
