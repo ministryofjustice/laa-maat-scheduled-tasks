@@ -38,7 +38,7 @@ runs:
                 "type": "section",
                 "fields": [
                   { "type": "mrkdwn", "text": "*Project:* ${{ github.event.repository.name }}" },
-                  { "type": "mrkdwn", "text": "*When:* ${{ env.BUILD_START_TIME }}" },
+                  { "type": "mrkdwn", "text": "*When:* ${{ github.env.BUILD_START_TIME }}" },
                   { "type": "mrkdwn", "text": "*Branch:* \n${{ github.ref_name }}" },
                   { "type": "mrkdwn", "text": "*Successful Job:* \n${{ github.job }}" }
                 ]
