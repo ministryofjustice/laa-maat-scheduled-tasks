@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -9,8 +10,10 @@ import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApi
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 
 import java.util.List;
@@ -25,6 +28,7 @@ public class ApplicantBillingService {
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantMapper applicantMapper;
+    private final BillingDataFeedLogMapper billingDataFeedLogMapper;
 
     @Transactional
     public void sendApplicantsToBilling(String userModified) {
@@ -34,6 +38,25 @@ public class ApplicantBillingService {
             return;
         }
 
+        sendApplicantsToBilling(applicants, userModified);
+    }
+
+    public void resendApplicantsToBilling(String userModified) {
+        List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
+
+        List<ApplicantBillingDTO> applicants = billingLogEntities.stream()
+            .map(entity -> (ApplicantBillingDTO) billingDataFeedLogMapper.mapEntityToDTO(entity))
+            .filter(Objects::nonNull)
+            .toList();
+
+        if (applicants.isEmpty()) {
+            return;
+        }
+
+        sendApplicantsToBilling(applicants, userModified);
+    }
+
+    private void sendApplicantsToBilling(List<ApplicantBillingDTO> applicants, String userModified) {
         List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
 
         resetApplicantBilling(
