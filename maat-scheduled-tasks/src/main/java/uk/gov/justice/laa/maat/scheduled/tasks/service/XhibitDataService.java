@@ -101,13 +101,11 @@ public class XhibitDataService {
         }
     }
 
-    public void markRecordSheetsAsProcessed(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
-        List<String> filenames = recordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList();
+    public void markRecordSheetsAsProcessed(List<String> filenames, RecordSheetType recordSheetType) {
         renameRecordSheets(filenames, recordSheetType, RecordSheetStatus.PROCESSED);
     }
 
-    public void markRecordSheetsAsErrored(List<XhibitRecordSheetDTO> recordSheets, RecordSheetType recordSheetType) {
-        List<String> filenames = recordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList();
+    public void markRecordSheetsAsErrored(List<String> filenames, RecordSheetType recordSheetType) {
         renameRecordSheets(filenames, recordSheetType, RecordSheetStatus.ERRORED);
     }
 
