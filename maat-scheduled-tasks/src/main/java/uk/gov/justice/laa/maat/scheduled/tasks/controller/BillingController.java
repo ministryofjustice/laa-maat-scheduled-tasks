@@ -2,7 +2,6 @@ package uk.gov.justice.laa.maat.scheduled.tasks.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +19,7 @@ public class BillingController {
     @GetMapping
     public ResponseEntity getBillingData() {
 
-        billingScheduler.extractCCLFBillingData();
+        billingScheduler.extractBillingData();
 
         return ResponseEntity.ok().build();
     }

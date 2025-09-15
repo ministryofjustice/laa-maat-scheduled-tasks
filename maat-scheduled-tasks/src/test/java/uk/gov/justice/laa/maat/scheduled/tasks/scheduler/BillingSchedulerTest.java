@@ -7,7 +7,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,7 +43,7 @@ public class BillingSchedulerTest {
     void givenNoExceptions_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformed() {
         when(billingConfiguration.getUserModified()).thenReturn("test");
 
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
         verify(applicantBillingService).sendApplicantsToBilling(anyString());
@@ -54,12 +53,12 @@ public class BillingSchedulerTest {
     }
 
     @Test
-    void givenExceptionThrown_whenExtractCCLFBillingDataIsInvoked_thenMaatReferencesDeleted() {
+    void givenExceptionThrown_whenExtractBillingDataIsInvoked_thenMaatReferencesDeleted() {
         doThrow(new MAATScheduledTasksException(
             "The maat references table is already populated.")).when(maatReferenceService)
             .populateMaatReferences();
 
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
         verify(maatReferenceService).deleteMaatReferences();
     }
