@@ -14,10 +14,10 @@ runs:
   using: "composite"
   steps:
     - name: Calculate build start time
-      id: build-start-time
+      id: build-run-time
       shell: bash
       run: |
-        echo "BUILD_START_TIME=$(date +%s)" >> $GITHUB_ENV
+        echo "BUILD_RUN_TIME=$(date +'%m/%d/%Y %T')" >> $GITHUB_ENV
 
     - name: Notify success to Slack
       id: slack-success
@@ -39,7 +39,7 @@ runs:
                 "type": "section",
                 "fields": [
                   { "type": "mrkdwn", "text": "*Project:* ${{ github.event.repository.name }}" },
-                  { "type": "mrkdwn", "text": "*When:* ${{ steps.build-start-time.env.BUILD_START_TIME }}" },
+                  { "type": "mrkdwn", "text": "*When:* ${{ steps.build-start-time.env.BUILD_RUN_TIME }}" },
                   { "type": "mrkdwn", "text": "*Branch:* \n${{ github.ref_name }}" },
                   { "type": "mrkdwn", "text": "*Successful Job:* \n${{ github.job }}" }
                 ]
