@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RepOrderBillingDTO {
+public class RepOrderBillingDTO implements BillingDTO {
 
     @JsonProperty("id")
     private Integer id;
