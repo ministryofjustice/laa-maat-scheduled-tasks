@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,10 @@ public class BillingDataFeedLogService {
     private static final String INVALID_DATE_MESSAGE = "A date must be provided for the logs to be deleted.";
     
     private final BillingDataFeedLogRepository billingDataFeedLogRepository;
+
+    public List<BillingDataFeedLogEntity> getBillingDataFeedLogs(BillingDataFeedRecordType recordType) {
+        return billingDataFeedLogRepository.getBillingDataFeedLogEntitiesByRecordType(recordType.getValue());
+    }
 
     public void saveBillingDataFeed(BillingDataFeedRecordType recordType, String payload) {
         BillingDataFeedLogEntity entity = BillingDataFeedLogEntity.builder()

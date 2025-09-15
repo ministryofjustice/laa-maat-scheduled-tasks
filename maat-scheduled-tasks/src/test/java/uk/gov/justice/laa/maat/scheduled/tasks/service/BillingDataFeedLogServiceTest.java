@@ -1,12 +1,17 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static wiremock.org.hamcrest.MatcherAssert.assertThat;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +30,45 @@ public class BillingDataFeedLogServiceTest {
     private BillingDataFeedLogRepository billingDataFeedLogRepository;
     @InjectMocks
     private BillingDataFeedLogService billingDataFeedLogService;
+
+    @Test
+    void givenNoDataExists_whenGetBillingDataFeedLogsIsInvoked_thenReturnEmptyList() {
+        List<BillingDataFeedLogEntity> records = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
+
+        assertTrue(records.isEmpty());
+    }
+
+    @Test
+    void givenNoMatchingDataExists_whenGetBillingDataFeedLogsIsInvoked_thenReturnEmptyList() {
+        BillingDataFeedLogEntity repOrderBillingEntity = BillingDataFeedLogEntity.builder()
+            .id(1)
+            .recordType(BillingDataFeedRecordType.REP_ORDER.getValue())
+            .payload("")
+            .build();
+
+        lenient().when(billingDataFeedLogRepository.getBillingDataFeedLogEntitiesByRecordType(BillingDataFeedRecordType.REP_ORDER.getValue()))
+            .thenReturn(List.of(repOrderBillingEntity));
+
+        List<BillingDataFeedLogEntity> records = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
+
+        assertTrue(records.isEmpty());
+    }
+
+    @Test
+    void givenMatchingDataExists_whenGetBillingDataFeedLogsIsInvoked_thenReturnsRecords() {
+        BillingDataFeedLogEntity applicantBillingEntity = BillingDataFeedLogEntity.builder()
+            .id(123)
+            .recordType(BillingDataFeedRecordType.APPLICANT.getValue())
+            .payload("")
+            .build();
+
+        when(billingDataFeedLogRepository.getBillingDataFeedLogEntitiesByRecordType(BillingDataFeedRecordType.APPLICANT.getValue()))
+            .thenReturn(List.of(applicantBillingEntity));
+
+        List<BillingDataFeedLogEntity> records = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
+
+        assertEquals(applicantBillingEntity, records.getFirst());
+    }
 
     @Test
     void givenValidData_whenSaveBillingDataFeedIsInvoked_thenDataIsSavedToRepository() {
