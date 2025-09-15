@@ -61,8 +61,8 @@ runs:
         SLACK_WEBHOOK_URL: ${{ inputs.webhook-url }}
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
-    - name: Notify failure to Slack (non-main branches only)
-      if: ${{ failure() && github.ref_name != 'main' }}
+    - name: Notify failure to Slack
+      if: ${{ failure() }}
       uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
