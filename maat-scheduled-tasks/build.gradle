@@ -20,7 +20,9 @@ def versions = [
 		resilience4j			: "2.3.0",
 		wmStubRunnerVersion		: "4.3.0",
 		commonsLang3Version		: "3.18.0",
-		awsSdkVersion			: "2.32.14"
+		awsSdkVersion			: "2.32.14",
+		localstack				: "1.21.3",
+		localstackUtils			: "0.2.23"
 ]
 
 configurations {
@@ -61,11 +63,15 @@ dependencies {
 	annotationProcessor "org.projectlombok:lombok"
 	annotationProcessor "org.mapstruct:mapstruct-processor:$versions.mapstructVersion"
 
+	testImplementation "com.h2database:h2"
 	testImplementation "org.springframework.boot:spring-boot-starter-test"
 	testImplementation "io.projectreactor:reactor-test"
-	testImplementation "com.h2database:h2"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 	testImplementation "org.springframework.cloud:spring-cloud-starter-contract-stub-runner:$versions.wmStubRunnerVersion"
+
+	testImplementation "org.testcontainers:localstack:$versions.localstack"
+	testImplementation "cloud.localstack:localstack-utils:$versions.localstackUtils"
+	testImplementation "org.testcontainers:junit-jupiter:$versions.localstack"
 
 	testCompileOnly "org.projectlombok:lombok"
 	testAnnotationProcessor "org.projectlombok:lombok"

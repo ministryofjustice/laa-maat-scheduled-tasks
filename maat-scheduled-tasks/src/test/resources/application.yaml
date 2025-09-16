@@ -12,6 +12,20 @@ spring:
     password:
     driver-class-name: org.h2.Driver
     name: TOGDATA
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate.enable_lazy_load_no_trans: true
+      hibernate.jdbc.lob.non_contextual_creation: true
+  sql:
+    init:
+      platform: h2
+      mode: embedded
+
   security:
     oauth2:
       client:
@@ -54,8 +68,12 @@ xhibit-batch:
     cron_expression: 0 0 9 * * *
   appeal_data_processing:
     cron_expression: 0 0 9 * * *
-
   fetch-size: 1
+  s3-data-bucket-name: test-bucket
+  object-key-errored-prefix: "errored"
+  object-key-processed-prefix: "processed"
+  object-key-trial-prefix: "incoming/trial/"
+  object-key-appeal-prefix: "incoming/appeal/"
 
 billing:
   user-modified: "test"

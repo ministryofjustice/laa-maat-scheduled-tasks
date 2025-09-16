@@ -61,7 +61,8 @@ public class XhibitDataService {
         ListObjectsV2Request listObjectsV2Request = listObjectsRequestBuilder.build();
 
         try {
-            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsV2Request);
+            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(
+                    listObjectsV2Request);
             List<S3Object> contents = listObjectsResponse.contents();
 
             if (contents.isEmpty()) {
@@ -76,16 +77,19 @@ public class XhibitDataService {
 
                 try {
                     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                        .bucket(xhibitConfiguration.getS3DataBucketName())
-                        .key(key)
-                        .build();
+                            .bucket(xhibitConfiguration.getS3DataBucketName())
+                            .key(key)
+                            .build();
 
                     String data = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
                     recordSheetDTOBuilder.data(data);
 
-                    recordSheetsResponse.getRetrievedRecordSheets().add(recordSheetDTOBuilder.build());
+                    recordSheetsResponse.getRetrievedRecordSheets()
+                            .add(recordSheetDTOBuilder.build());
                 } catch (NoSuchKeyException | InvalidObjectStateException ex) {
-                    recordSheetsResponse.getErroredRecordSheets().add(recordSheetDTOBuilder.build());
+                    log.error("Failed to retrieve object from S3. key={}", key, ex);
+                    recordSheetsResponse.getErroredRecordSheets()
+                            .add(recordSheetDTOBuilder.build());
                 }
             });
 
@@ -95,7 +99,6 @@ public class XhibitDataService {
             return recordSheetsResponse;
         } catch (SdkClientException | AwsServiceException ex) {
             log.error("AWS S3 error: {}", ex.getMessage());
-
             throw new XhibitDataServiceException(ex.getMessage());
         }
     }
@@ -117,29 +120,30 @@ public class XhibitDataService {
         try {
             filenames.forEach(filename -> {
                 CopyObjectRequest copyObjectRequest = CopyObjectRequest.builder()
-                    .sourceBucket(xhibitConfiguration.getS3DataBucketName())
-                    .sourceKey(sourceKeyPrefix + filename)
-                    .destinationBucket(xhibitConfiguration.getS3DataBucketName())
-                    .destinationKey(destinationKeyPrefix + filename)
-                    .build();
+                        .sourceBucket(xhibitConfiguration.getS3DataBucketName())
+                        .sourceKey(sourceKeyPrefix + filename)
+                        .destinationBucket(xhibitConfiguration.getS3DataBucketName())
+                        .destinationKey(destinationKeyPrefix + filename)
+                        .build();
 
                 DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                    .bucket(xhibitConfiguration.getS3DataBucketName())
-                    .key(sourceKeyPrefix + filename)
-                    .build();
+                        .bucket(xhibitConfiguration.getS3DataBucketName())
+                        .key(sourceKeyPrefix + filename)
+                        .build();
 
                 CopyObjectResponse copyObjectResponse = s3Client.copyObject(copyObjectRequest);
                 if (copyObjectResponse == null || copyObjectResponse.copyObjectResult() == null
-                    || !StringUtils.hasLength( copyObjectResponse.copyObjectResult().eTag())) {
-                    log.warn("Failed to copy record sheet {} with source key {}, skipping delete", filename, copyObjectRequest.sourceKey());
-
+                        || !StringUtils.hasLength(copyObjectResponse.copyObjectResult().eTag())) {
+                    log.warn("Failed to copy record sheet {} with source key {}, skipping delete",
+                            filename, copyObjectRequest.sourceKey());
                     return;
                 }
 
-                DeleteObjectResponse deleteObjectResponse = s3Client.deleteObject(deleteObjectRequest);
-
-                if (!deleteObjectResponse.sdkHttpResponse().isSuccessful()) {
-                    log.warn("Failed to delete record sheet {} with source key {}", filename, deleteObjectRequest.key());
+                DeleteObjectResponse deleteObjectResponse = s3Client.deleteObject(
+                        deleteObjectRequest);
+                if (!s3DeleteWasSuccessful(deleteObjectResponse)) {
+                    log.warn("Failed to delete record sheet {} with source key {}", filename,
+                            deleteObjectRequest.key());
                 }
             });
         } catch (SdkClientException | AwsServiceException ex) {
@@ -150,5 +154,4 @@ public class XhibitDataService {
     public boolean s3DeleteWasSuccessful(DeleteObjectResponse response) {
         return response.sdkHttpResponse() == null || response.sdkHttpResponse().isSuccessful();
     }
-
 }
