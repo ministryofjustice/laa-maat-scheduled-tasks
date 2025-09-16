@@ -4,23 +4,24 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.StoredProcedure;
 
 @Service
 @RequiredArgsConstructor
 public class LocalManagementReportsService {
 
-    private static final String STORED_PROCEDURE_PREFIX = "maat_batch.process_reports_batch_";
-    private static final List<Integer> BATCH_NUMBERS = List.of(1, 2, 3, 4, 5, 6);
+    private static final List<StoredProcedure> REPORT_PROCEDURES = List.of(
+            StoredProcedure.REPORTS_BATCH_1,
+            StoredProcedure.REPORTS_BATCH_2,
+            StoredProcedure.REPORTS_BATCH_3,
+            StoredProcedure.REPORTS_BATCH_4,
+            StoredProcedure.REPORTS_BATCH_5,
+            StoredProcedure.REPORTS_BATCH_6
+    );
 
     private final StoredProcedureService storedProcedureService;
 
-    /**
-     * Processes report batches asynchronously by executing a series of stored procedures.
-     * Each stored procedure handles a specific batch of reports.
-     */
-     public void processReportsBatches() {
-        BATCH_NUMBERS.forEach(batchNumber ->
-                storedProcedureService.callStoredProcedure(STORED_PROCEDURE_PREFIX + batchNumber)
-        );
+    public void processReportsBatches() {
+        REPORT_PROCEDURES.forEach(storedProcedureService::callStoredProcedure);
     }
 }

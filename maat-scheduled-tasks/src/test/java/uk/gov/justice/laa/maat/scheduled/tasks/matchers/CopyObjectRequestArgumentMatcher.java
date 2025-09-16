@@ -15,6 +15,10 @@ public class CopyObjectRequestArgumentMatcher implements ArgumentMatcher<CopyObj
 
     @Override
     public boolean matches(CopyObjectRequest copyObjectRequest) {
+        if (copyObjectRequest == null) {
+            return false;
+        }
+
         return sourceKey.equals(copyObjectRequest.sourceKey())
             && destinationKey.equals(copyObjectRequest.destinationKey());
     }

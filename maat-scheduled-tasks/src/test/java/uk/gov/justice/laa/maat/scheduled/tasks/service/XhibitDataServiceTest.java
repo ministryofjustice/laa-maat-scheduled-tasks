@@ -1,10 +1,25 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.core.ResponseBytes;
@@ -30,29 +45,10 @@ import uk.gov.justice.laa.maat.scheduled.tasks.matchers.DeleteObjectRequestArgum
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.GetObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.ListObjectsV2RequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import uk.gov.justice.laa.maat.scheduled.tasks.util.ObjectKeyHelper;
 
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceTest {
-
-    private static final String OBJECT_PREFIX = "trial/";
 
     @Mock
     private S3Client s3Client;
@@ -63,7 +59,6 @@ class XhibitDataServiceTest {
     @Mock
     XhibitConfiguration xhibitConfiguration;
 
-    @InjectMocks
     private XhibitDataService xhibitDataService;
 
     private final XhibitRecordSheetDTO xhibitRecordSheet1 = XhibitRecordSheetDTO.builder()
@@ -83,6 +78,9 @@ class XhibitDataServiceTest {
         lenient().when(xhibitConfiguration.getObjectKeyErroredPrefix()).thenReturn("errored");
         lenient().when(xhibitConfiguration.getS3DataBucketName()).thenReturn("bucket");
         lenient().when(xhibitConfiguration.getFetchSize()).thenReturn("1");
+
+        ObjectKeyHelper objectKeyHelper = new ObjectKeyHelper(xhibitConfiguration);
+        xhibitDataService = new XhibitDataService(s3Client, objectKeyHelper, xhibitConfiguration);
     }
 
     @Test
