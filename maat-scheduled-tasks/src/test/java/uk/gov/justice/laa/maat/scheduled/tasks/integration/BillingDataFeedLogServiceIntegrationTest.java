@@ -44,7 +44,7 @@ public class BillingDataFeedLogServiceIntegrationTest {
     
     @Test
     void givenBillingLogDataExistsBeforeThreshold_whenDeleteLogsBeforeDateInvoked_thenBillingLogDataIsDeleted() {
-        List billingLogsToDelete = billingLogsToDelete();
+        List<BillingDataFeedLogEntity> billingLogsToDelete = billingLogsToDelete();
 
         billingDataFeedLogRepository.saveAll(billingLogsToDelete);
         
@@ -57,8 +57,8 @@ public class BillingDataFeedLogServiceIntegrationTest {
 
     @Test
     void givenBillingLogDataExistsBeforeAndAfterThreshold_whenDeleteLogsBeforeDateInvoked_thenCorrectBillingLogDataIsDeleted() {
-        List billingLogsToDelete = billingLogsToDelete();
-        List billingLogsToKeep = billingLogsToKeep();
+        List<BillingDataFeedLogEntity> billingLogsToKeep = billingLogsToKeep();
+        List<BillingDataFeedLogEntity> billingLogsToDelete = billingLogsToDelete();
 
         billingDataFeedLogRepository.saveAll(billingLogsToDelete);
         billingDataFeedLogRepository.saveAll(billingLogsToKeep);
