@@ -1,58 +1,55 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.safePopulate;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.StoredProcedureQuery;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.StoredProcedure;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
 import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter;
 import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.safePopulate;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class StoredProcedureService {
 
-    private static final String EMPTY_PROCEDURE_NAME_MESSAGE = "Stored procedure name cannot be null or empty";
     private static final String STORED_PROCEDURE_FAILURE_MESSAGE = "Failed to execute stored procedure: ";
 
     @PersistenceContext
     private EntityManager entityManager;
 
     @Transactional
-    public void callStoredProcedure(String storedProcedureName) {
-        createAndExecuteStoredProcedure(storedProcedureName, Collections.emptyList());
+    public void callStoredProcedure(StoredProcedure storedProcedure) {
+        createAndExecuteStoredProcedure(storedProcedure, Collections.emptyList());
     }
 
     @Transactional
-    public StoredProcedureResponse callStoredProcedure(String storedProcedureName, List<StoredProcedureParameter<?>> parameters) {
-        return createAndExecuteStoredProcedure(storedProcedureName, parameters);
+    public StoredProcedureResponse callStoredProcedure(StoredProcedure storedProcedure, List<StoredProcedureParameter<?>> parameters) {
+        return createAndExecuteStoredProcedure(storedProcedure, parameters);
     }
 
-    private StoredProcedureResponse createAndExecuteStoredProcedure(String name, List<StoredProcedureParameter<?>> parameters) {
-        if (!StringUtils.hasText(name)) {
-            throw new IllegalArgumentException(EMPTY_PROCEDURE_NAME_MESSAGE);
-        }
+    private StoredProcedureResponse createAndExecuteStoredProcedure(StoredProcedure storedProcedure, List<StoredProcedureParameter<?>> parameters) {
+        Objects.requireNonNull(storedProcedure, "Stored procedure must not be null");
 
-        StoredProcedureQuery storedProcedureQuery = getStoredProcedureQuery(name, parameters);
+        StoredProcedureQuery storedProcedureQuery = getStoredProcedureQuery(storedProcedure.getQualifiedName(), parameters);
 
         try {
             storedProcedureQuery.execute();
-            log.info("Completed stored procedure: { procedure: {} }", name);
+            log.info("Completed stored procedure: { procedure: {} }", storedProcedure.getQualifiedName());
             return getStoredProcedureResponse(storedProcedureQuery, parameters);
         } catch (Exception e) {
-            log.error("Error executing stored procedure { procedure: {} }", name, e);
-            throw new StoredProcedureException(STORED_PROCEDURE_FAILURE_MESSAGE + name, e);
+            log.error("Error executing stored procedure { procedure: {} }", storedProcedure.getQualifiedName(), e);
+            throw new StoredProcedureException(STORED_PROCEDURE_FAILURE_MESSAGE + storedProcedure.getQualifiedName(), e);
         }
     }
 

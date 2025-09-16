@@ -14,8 +14,8 @@ import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.BillingDataFeedLogRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
 
-@AutoConfigureMockMvc
 @SpringBootTest
+@AutoConfigureMockMvc
 public class BillingDataFeedLogServiceIntegrationTest {
     
     public static final LocalDateTime THRESHOLD_DATE = LocalDateTime.of(2025, 7, 1, 23, 15);
