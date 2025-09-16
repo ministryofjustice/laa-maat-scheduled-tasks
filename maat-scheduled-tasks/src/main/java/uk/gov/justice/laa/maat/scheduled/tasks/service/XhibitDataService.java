@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,9 +25,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
-
-import java.text.MessageFormat;
-import java.util.List;
+import uk.gov.justice.laa.maat.scheduled.tasks.util.ObjectKeyHelper;
 
 @Slf4j
 @Service
@@ -34,12 +33,12 @@ import java.util.List;
 public class XhibitDataService {
 
     private final S3Client s3Client;
-
+    private final ObjectKeyHelper objectKeyHelper;
     private final XhibitConfiguration xhibitConfiguration;
 
     public GetRecordSheetsResponse getAllRecordSheets(RecordSheetType recordSheetType) {
         GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
-        String objectKeyPrefix = getPrefixString(recordSheetType);
+        String objectKeyPrefix = objectKeyHelper.buildPrefix(recordSheetType);
 
         do {
             recordSheetsResponse = buildRecordSheetsResponse(recordSheetsResponse, objectKeyPrefix);
@@ -110,9 +109,10 @@ public class XhibitDataService {
     }
 
     private void renameRecordSheets(List<String> filenames,
-        RecordSheetType recordSheetType, RecordSheetStatus recordSheetStatus) {
-        String sourceKeyPrefix = getPrefixString(recordSheetType);
-        String destinationKeyPrefix = getPrefixString(recordSheetType, recordSheetStatus);
+            RecordSheetType recordSheetType, RecordSheetStatus recordSheetStatus) {
+        String sourceKeyPrefix = objectKeyHelper.buildPrefix(recordSheetType);
+        String destinationKeyPrefix =
+                objectKeyHelper.buildPrefix(recordSheetType, recordSheetStatus);
 
         try {
             filenames.forEach(filename -> {
@@ -147,16 +147,8 @@ public class XhibitDataService {
         }
     }
 
-    private String getPrefixString(RecordSheetType type) {
-        return type == RecordSheetType.TRIAL ? xhibitConfiguration.getObjectKeyTrialPrefix()
-            : xhibitConfiguration.getObjectKeyAppealPrefix();
+    public boolean s3DeleteWasSuccessful(DeleteObjectResponse response) {
+        return response.sdkHttpResponse() == null || response.sdkHttpResponse().isSuccessful();
     }
 
-    private String getPrefixString(RecordSheetType type, RecordSheetStatus status) {
-        String processedStatus = status == RecordSheetStatus.PROCESSED
-            ? xhibitConfiguration.getObjectKeyProcessedPrefix()
-            : xhibitConfiguration.getObjectKeyErroredPrefix();
-
-        return MessageFormat.format("{0}/{1}/", processedStatus, type.toString().toLowerCase());
-    }
 }
