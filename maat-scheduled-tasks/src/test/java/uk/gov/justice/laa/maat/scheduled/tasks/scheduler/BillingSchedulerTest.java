@@ -3,6 +3,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,7 +41,7 @@ public class BillingSchedulerTest {
     private BillingDataFeedLogService billingDataFeedLogService;
 
     @Test
-    void givenNoExceptions_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformed() {
+    void givenNoExceptions_whenExtractBillingDataIsInvoked_thenExtractIsPerformed() {
         when(billingConfiguration.getUserModified()).thenReturn("test");
 
         scheduler.extractBillingData();
@@ -54,12 +55,14 @@ public class BillingSchedulerTest {
 
     @Test
     void givenExceptionThrown_whenExtractBillingDataIsInvoked_thenMaatReferencesDeleted() {
-        doThrow(new MAATScheduledTasksException(
-            "The maat references table is already populated.")).when(maatReferenceService)
-            .populateMaatReferences();
+        doThrow(new MAATScheduledTasksException("The maat references table is already populated."))
+            .when(maatReferenceService).populateMaatReferences();
 
         scheduler.extractBillingData();
 
+        verify(applicantBillingService, never()).sendApplicantsToBilling(anyString());
+        verify(applicantHistoryBillingService, never()).sendApplicantHistoryToBilling(anyString());
+        verify(repOrderBillingService, never()).sendRepOrdersToBilling(anyString());
         verify(maatReferenceService).deleteMaatReferences();
     }
 
