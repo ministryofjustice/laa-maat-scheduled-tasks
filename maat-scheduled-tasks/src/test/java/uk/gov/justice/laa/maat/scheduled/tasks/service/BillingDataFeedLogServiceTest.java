@@ -1,10 +1,10 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -29,8 +29,9 @@ public class BillingDataFeedLogServiceTest {
     @Test
     void givenValidData_whenSaveBillingDataFeedIsInvoked_thenDataIsSavedToRepository() {
         BillingDataFeedRecordType recordType = BillingDataFeedRecordType.APPLICANT;
-        String payload = "[ApplicantBillingDTO(id=1, firstName='John', lastName='Doe', dob='1983-02-03'," +
-            " gender='Male', niNumber='SR096795A', dateCreated='2025-01-01', userCreated='test-u')]";
+        String payload =
+                "[ApplicantBillingDTO(id=1, firstName='John', lastName='Doe', dob='1983-02-03'," +
+                        " gender='Male', niNumber='SR096795A', dateCreated='2025-01-01', userCreated='test-u')]";
 
         billingDataFeedLogService.saveBillingDataFeed(recordType, payload);
 
@@ -43,15 +44,14 @@ public class BillingDataFeedLogServiceTest {
 
         Long logsDeleted = billingDataFeedLogService.deleteLogsBeforeDate(THRESHOLD_DATE);
 
+        assertThat(logsDeleted).isEqualTo(2L);
         verify(billingDataFeedLogRepository).deleteByDateCreatedBefore(THRESHOLD_DATE);
-        assertEquals(2L, logsDeleted);
     }
 
     @Test
     void givenNoDate_whenDeleteLogsBeforeDateInvoked_thenAnIllegalArgumentExceptionIsThrown() {
-        assertThatThrownBy(() -> {
-            billingDataFeedLogService.deleteLogsBeforeDate(null);
-        }).isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("A date must be provided for the logs to be deleted.");
+        assertThatThrownBy(() -> billingDataFeedLogService.deleteLogsBeforeDate(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("A date must be provided for the logs to be deleted.");
     }
 }

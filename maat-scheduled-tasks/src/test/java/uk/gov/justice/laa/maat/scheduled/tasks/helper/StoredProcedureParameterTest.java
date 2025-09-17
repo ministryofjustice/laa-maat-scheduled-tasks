@@ -1,15 +1,14 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.helper;
 
-import jakarta.persistence.ParameterMode;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inOutParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inputParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.outputParameter;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.safePopulate;
+
+import jakarta.persistence.ParameterMode;
+import org.junit.jupiter.api.Test;
 
 class StoredProcedureParameterTest {
 
@@ -17,43 +16,44 @@ class StoredProcedureParameterTest {
     void testInputParameter() {
         StoredProcedureParameter<String> param = inputParameter("username", "name");
 
-        assertEquals("username", param.getName());
-        assertEquals(String.class, param.getType());
-        assertEquals("name", param.getValue());
-        assertEquals(ParameterMode.IN, param.getMode());
+        assertThat(param.getName()).isEqualTo("username");
+        assertThat(param.getType()).isEqualTo(String.class);
+        assertThat(param.getValue()).isEqualTo("name");
+        assertThat(param.getMode()).isEqualTo(ParameterMode.IN);
     }
 
     @Test
     void testOutputParameter() {
         StoredProcedureParameter<Integer> param = outputParameter("userId", Integer.class);
 
-        assertEquals("userId", param.getName());
-        assertEquals(Integer.class, param.getType());
-        assertNull(param.getValue());
-        assertEquals(ParameterMode.OUT, param.getMode());
+        assertThat(param.getValue()).isNull();
+        assertThat(param.getName()).isEqualTo("userId");
+        assertThat(param.getType()).isEqualTo(Integer.class);
+        assertThat(param.getMode()).isEqualTo(ParameterMode.OUT);
     }
 
     @Test
     void testInOutParameter() {
         StoredProcedureParameter<Boolean> param = inOutParameter("active", true);
 
-        assertEquals("active", param.getName());
-        assertEquals(Boolean.class, param.getType());
-        assertEquals(true, param.getValue());
-        assertEquals(ParameterMode.INOUT, param.getMode());
+        assertThat(param.getValue()).isTrue();
+        assertThat(param.getName()).isEqualTo("active");
+        assertThat(param.getType()).isEqualTo(Boolean.class);
+        assertThat(param.getMode()).isEqualTo(ParameterMode.INOUT);
     }
 
     @Test
     void badValueTypeThrowsException() {
         StoredProcedureParameter<Boolean> outParam = outputParameter("userId", Boolean.class);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> safePopulate(outParam, "notBoolean"));
-        String expectedMessage = "Type mismatch for parameter: userId, expected: Boolean, but got: String";
-        assertEquals(expectedMessage, exception.getMessage());
+        assertThatThrownBy(() -> safePopulate(outParam, "notBoolean"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(
+                        "Type mismatch for parameter: userId, expected: Boolean, but got: String");
     }
 
     @Test
     void nullParameterValue_ReturnsOriginalParameter() {
         StoredProcedureParameter<String> outParam = outputParameter("userId", String.class);
-        assertEquals(outParam, safePopulate(outParam, null));
+        assertThat(safePopulate(outParam, null)).isEqualTo(outParam);
     }
 }
