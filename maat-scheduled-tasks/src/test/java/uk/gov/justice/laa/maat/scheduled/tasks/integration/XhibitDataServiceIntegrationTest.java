@@ -29,19 +29,19 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.LocalstackS3TestConfig;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitAppealDataEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.config.XhibitConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.entity.XhibitAppealDataEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.entity.XhibitTrialDataEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetStatus;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.StoredProcedure;
 import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
-import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitAppealDataRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.AppealDataService;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.repository.XhibitAppealDataRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.repository.XhibitTrialDataRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service.AppealDataService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.StoredProcedureService;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.TrialDataService;
-import uk.gov.justice.laa.maat.scheduled.tasks.util.ObjectKeyHelper;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service.TrialDataService;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.helper.ObjectKeyHelper;
 
 @SpringBootTest
 @Testcontainers
@@ -115,7 +115,7 @@ class XhibitDataServiceIntegrationTest {
                 StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE), any()))
                 .thenReturn(new StoredProcedureResponse(Collections.emptyList()));
 
-        trialDataService.populateAndProcessTrialDataInToMaat();
+        trialDataService.populateAndProcessData();
 
         assertThatNoException().isThrownBy(() -> s3Client.getObject(
                 GetObjectRequest.builder().bucket(xhibitConfiguration.getS3DataBucketName())
@@ -147,7 +147,7 @@ class XhibitDataServiceIntegrationTest {
                 StoredProcedure.APPEAL_DATA_TO_MAAT_PROCEDURE), any()))
                 .thenReturn(new StoredProcedureResponse(Collections.emptyList()));
 
-        appealDataService.populateAndProcessAppealDataInToMaat();
+        appealDataService.populateAndProcessData();
 
         assertThatNoException().isThrownBy(() -> s3Client.getObject(
                 GetObjectRequest.builder().bucket(xhibitConfiguration.getS3DataBucketName())
@@ -167,14 +167,14 @@ class XhibitDataServiceIntegrationTest {
 
     @Test
     void givenNoTrialRecordSheets_whenProcessTrialDataIsInvoked_thenNoDataIsProcessed() {
-        trialDataService.populateAndProcessTrialDataInToMaat();
+        trialDataService.populateAndProcessData();
         List<XhibitTrialDataEntity> recordSheets = trialDataRepository.findAll();
         assertThat(recordSheets).isEmpty();
     }
 
     @Test
     void givenNoAppealRecordSheets_whenProcessAppealDataIsInvoked_thenNoDataIsProcessed() {
-        appealDataService.populateAndProcessAppealDataInToMaat();
+        appealDataService.populateAndProcessData();
         List<XhibitAppealDataEntity> recordSheets = appealDataRepository.findAll();
         assertThat(recordSheets).isEmpty();
     }
