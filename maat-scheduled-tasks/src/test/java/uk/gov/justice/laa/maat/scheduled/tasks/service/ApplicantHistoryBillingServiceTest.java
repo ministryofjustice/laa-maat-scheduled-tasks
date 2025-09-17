@@ -70,7 +70,7 @@ class ApplicantHistoryBillingServiceTest {
 
         verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(USER_MODIFIED, List.of(
             APPLICANT_HISTORY_TEST_ID));
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient, never()).updateApplicantsHistory(any(
             UpdateApplicantHistoriesRequest.class));
     }
@@ -89,7 +89,7 @@ class ApplicantHistoryBillingServiceTest {
 
         verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED, List.of(
             APPLICANT_HISTORY_TEST_ID));
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any(
             UpdateApplicantHistoriesRequest.class));
     }
@@ -115,14 +115,14 @@ class ApplicantHistoryBillingServiceTest {
 
         when(billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT_HISTORY))
             .thenReturn(List.of(billingEntity));
-        when(billingDataFeedLogMapper.mapEntityToDTO(billingEntity)).thenReturn(applicantHistoryDto);
+        when(billingDataFeedLogMapper.mapEntityToApplicationHistoryBillingDtos(billingEntity)).thenReturn(List.of(applicantHistoryDto));
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
 
         applicantHistoryBillingService.resendApplicantHistoryToBilling(USER_MODIFIED);
 
         verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED, List.of(
             APPLICANT_HISTORY_TEST_ID));
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(applicantHistoryDto).toString());
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(applicantHistoryDto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any(UpdateApplicantHistoriesRequest.class));
     }
 }

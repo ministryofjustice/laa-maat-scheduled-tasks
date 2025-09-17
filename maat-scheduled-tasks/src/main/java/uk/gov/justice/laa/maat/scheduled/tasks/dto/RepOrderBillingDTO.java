@@ -4,19 +4,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RepOrderBillingDTO implements BillingDTO {
-
-    @JsonProperty("id")
-    private Integer id;
+public class RepOrderBillingDTO extends BillingDTO {
 
     @JsonProperty("def_id")
     private Integer applicantId;
