@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.service;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -36,16 +36,16 @@ import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.config.XhibitConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.exception.XhibitDataServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.CopyObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.DeleteObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.GetObjectRequestArgumentMatcher;
 import uk.gov.justice.laa.maat.scheduled.tasks.matchers.ListObjectsV2RequestArgumentMatcher;
-import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
-import uk.gov.justice.laa.maat.scheduled.tasks.util.ObjectKeyHelper;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.GetRecordSheetsResponse;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.helper.ObjectKeyHelper;
 
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceTest {
@@ -61,12 +61,12 @@ class XhibitDataServiceTest {
 
     private XhibitDataService xhibitDataService;
 
-    private final XhibitRecordSheetDTO xhibitRecordSheet1 = XhibitRecordSheetDTO.builder()
+    private final XhibitRecordSheet xhibitRecordSheet1 = XhibitRecordSheet.builder()
         .filename("file1.xml")
         .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Alice Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
         .build();
 
-    private final XhibitRecordSheetDTO xhibitRecordSheet2 = XhibitRecordSheetDTO.builder()
+    private final XhibitRecordSheet xhibitRecordSheet2 = XhibitRecordSheet.builder()
         .filename("file2.xml")
         .data("<NS1:TrialRecordSheet xmlns:NS1=\"http://www.courtservice.gov.uk/schemas/courtservice\"><NS1:DocumentID><NS1:DocumentName>TR Joe Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
         .build();
@@ -105,7 +105,7 @@ class XhibitDataServiceTest {
         when(listObjectsV2Response.nextContinuationToken()).thenReturn(null);
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
-        List<XhibitRecordSheetDTO> expectedRecordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
+        List<XhibitRecordSheet> expectedRecordSheets = List.of(xhibitRecordSheet1, xhibitRecordSheet2);
 
         setupFileResponse(xhibitRecordSheet1, "trial/file1.xml");
         setupFileResponse(xhibitRecordSheet2, "trial/file2.xml");
@@ -126,7 +126,7 @@ class XhibitDataServiceTest {
         when(listObjectsV2Response.nextContinuationToken()).thenReturn(null);
         when(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class))).thenReturn(listObjectsV2Response);
 
-        List<XhibitRecordSheetDTO> expectedSuccessfulRecordSheets = List.of(xhibitRecordSheet2);
+        List<XhibitRecordSheet> expectedSuccessfulRecordSheets = List.of(xhibitRecordSheet2);
         List<String> expectedErroredRecordSheets = List.of("file1.xml", "file3.xml");
 
         setupErrorFileResponse("trial/file1.xml");
@@ -137,7 +137,7 @@ class XhibitDataServiceTest {
 
         assertEquals(expectedSuccessfulRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
         assertEquals(expectedErroredRecordSheets, recordSheetsResponse.getErroredRecordSheets().stream().map(
-            XhibitRecordSheetDTO::getFilename).toList());
+            XhibitRecordSheet::getFilename).toList());
     }
 
     @Test
@@ -164,7 +164,7 @@ class XhibitDataServiceTest {
         doReturn(firstResponse).when(s3Client).listObjectsV2(argThat(new ListObjectsV2RequestArgumentMatcher(null)));
         doReturn(secondResponse).when(s3Client).listObjectsV2(argThat(new ListObjectsV2RequestArgumentMatcher("test-continuation-token")));
 
-        List<XhibitRecordSheetDTO> expectedSuccessfulRecordSheets = List.of(xhibitRecordSheet2);
+        List<XhibitRecordSheet> expectedSuccessfulRecordSheets = List.of(xhibitRecordSheet2);
         List<String> expectedErroredRecordSheets = List.of("file1.xml");
 
         setupErrorFileResponse("trial/file1.xml");
@@ -174,7 +174,7 @@ class XhibitDataServiceTest {
 
         assertEquals(expectedSuccessfulRecordSheets, recordSheetsResponse.getRetrievedRecordSheets());
         assertEquals(expectedErroredRecordSheets, recordSheetsResponse.getErroredRecordSheets().stream().map(
-            XhibitRecordSheetDTO::getFilename).toList());
+            XhibitRecordSheet::getFilename).toList());
 
         verify(s3Client, times(2)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request.class));
     }
@@ -244,10 +244,10 @@ class XhibitDataServiceTest {
             .build()).when(s3Client).deleteObject(ArgumentMatchers.any(DeleteObjectRequest.class));
     }
 
-    private void setupFileResponse(XhibitRecordSheetDTO xhibitRecordSheetDTO, String objectKey) {
+    private void setupFileResponse(XhibitRecordSheet xhibitRecordSheet, String objectKey) {
         ResponseBytes<GetObjectResponse> fileObjectResponse = ResponseBytes.fromByteArray(
             mock(GetObjectResponse.class),
-            xhibitRecordSheetDTO.getData().getBytes(StandardCharsets.UTF_8)
+            xhibitRecordSheet.getData().getBytes(StandardCharsets.UTF_8)
         );
 
         doReturn(fileObjectResponse).when(s3Client).getObjectAsBytes(argThat(new GetObjectRequestArgumentMatcher(objectKey)));

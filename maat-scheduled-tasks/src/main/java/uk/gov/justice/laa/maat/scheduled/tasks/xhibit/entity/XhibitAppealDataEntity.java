@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.entity;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
 
 @Builder
 @AllArgsConstructor
@@ -34,7 +34,7 @@ public class XhibitAppealDataEntity {
     @Lob
     private String data;
 
-    public static XhibitAppealDataEntity fromDto(XhibitRecordSheetDTO dto) {
+    public static XhibitAppealDataEntity fromDto(XhibitRecordSheet dto) {
         return builder()
             .filename(dto.getFilename())
             .data(dto.getData())

@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.dto;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class XhibitRecordSheetDTO {
+public class XhibitRecordSheet {
 
-    private String filename;
     private String data;
+    private String filename;
 }

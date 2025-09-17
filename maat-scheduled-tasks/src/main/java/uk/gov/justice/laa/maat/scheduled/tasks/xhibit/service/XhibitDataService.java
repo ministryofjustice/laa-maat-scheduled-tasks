@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.service;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +18,14 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Object;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO.XhibitRecordSheetDTOBuilder;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.XhibitDataServiceException;
-import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
-import uk.gov.justice.laa.maat.scheduled.tasks.util.ObjectKeyHelper;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.config.XhibitConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet.XhibitRecordSheetBuilder;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetStatus;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.exception.XhibitDataServiceException;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.GetRecordSheetsResponse;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.helper.ObjectKeyHelper;
 
 @Slf4j
 @Service
@@ -72,7 +72,7 @@ public class XhibitDataService {
 
             contents.stream().map(S3Object::key).forEach(key -> {
                 String filename = key.substring(objectKeyPrefix.length());
-                XhibitRecordSheetDTOBuilder recordSheetDTOBuilder = XhibitRecordSheetDTO.builder()
+                XhibitRecordSheetBuilder recordSheetDTOBuilder = XhibitRecordSheet.builder()
                     .filename(filename);
 
                 try {

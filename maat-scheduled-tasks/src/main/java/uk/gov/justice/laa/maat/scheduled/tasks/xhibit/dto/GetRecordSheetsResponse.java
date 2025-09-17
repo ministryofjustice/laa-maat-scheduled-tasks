@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.responses;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 
 @Data
 @Builder
@@ -17,9 +16,9 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 public class GetRecordSheetsResponse {
 
     @Builder.Default
-    private List<XhibitRecordSheetDTO> retrievedRecordSheets = new ArrayList<>();
+    private List<XhibitRecordSheet> retrievedRecordSheets = new ArrayList<>();
     @Builder.Default
-    private List<XhibitRecordSheetDTO> erroredRecordSheets = new ArrayList<>();
+    private List<XhibitRecordSheet> erroredRecordSheets = new ArrayList<>();
 
     private String continuationToken;
 

@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.entity;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,13 +12,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@Entity
 @Data
+@Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "XHIBIT_TRIAL_DATA", schema = "HUB")
 public class XhibitTrialDataEntity {
 
@@ -35,7 +35,7 @@ public class XhibitTrialDataEntity {
     @Lob
     private String data;
 
-    public static XhibitTrialDataEntity fromDto(XhibitRecordSheetDTO dto) {
+    public static XhibitTrialDataEntity fromDto(XhibitRecordSheet dto) {
         return builder()
             .filename(dto.getFilename())
             .data(dto.getData())
