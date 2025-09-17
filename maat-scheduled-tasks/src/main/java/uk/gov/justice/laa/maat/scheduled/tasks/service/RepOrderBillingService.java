@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,8 @@ public class RepOrderBillingService {
         List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.REP_ORDER);
 
         List<RepOrderBillingDTO> repOrders = billingLogEntities.stream()
-            .map(entity -> (RepOrderBillingDTO) billingDataFeedLogMapper.mapEntityToDTO(entity))
+            .map(billingDataFeedLogMapper::mapEntityToRepOrderBillingDtos)
+            .flatMap(Collection::stream)
             .filter(Objects::nonNull)
             .toList();
 
@@ -62,8 +64,7 @@ public class RepOrderBillingService {
         resetRepOrdersSentForBilling(
             ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
 
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
-            repOrders.toString());
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, repOrders);
 
         UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
             .repOrders(repOrders).build();

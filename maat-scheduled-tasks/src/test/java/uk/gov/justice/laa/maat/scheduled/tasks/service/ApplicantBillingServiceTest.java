@@ -59,7 +59,7 @@ class ApplicantBillingServiceTest {
         applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 
         verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(APPLICANT_TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(any(UpdateApplicantsRequest.class));
     }
 
@@ -75,7 +75,7 @@ class ApplicantBillingServiceTest {
         applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 
         verify(applicantBillingRepository).resetApplicantBilling(List.of(APPLICANT_TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicants(any(UpdateApplicantsRequest.class));
     }
 
@@ -99,13 +99,13 @@ class ApplicantBillingServiceTest {
 
         when(billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT))
             .thenReturn(List.of(billingEntity));
-        when(billingDataFeedLogMapper.mapEntityToDTO(billingEntity)).thenReturn(applicantDto);
+        when(billingDataFeedLogMapper.mapEntityToApplicantBillingDtos(billingEntity)).thenReturn(List.of(applicantDto));
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
 
         applicantBillingService.resendApplicantsToBilling(USER_MODIFIED);
 
         verify(applicantBillingRepository).resetApplicantBilling(List.of(APPLICANT_TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(applicantDto).toString());
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(applicantDto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicants(any(UpdateApplicantsRequest.class));
     }
 }
