@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,8 @@ public class ApplicantHistoryBillingService {
         List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT_HISTORY);
 
         List<ApplicantHistoryBillingDTO> applicantHistories = billingLogEntities.stream()
-            .map(entity -> (ApplicantHistoryBillingDTO) billingDataFeedLogMapper.mapEntityToDTO(entity))
+            .map(billingDataFeedLogMapper::mapEntityToApplicationHistoryBillingDtos)
+            .flatMap(Collection::stream)
             .filter(Objects::nonNull)
             .toList();
 
@@ -62,9 +64,7 @@ public class ApplicantHistoryBillingService {
         resetApplicantHistory(
             ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
 
-        billingDataFeedLogService.saveBillingDataFeed(
-            BillingDataFeedRecordType.APPLICANT_HISTORY,
-            applicantHistories.toString());
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, applicantHistories);
 
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();

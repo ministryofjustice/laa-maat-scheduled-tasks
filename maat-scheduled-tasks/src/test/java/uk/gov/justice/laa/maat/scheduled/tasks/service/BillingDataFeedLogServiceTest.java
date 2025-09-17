@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantDTO;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -14,8 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.BillingDataFeedLogRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,6 +27,8 @@ public class BillingDataFeedLogServiceTest {
 
     public static final LocalDateTime THRESHOLD_DATE = LocalDateTime.of(2025, 8, 1, 10, 0);
 
+    @Mock
+    private BillingDataFeedLogMapper billingDataFeedLogMapper;
     @Mock
     private BillingDataFeedLogRepository billingDataFeedLogRepository;
     @InjectMocks
@@ -68,12 +74,15 @@ public class BillingDataFeedLogServiceTest {
     }
 
     @Test
-    void givenValidData_whenSaveBillingDataFeedIsInvoked_thenDataIsSavedToRepository() {
+    void givenValidData_whenSaveBillingDataFeedIsInvoked_thenDataIsSavedToRepository()
+        throws JsonProcessingException {
         BillingDataFeedRecordType recordType = BillingDataFeedRecordType.APPLICANT;
-        String payload = "[ApplicantBillingDTO(id=1, firstName='John', lastName='Doe', dob='1983-02-03'," +
-            " gender='Male', niNumber='SR096795A', dateCreated='2025-01-01', userCreated='test-u')]";
+        List<ApplicantBillingDTO> applicantBillingDTOs = List.of(getApplicantDTO(1));
 
-        billingDataFeedLogService.saveBillingDataFeed(recordType, payload);
+        when(billingDataFeedLogMapper.mapDtoToEntity(recordType, applicantBillingDTOs)).
+            thenReturn(BillingDataFeedLogEntity.builder().build());
+
+        billingDataFeedLogService.saveBillingDataFeed(recordType, applicantBillingDTOs);
 
         verify(billingDataFeedLogRepository).save(any(BillingDataFeedLogEntity.class));
     }

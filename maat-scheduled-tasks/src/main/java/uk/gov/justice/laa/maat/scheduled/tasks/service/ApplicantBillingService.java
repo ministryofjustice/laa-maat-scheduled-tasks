@@ -1,13 +1,15 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
@@ -45,7 +47,8 @@ public class ApplicantBillingService {
         List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
 
         List<ApplicantBillingDTO> applicants = billingLogEntities.stream()
-            .map(entity -> (ApplicantBillingDTO) billingDataFeedLogMapper.mapEntityToDTO(entity))
+            .map(billingDataFeedLogMapper::mapEntityToApplicantBillingDtos)
+            .flatMap(Collection::stream)
             .filter(Objects::nonNull)
             .toList();
 
@@ -57,13 +60,12 @@ public class ApplicantBillingService {
     }
 
     private void sendApplicantsToBilling(List<ApplicantBillingDTO> applicants, String userModified) {
-        List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
+        List<Integer> ids = applicants.stream().map(BillingDTO::getId).toList();
 
         resetApplicantBilling(
             ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
 
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
-            applicants.toString());
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, applicants);
 
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
             .defendants(applicants).build();

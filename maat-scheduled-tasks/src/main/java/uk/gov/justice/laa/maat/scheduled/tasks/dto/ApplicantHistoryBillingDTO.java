@@ -1,23 +1,19 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApplicantHistoryBillingDTO implements BillingDTO {
-
-    @NotNull
-    @JsonProperty("id")
-    private Integer id;
+public class ApplicantHistoryBillingDTO extends BillingDTO {
 
     @JsonProperty("as_at_date")
     private LocalDate asAtDate;
@@ -45,19 +41,5 @@ public class ApplicantHistoryBillingDTO implements BillingDTO {
 
     @JsonProperty("foreign_id")
     private String foreignId;
-
-    @NotNull
-    @JsonProperty("date_created")
-    private LocalDateTime dateCreated;
-
-    @NotNull
-    @JsonProperty("user_created")
-    private String userCreated;
-
-    @JsonProperty("date_modified")
-    private LocalDateTime dateModified;
-
-    @JsonProperty("user_modified")
-    private String userModified;
 }
 
