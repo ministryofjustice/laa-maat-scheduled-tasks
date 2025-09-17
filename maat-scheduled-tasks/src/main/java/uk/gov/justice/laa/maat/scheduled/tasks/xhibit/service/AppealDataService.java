@@ -2,7 +2,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.entity.XhibitAppealDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.repository.XhibitAppealDataRepository;
@@ -12,10 +12,10 @@ import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.repository.XhibitAppealDat
 public class AppealDataService extends XhibitDataServiceBase<XhibitAppealDataEntity> {
 
     public AppealDataService(
-            XhibitDataService xhibitDataService,
+            XhibitS3Service xhibitS3Service,
             XhibitAppealDataRepository repository,
             AppealDataProcedureService procedureService) {
-        super(xhibitDataService, repository, procedureService);
+        super(xhibitS3Service, repository, procedureService);
     }
 
     @Override
@@ -24,7 +24,7 @@ public class AppealDataService extends XhibitDataServiceBase<XhibitAppealDataEnt
     }
 
     @Override
-    protected XhibitAppealDataEntity fromDto(XhibitRecordSheet dto) {
+    protected XhibitAppealDataEntity fromDto(RecordSheet dto) {
         return XhibitAppealDataEntity.fromDto(dto);
     }
 

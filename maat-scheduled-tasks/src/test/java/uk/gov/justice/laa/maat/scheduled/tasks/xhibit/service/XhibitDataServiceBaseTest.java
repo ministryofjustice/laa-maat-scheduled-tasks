@@ -17,16 +17,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.repository.JpaRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.StoredProcedureService;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheetsPage;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.ProcedureResult;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.GetRecordSheetsResponse;
 
 @ExtendWith(MockitoExtension.class)
 class XhibitDataServiceBaseTest {
 
     @Mock
-    private XhibitDataService xhibitDataService;
+    private XhibitS3Service xhibitS3Service;
     @Mock
     private StoredProcedureService storedProcedureService;
     @Mock
@@ -34,127 +34,124 @@ class XhibitDataServiceBaseTest {
     @Mock
     private XhibitProcedureService<TestEntity> procedureService;
     @Mock
-    private GetRecordSheetsResponse getRecordSheetsResponse;
+    private RecordSheetsPage recordSheetsPage;
 
     @InjectMocks
-    private TestDataServiceDataBase testDataService;
+    private TestDataServiceBase testDataService;
 
-    private final XhibitRecordSheet recordSheet1 = XhibitRecordSheet.builder()
+    private final RecordSheet recordSheet1 = RecordSheet.builder()
             .filename("trial_record_1.xml")
             .data("<NS1:TrialRecordSheet><NS1:DocumentID><NS1:DocumentName>TR Alice Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
             .build();
 
-    private final XhibitRecordSheet recordSheet2 = XhibitRecordSheet.builder()
+    private final RecordSheet recordSheet2 = RecordSheet.builder()
             .filename("trial_record_2.xml")
             .data("<NS1:TrialRecordSheet><NS1:DocumentID><NS1:DocumentName>TR Joe Bloggs</NS1:DocumentName></NS1:DocumentID></NS1:TrialRecordSheet>")
             .build();
 
     @Test
     void givenNoUnprocessedRecordSheets_whenPopulateAndProcessAppealDataIsInvoked_thenNoDataInToMaatIsPopulated() {
-        when(xhibitDataService.getAllRecordSheets(RecordSheetType.APPEAL))
-                .thenReturn(getRecordSheetsResponse);
+        when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL))
+                .thenReturn(recordSheetsPage);
 
         testDataService.populateAndProcessData();
 
         verify(repository, never()).saveAll(any());
-        verify(xhibitDataService, times(1)).getAllRecordSheets(RecordSheetType.APPEAL);
-        verify(xhibitDataService, never()).markRecordSheetsAsProcessed(any(), any());
-        verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
+        verify(xhibitS3Service, times(1)).getRecordSheets(RecordSheetType.APPEAL);
+        verify(xhibitS3Service, never()).markProcessed(any(), any());
+        verify(xhibitS3Service, never()).markErrored(any(), any());
         verify(storedProcedureService, never()).callStoredProcedure(any(), anyList());
     }
 
     @Test
     void givenUnprocessRecordSheetsThatAreSuccessfullyRetrieved_whenPopulateAndProcessAppealDataIsInvoked_thenDataInToMaatIsPopulated() {
 
-        when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(
+        when(recordSheetsPage.retrieved()).thenReturn(
                 List.of(recordSheet1, recordSheet2));
 
-        when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(Collections.emptyList());
+        when(recordSheetsPage.errored()).thenReturn(Collections.emptyList());
 
-        when(xhibitDataService.getAllRecordSheets(RecordSheetType.APPEAL)).thenReturn(
-                getRecordSheetsResponse);
+        when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(
+                recordSheetsPage);
 
         when(repository.findAllById(anyList())).thenReturn(List.of(
-                TestEntity.builder().id(1).filename(recordSheet1.getFilename())
-                        .data(recordSheet1.getData()).build(),
-                TestEntity.builder().id(2).filename(recordSheet2.getFilename())
-                        .data(recordSheet2.getData()).build()
+                TestEntity.builder().id(1).filename(recordSheet1.filename())
+                        .data(recordSheet1.data()).build(),
+                TestEntity.builder().id(2).filename(recordSheet2.filename())
+                        .data(recordSheet2.data()).build()
         ));
         when(procedureService.call(any(TestEntity.class))).thenReturn(ProcedureResult.SUCCESS);
 
         testDataService.populateAndProcessData();
 
         verify(repository).saveAllAndFlush(any());
-        verify(xhibitDataService).getAllRecordSheets(RecordSheetType.APPEAL);
+        verify(xhibitS3Service).getRecordSheets(RecordSheetType.APPEAL);
         verify(procedureService, times(2)).call(any(TestEntity.class));
-        verify(xhibitDataService).markRecordSheetsAsProcessed(
-                List.of(recordSheet1.getFilename(), recordSheet2.getFilename()),
+        verify(xhibitS3Service).markProcessed(
+                List.of(recordSheet1.filename(), recordSheet2.filename()),
                 RecordSheetType.APPEAL);
-        verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
+        verify(xhibitS3Service, never()).markErrored(any(), any());
     }
 
     @Test
     void givenUnprocessedRecordSheetsThatCannotBeRetrieved_whenPopulateAndProcessAppealDataIsInvoked_thenNoDataInToMaatIsPopulated() {
-        when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(
+        when(recordSheetsPage.retrieved()).thenReturn(
                 Collections.emptyList());
-        when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(
+        when(recordSheetsPage.errored()).thenReturn(
                 List.of(recordSheet1, recordSheet2));
 
-        when(xhibitDataService.getAllRecordSheets(RecordSheetType.APPEAL)).thenReturn(
-                getRecordSheetsResponse);
+        when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(
+                recordSheetsPage);
 
         testDataService.populateAndProcessData();
 
         verify(repository, times(1)).saveAllAndFlush(Collections.emptyList());
-        verify(xhibitDataService, times(1)).getAllRecordSheets(RecordSheetType.APPEAL);
-        verify(xhibitDataService, never()).markRecordSheetsAsProcessed(any(), any());
-        verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(any(), any());
+        verify(xhibitS3Service, times(1)).getRecordSheets(RecordSheetType.APPEAL);
+        verify(xhibitS3Service, never()).markProcessed(any(), any());
+        verify(xhibitS3Service, times(1)).markErrored(any(), any());
     }
 
     @Test
     void givenMultiplePagesOfUnprocessedRecordSheets_whenPopulateAndProcessAppealDataIsInvoked_thenDataInToMaatIsPopulated() {
-        GetRecordSheetsResponse response = GetRecordSheetsResponse.builder()
-                .retrievedRecordSheets(List.of(recordSheet1, recordSheet2))
-                .erroredRecordSheets(Collections.emptyList())
-                .continuationToken(null)
-                .allRecordSheetsRetrieved(true)
-                .build();
+        RecordSheetsPage page = RecordSheetsPage.complete(List.of(recordSheet1, recordSheet2),
+                Collections.emptyList());
 
-        when(xhibitDataService.getAllRecordSheets(RecordSheetType.APPEAL)).thenReturn(response);
-        when(xhibitDataService.getAllRecordSheets(RecordSheetType.APPEAL)).thenReturn(response);
+        when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(page)
+                .thenReturn(page);
+
         when(repository.findAllById(anyList())).thenReturn(List.of(
-                TestEntity.builder().id(1).filename(recordSheet1.getFilename())
-                        .data(recordSheet1.getData()).build(),
-                TestEntity.builder().id(2).filename(recordSheet2.getFilename())
-                        .data(recordSheet2.getData()).build()
+                TestEntity.builder().id(1).filename(recordSheet1.filename())
+                        .data(recordSheet1.data()).build(),
+                TestEntity.builder().id(2).filename(recordSheet2.filename())
+                        .data(recordSheet2.data()).build()
         ));
         when(procedureService.call(any(TestEntity.class))).thenReturn(ProcedureResult.SUCCESS);
 
         testDataService.populateAndProcessData();
 
         verify(repository).saveAllAndFlush(any());
-        verify(xhibitDataService).getAllRecordSheets(RecordSheetType.APPEAL);
+        verify(xhibitS3Service).getRecordSheets(RecordSheetType.APPEAL);
         verify(procedureService, times(2)).call(any(TestEntity.class));
-        verify(xhibitDataService).markRecordSheetsAsProcessed(
-                List.of(recordSheet1.getFilename(), recordSheet2.getFilename()),
+        verify(xhibitS3Service).markProcessed(
+                List.of(recordSheet1.filename(), recordSheet2.filename()),
                 RecordSheetType.APPEAL);
-        verify(xhibitDataService, never()).markRecordSheetsAsErrored(any(), any());
+        verify(xhibitS3Service, never()).markErrored(any(), any());
     }
 
     @Test
     void givenStoredProcedureFailures_whenHandlingExceptions_FailedRecordsAreMarked() {
 
-        when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(
+        when(recordSheetsPage.retrieved()).thenReturn(
                 List.of(recordSheet1, recordSheet2));
-        when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(Collections.emptyList());
+        when(recordSheetsPage.errored()).thenReturn(Collections.emptyList());
 
-        when(xhibitDataService.getAllRecordSheets(RecordSheetType.APPEAL)).thenReturn(
-                getRecordSheetsResponse);
+        when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(
+                recordSheetsPage);
         when(repository.findAllById(anyList())).thenReturn(List.of(
-                TestEntity.builder().id(1).filename(recordSheet1.getFilename())
-                        .data(recordSheet1.getData()).build(),
-                TestEntity.builder().id(2).filename(recordSheet2.getFilename())
-                        .data(recordSheet2.getData()).build()
+                TestEntity.builder().id(1).filename(recordSheet1.filename())
+                        .data(recordSheet1.data()).build(),
+                TestEntity.builder().id(2).filename(recordSheet2.filename())
+                        .data(recordSheet2.data()).build()
         ));
 
         when(procedureService.call(any(TestEntity.class))).thenReturn(ProcedureResult.SUCCESS)
@@ -163,39 +160,39 @@ class XhibitDataServiceBaseTest {
         testDataService.populateAndProcessData();
 
         verify(procedureService, times(2)).call(any(TestEntity.class));
-        verify(xhibitDataService, times(1)).markRecordSheetsAsProcessed(
-                List.of(recordSheet1.getFilename()), RecordSheetType.APPEAL);
-        verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(
-                List.of(recordSheet2.getFilename()), RecordSheetType.APPEAL);
+        verify(xhibitS3Service, times(1)).markProcessed(
+                List.of(recordSheet1.filename()), RecordSheetType.APPEAL);
+        verify(xhibitS3Service, times(1)).markErrored(
+                List.of(recordSheet2.filename()), RecordSheetType.APPEAL);
     }
 
     @Test
     void givenStoredProcedureResponse_whenContainsErrorCodeOutput_thenMarkFailed() {
 
-        when(getRecordSheetsResponse.getRetrievedRecordSheets()).thenReturn(
+        when(recordSheetsPage.retrieved()).thenReturn(
                 List.of(recordSheet1));
-        when(getRecordSheetsResponse.getErroredRecordSheets()).thenReturn(Collections.emptyList());
-        when(xhibitDataService.getAllRecordSheets(RecordSheetType.APPEAL)).thenReturn(
-                getRecordSheetsResponse);
+        when(recordSheetsPage.errored()).thenReturn(Collections.emptyList());
+        when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(
+                recordSheetsPage);
         when(repository.findAllById(anyList())).thenReturn(List.of(
-                TestEntity.builder().id(1).filename(recordSheet1.getFilename())
-                        .data(recordSheet1.getData()).build()
+                TestEntity.builder().id(1).filename(recordSheet1.filename())
+                        .data(recordSheet1.data()).build()
         ));
         when(procedureService.call(any(TestEntity.class))).thenReturn(ProcedureResult.FAILURE);
 
         testDataService.populateAndProcessData();
 
-        verify(xhibitDataService, times(1)).markRecordSheetsAsErrored(
-                List.of(recordSheet1.getFilename()), RecordSheetType.APPEAL);
+        verify(xhibitS3Service, times(1)).markErrored(
+                List.of(recordSheet1.filename()), RecordSheetType.APPEAL);
     }
 
 
-    static class TestDataServiceDataBase extends XhibitDataServiceBase<TestEntity> {
+    static class TestDataServiceBase extends XhibitDataServiceBase<TestEntity> {
 
-        public TestDataServiceDataBase(XhibitDataService xhibitDataService,
+        public TestDataServiceBase(XhibitS3Service xhibitS3Service,
                 JpaRepository<TestEntity, Integer> repository,
                 XhibitProcedureService<TestEntity> procedureService) {
-            super(xhibitDataService, repository, procedureService);
+            super(xhibitS3Service, repository, procedureService);
         }
 
         @Override
@@ -204,8 +201,8 @@ class XhibitDataServiceBaseTest {
         }
 
         @Override
-        protected TestEntity fromDto(XhibitRecordSheet dto) {
-            return new TestEntity(1, dto.getFilename(), "");
+        protected TestEntity fromDto(RecordSheet dto) {
+            return new TestEntity(1, dto.filename(), "");
         }
 
         @Override
@@ -220,9 +217,7 @@ class XhibitDataServiceBaseTest {
     }
 
     @Builder
-    record TestEntity(Integer id, String filename, String data) {
-
-    }
+    private record TestEntity(Integer id, String filename, String data) {}
 
 
 }

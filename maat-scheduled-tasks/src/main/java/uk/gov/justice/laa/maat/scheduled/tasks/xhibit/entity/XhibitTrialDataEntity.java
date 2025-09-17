@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
 
 @Data
 @Entity
@@ -35,10 +35,10 @@ public class XhibitTrialDataEntity {
     @Lob
     private String data;
 
-    public static XhibitTrialDataEntity fromDto(XhibitRecordSheet dto) {
+    public static XhibitTrialDataEntity fromDto(RecordSheet dto) {
         return builder()
-            .filename(dto.getFilename())
-            .data(dto.getData())
+            .data(dto.data())
+            .filename(dto.filename())
             .build();
     }
 }

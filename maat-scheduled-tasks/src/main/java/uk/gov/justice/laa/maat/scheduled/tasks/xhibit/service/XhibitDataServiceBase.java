@@ -8,16 +8,16 @@ import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheetsPage;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.ProcedureResult;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.GetRecordSheetsResponse;
 
 @Slf4j
 @RequiredArgsConstructor
 public abstract class XhibitDataServiceBase<T> {
 
-    private final XhibitDataService xhibitDataService;
+    private final XhibitS3Service xhibitS3Service;
     private final JpaRepository<T, Integer> repository;
     private final XhibitProcedureService<T> procedureService;
 
@@ -25,15 +25,15 @@ public abstract class XhibitDataServiceBase<T> {
     public void populateAndProcessData() {
         RecordSheetType type = getRecordSheetType();
 
-        GetRecordSheetsResponse response = xhibitDataService.getAllRecordSheets(type);
-        if (response.getRetrievedRecordSheets().isEmpty() && response.getErroredRecordSheets()
+        RecordSheetsPage recordSheets = xhibitS3Service.getRecordSheets(type);
+        if (recordSheets.retrieved().isEmpty() && recordSheets.errored()
                 .isEmpty()) {
             log.info("No {} data found to process, aborting", type);
             return;
         }
 
         // Save
-        List<T> entities = response.getRetrievedRecordSheets().stream()
+        List<T> entities = recordSheets.retrieved().stream()
                 .map(this::fromDto)
                 .toList();
 
@@ -53,28 +53,27 @@ public abstract class XhibitDataServiceBase<T> {
                 ));
 
         List<String> processed = results.get(true);
-        List<String> errored = Stream.concat(
-                results.get(false).stream(),
-                response.getErroredRecordSheets().stream().map(XhibitRecordSheet::getFilename)
+        List<String> errored = Stream.concat(results.get(false).stream(),
+                recordSheets.errored().stream().map(RecordSheet::filename)
         ).toList();
 
         if (!errored.isEmpty()) {
-            xhibitDataService.markRecordSheetsAsErrored(errored, type);
+            xhibitS3Service.markErrored(errored, type);
             log.info("Marked {} {} record sheets as errored", errored.size(), type);
         }
 
         if (!processed.isEmpty()) {
-            xhibitDataService.markRecordSheetsAsProcessed(processed, type);
+            xhibitS3Service.markProcessed(processed, type);
             log.info("Marked {} {} record sheets as processed", processed.size(), type);
         }
     }
 
-    protected abstract RecordSheetType getRecordSheetType();
-
-    protected abstract T fromDto(XhibitRecordSheet dto);
+    protected abstract T fromDto(RecordSheet dto);
 
     protected abstract Integer getEntityId(T entity);
 
     protected abstract String getFilename(T entity);
+
+    protected abstract RecordSheetType getRecordSheetType();
 }
 

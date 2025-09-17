@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,61 +20,59 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.config.XhibitConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet.XhibitRecordSheetBuilder;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheetsPage;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetStatus;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.exception.XhibitDataServiceException;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.GetRecordSheetsResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.helper.ObjectKeyHelper;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class XhibitDataService {
+public class XhibitS3Service {
 
     private final S3Client s3Client;
     private final ObjectKeyHelper objectKeyHelper;
     private final XhibitConfiguration xhibitConfiguration;
 
-    public GetRecordSheetsResponse getAllRecordSheets(RecordSheetType recordSheetType) {
-        GetRecordSheetsResponse recordSheetsResponse = new GetRecordSheetsResponse();
-        String objectKeyPrefix = objectKeyHelper.buildPrefix(recordSheetType);
+    public RecordSheetsPage getRecordSheets(RecordSheetType recordSheetType) {
+        RecordSheetsPage page = RecordSheetsPage.empty();
+        String prefix = objectKeyHelper.buildPrefix(recordSheetType);
 
         do {
-            recordSheetsResponse = buildRecordSheetsResponse(recordSheetsResponse, objectKeyPrefix);
-        } while (!recordSheetsResponse.allRecordSheetsRetrieved());
+            page = fetchPage(page.continuationToken(), prefix, page);
+        } while (!page.complete());
 
-        return recordSheetsResponse;
+        return page;
     }
 
-    private GetRecordSheetsResponse buildRecordSheetsResponse(GetRecordSheetsResponse recordSheetsResponse, String objectKeyPrefix) {
-        String continuationToken = recordSheetsResponse.getContinuationToken();
-        ListObjectsV2Request.Builder listObjectsRequestBuilder = ListObjectsV2Request.builder()
-            .bucket(xhibitConfiguration.getS3DataBucketName())
-            .maxKeys(Integer.parseInt(xhibitConfiguration.getFetchSize()))
-            .prefix(objectKeyPrefix);
+    private RecordSheetsPage fetchPage(String continuationToken, String prefix,
+            RecordSheetsPage accumulator) {
+
+        ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder()
+                .bucket(xhibitConfiguration.getS3DataBucketName())
+                .maxKeys(Integer.parseInt(xhibitConfiguration.getFetchSize()))
+                .prefix(prefix);
 
         if (continuationToken != null) {
-            listObjectsRequestBuilder.continuationToken(continuationToken);
+            requestBuilder.continuationToken(continuationToken);
         }
 
-        ListObjectsV2Request listObjectsV2Request = listObjectsRequestBuilder.build();
-
         try {
-            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(
-                    listObjectsV2Request);
-            List<S3Object> contents = listObjectsResponse.contents();
+            ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build());
 
-            if (contents.isEmpty()) {
-                recordSheetsResponse.allRecordSheetsRetrieved(true);
-                return recordSheetsResponse;
+            if (response.contents().isEmpty()) {
+                return accumulator.next(null, true);
             }
 
-            contents.stream().map(S3Object::key).forEach(key -> {
-                String filename = key.substring(objectKeyPrefix.length());
-                XhibitRecordSheetBuilder recordSheetDTOBuilder = XhibitRecordSheet.builder()
-                    .filename(filename);
+            List<RecordSheet> errored = new ArrayList<>();
+            List<RecordSheet> retrieved = new ArrayList<>();
+
+            response.contents().stream().map(S3Object::key).forEach(key -> {
+                String filename = key.substring(prefix.length());
+                RecordSheet.RecordSheetBuilder builder = RecordSheet.builder()
+                        .filename(filename);
 
                 try {
                     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -82,36 +81,33 @@ public class XhibitDataService {
                             .build();
 
                     String data = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
-                    recordSheetDTOBuilder.data(data);
-
-                    recordSheetsResponse.getRetrievedRecordSheets()
-                            .add(recordSheetDTOBuilder.build());
+                    builder.data(data);
+                    retrieved.add(builder.build());
                 } catch (NoSuchKeyException | InvalidObjectStateException ex) {
                     log.error("Failed to retrieve object from S3. key={}", key, ex);
-                    recordSheetsResponse.getErroredRecordSheets()
-                            .add(recordSheetDTOBuilder.build());
+                    errored.add(builder.build());
                 }
             });
 
-            recordSheetsResponse.allRecordSheetsRetrieved(!listObjectsResponse.isTruncated());
-            recordSheetsResponse.setContinuationToken(listObjectsResponse.nextContinuationToken());
-
-            return recordSheetsResponse;
+            return accumulator
+                    .withErrored(errored)
+                    .withRetrieved(retrieved)
+                    .next(response.nextContinuationToken(), !response.isTruncated());
         } catch (SdkClientException | AwsServiceException ex) {
             log.error("AWS S3 error: {}", ex.getMessage());
             throw new XhibitDataServiceException(ex.getMessage());
         }
     }
 
-    public void markRecordSheetsAsProcessed(List<String> filenames, RecordSheetType recordSheetType) {
-        renameRecordSheets(filenames, recordSheetType, RecordSheetStatus.PROCESSED);
+    public void markProcessed(List<String> filenames, RecordSheetType recordSheetType) {
+        move(filenames, recordSheetType, RecordSheetStatus.PROCESSED);
     }
 
-    public void markRecordSheetsAsErrored(List<String> filenames, RecordSheetType recordSheetType) {
-        renameRecordSheets(filenames, recordSheetType, RecordSheetStatus.ERRORED);
+    public void markErrored(List<String> filenames, RecordSheetType recordSheetType) {
+        move(filenames, recordSheetType, RecordSheetStatus.ERRORED);
     }
 
-    private void renameRecordSheets(List<String> filenames,
+    private void move(List<String> filenames,
             RecordSheetType recordSheetType, RecordSheetStatus recordSheetStatus) {
         String sourceKeyPrefix = objectKeyHelper.buildPrefix(recordSheetType);
         String destinationKeyPrefix =

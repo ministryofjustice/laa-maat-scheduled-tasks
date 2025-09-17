@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.XhibitRecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
 
 @Builder
 @AllArgsConstructor
@@ -34,10 +34,10 @@ public class XhibitAppealDataEntity {
     @Lob
     private String data;
 
-    public static XhibitAppealDataEntity fromDto(XhibitRecordSheet dto) {
+    public static XhibitAppealDataEntity fromDto(RecordSheet dto) {
         return builder()
-            .filename(dto.getFilename())
-            .data(dto.getData())
+            .data(dto.data())
+            .filename(dto.filename())
             .build();
     }
 }
