@@ -34,7 +34,7 @@ class AppealDataProcedureServiceTest {
 
     @Test
     void call_returnsSuccess_whenProcedureHasNoErrors() {
-        XhibitAppealDataEntity entity = getTrialDataEntity(234, "appeal1.txt");
+        XhibitAppealDataEntity entity = getAppealDataEntity(234, "appeal1.txt");
 
         StoredProcedureResponse response = new StoredProcedureResponse(List.of());
         when(storedProcedureService.callStoredProcedure(
@@ -49,7 +49,7 @@ class AppealDataProcedureServiceTest {
     @Test
     void call_returnsFailure_whenProcedureHasErrorCodeAndMessage() {
 
-        XhibitAppealDataEntity entity = getTrialDataEntity(456, "appeal2.txt");
+        XhibitAppealDataEntity entity = getAppealDataEntity(456, "appeal2.txt");
 
         List<StoredProcedureParameter<?>> outputs = List.of(
                 StoredProcedureParameter.safePopulate(
@@ -72,7 +72,7 @@ class AppealDataProcedureServiceTest {
     @Test
     void call_returnsFailure_whenStoredProcedureThrowsException() {
 
-        XhibitAppealDataEntity entity = getTrialDataEntity(789, "appeal3.txt");
+        XhibitAppealDataEntity entity = getAppealDataEntity(789, "appeal3.txt");
 
         when(storedProcedureService.callStoredProcedure(
                 eq(StoredProcedure.APPEAL_DATA_TO_MAAT_PROCEDURE), anyList()))
@@ -94,7 +94,7 @@ class AppealDataProcedureServiceTest {
                 .contains("id", "p_error_code", "p_err_msg");
     }
 
-    private static XhibitAppealDataEntity getTrialDataEntity(int id, String filename) {
+    private static XhibitAppealDataEntity getAppealDataEntity(int id, String filename) {
         return XhibitAppealDataEntity.builder()
                 .id(id)
                 .filename(filename)

@@ -36,7 +36,7 @@ class AppealDataServiceTest {
     private AppealDataService appealDataService;
 
     @Test
-    void populateAndProcessTrialDataInToMaat_delegatesToCollaborators() {
+    void populateAndProcessData_delegatesToCollaborators() {
         RecordSheet mockRecordSheet = RecordSheet.builder()
                 .filename("file1.txt")
                 .data("data1")
