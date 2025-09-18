@@ -42,6 +42,9 @@ public class ResourceServerConfiguration {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/oauth2/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/**").hasAuthority("SCOPE_" + maatScheduledTasksScope + "/standard")
                 .anyRequest().authenticated())
             .oauth2ResourceServer((oauth2) -> oauth2
