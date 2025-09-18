@@ -23,10 +23,6 @@ public abstract class XhibitProcedureService<T> {
                     outputParameter("p_err_msg", String.class)
             );
 
-    protected boolean isErrored(StoredProcedureResponse res) {
-        return res.hasValue("p_err_msg") && res.hasValue("p_error_code");
-    }
-
     public ProcedureResult call(T entity) {
         try {
             List<StoredProcedureParameter<?>> parameters = getProcedureParameters(entity);
@@ -42,14 +38,17 @@ public abstract class XhibitProcedureService<T> {
                         res.getValue("p_err_msg")
                 );
                 return ProcedureResult.FAILURE;
-            } else {
-                return ProcedureResult.SUCCESS;
             }
 
         } catch (StoredProcedureException e) {
             log.error("Stored procedure invocation failed for recordId={}", getEntityId(entity), e);
             return ProcedureResult.FAILURE;
         }
+        return ProcedureResult.SUCCESS;
+    }
+
+    protected boolean isErrored(StoredProcedureResponse res) {
+        return res.hasValue("p_err_msg") && res.hasValue("p_error_code");
     }
 
     protected abstract int getEntityId(T entity);
