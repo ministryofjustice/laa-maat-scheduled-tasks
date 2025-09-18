@@ -8,7 +8,6 @@ import uk.gov.justice.laa.crime.enums.MagCourtOutcome;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtCaseType;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtTrialOutcome;
