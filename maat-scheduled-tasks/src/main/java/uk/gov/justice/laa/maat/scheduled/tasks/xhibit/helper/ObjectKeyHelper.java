@@ -1,10 +1,10 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.util;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.helper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.XhibitConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetStatus;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.config.XhibitConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetStatus;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
 
 @Component
 @RequiredArgsConstructor

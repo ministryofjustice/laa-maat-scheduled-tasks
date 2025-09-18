@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.entity;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,20 +12,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Data
-@Table(name = "XHIBIT_TRIAL_DATA", schema = "HUB")
-public class XhibitTrialDataEntity {
-
+@Table(name = "XHIBIT_APPEAL_DATA", schema = "HUB")
+public class XhibitAppealDataEntity {
     @Id
     @Column(name = "ID")
-    @SequenceGenerator(name = "xhibit_trial_data_gen_seq", sequenceName = "XHIBIT_TRIAL_DATA_SEQ", allocationSize = 1, schema = "HUB")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "xhibit_trial_data_gen_seq")
+    @SequenceGenerator(name = "xhibit_appeal_data_gen_seq", sequenceName = "XHIBIT_APPEAL_DATA_SEQ", allocationSize = 1, schema = "HUB")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "xhibit_appeal_data_gen_seq")
     private Integer id;
 
     @Column(name = "FILENAME")
@@ -35,10 +34,10 @@ public class XhibitTrialDataEntity {
     @Lob
     private String data;
 
-    public static XhibitTrialDataEntity fromDto(XhibitRecordSheetDTO dto) {
+    public static XhibitAppealDataEntity fromDto(RecordSheet dto) {
         return builder()
-            .filename(dto.getFilename())
-            .data(dto.getData())
+            .data(dto.data())
+            .filename(dto.filename())
             .build();
     }
 }

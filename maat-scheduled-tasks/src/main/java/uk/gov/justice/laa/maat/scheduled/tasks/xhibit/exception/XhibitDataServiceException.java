@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.exception;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.exception;
 
 public class XhibitDataServiceException extends RuntimeException {
 

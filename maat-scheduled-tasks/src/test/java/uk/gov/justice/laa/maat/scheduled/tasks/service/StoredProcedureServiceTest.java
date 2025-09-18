@@ -1,8 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inOutParameter;
@@ -27,14 +26,14 @@ import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
 @ExtendWith(MockitoExtension.class)
 class StoredProcedureServiceTest {
 
-    @InjectMocks
-    private StoredProcedureService storedProcedureService;
-
     @Mock
     private EntityManager entityManager;
 
     @Mock
     private StoredProcedureQuery storedProcedureQuery;
+
+    @InjectMocks
+    private StoredProcedureService storedProcedureService;
 
     @Test
     void testCallStoredProcedure_validProcedure_executesSuccessfully() {
@@ -55,29 +54,26 @@ class StoredProcedureServiceTest {
 
     @Test
     void testCallStoredProcedure_nullName_throwsIllegalArgumentException() {
-        // Act & Assert
-        NullPointerException exception = assertThrows(NullPointerException.class, () ->
-                storedProcedureService.callStoredProcedure(null)
-        );
 
-        assertEquals("Stored procedure must not be null", exception.getMessage());
+        assertThatThrownBy(() ->
+                storedProcedureService.callStoredProcedure(null)).isInstanceOf(
+                        NullPointerException.class)
+                .hasMessageContaining("Stored procedure must not be null");
     }
 
     @Test
     void testCallStoredProcedure_executionFails_throwsStoredProcedureException() {
-        // Arrange
-        String procedureName = "faulty_procedure";
+
         when(entityManager.createStoredProcedureQuery(
                 StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE.getQualifiedName()))
                 .thenReturn(storedProcedureQuery);
         when(storedProcedureQuery.execute()).thenThrow(new RuntimeException("DB error"));
 
-        // Act & Assert
-        StoredProcedureException exception = assertThrows(StoredProcedureException.class, () ->
+        assertThatThrownBy(() ->
                 storedProcedureService.callStoredProcedure(
-                        StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE)
-        );
-        assertTrue(exception.getMessage().contains("Failed to execute stored procedure"));
+                        StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE))
+                .isInstanceOf(StoredProcedureException.class)
+                .hasMessageContaining("Failed to execute stored procedure");
     }
 
     @Test
@@ -145,7 +141,9 @@ class StoredProcedureServiceTest {
                         safePopulate(outputParameter("outParam3", Object.class), null)
                 )
         );
-        assertEquals(expectedResponse, storedProcedureService.callStoredProcedure(
-                StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE, parameters));
+
+        assertThat(storedProcedureService.callStoredProcedure(
+                StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE, parameters)).isEqualTo(
+                expectedResponse);
     }
 }

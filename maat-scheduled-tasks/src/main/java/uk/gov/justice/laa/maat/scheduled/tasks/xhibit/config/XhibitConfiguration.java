@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.config;
+package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.config;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

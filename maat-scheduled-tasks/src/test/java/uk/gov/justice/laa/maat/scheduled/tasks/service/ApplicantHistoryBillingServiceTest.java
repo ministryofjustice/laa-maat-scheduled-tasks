@@ -1,8 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -10,11 +7,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getApplicantHistoryBillingEntity;
-import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedApplicantBillingEntity;
-import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantDTO;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantHistoryBillingDTO;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -23,17 +17,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder;
-import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,30 +46,37 @@ class ApplicantHistoryBillingServiceTest {
         ApplicantHistoryBillingEntity entity = getApplicantHistoryBillingEntity(TEST_ID);
         ApplicantHistoryBillingDTO dto = getApplicantHistoryBillingDTO(TEST_ID);
 
-        when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(List.of(entity));
+        when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(
+                List.of(entity));
         when(applicantHistoryBillingMapper.mapEntityToDTO(entity)).thenReturn(dto);
-        when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
+        when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(),
+                anyList())).thenReturn(1);
 
         applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
 
-        verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED, List.of(TEST_ID));
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
+        verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED,
+                List.of(TEST_ID));
+        verify(billingDataFeedLogService).saveBillingDataFeed(
+                BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
         verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any(
-            UpdateApplicantHistoriesRequest.class));
+                UpdateApplicantHistoriesRequest.class));
     }
 
     @Test
     void givenNoCCLFDataAvailable_whenSendApplicantHistoryToBillingIsInvoked_thenNoActionsPerformed() {
         ApplicantHistoryBillingDTO dto = getApplicantHistoryBillingDTO(TEST_ID);
 
-        when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(Collections.emptyList());
+        when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(
+                Collections.emptyList());
 
         applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
 
-        verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(USER_MODIFIED, List.of(TEST_ID));
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
+        verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(USER_MODIFIED,
+                List.of(TEST_ID));
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(
+                BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
         verify(crownCourtLitigatorFeesApiClient, never()).updateApplicantsHistory(any(
-            UpdateApplicantHistoriesRequest.class));
+                UpdateApplicantHistoriesRequest.class));
     }
 }
 
