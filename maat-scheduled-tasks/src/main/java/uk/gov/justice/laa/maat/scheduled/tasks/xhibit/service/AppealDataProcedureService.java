@@ -20,7 +20,7 @@ public class AppealDataProcedureService extends XhibitProcedureService<XhibitApp
     }
 
     @Override
-    protected Object getEntityId(XhibitAppealDataEntity e) {
+    protected int getEntityId(XhibitAppealDataEntity e) {
         return e.getId();
     }
 

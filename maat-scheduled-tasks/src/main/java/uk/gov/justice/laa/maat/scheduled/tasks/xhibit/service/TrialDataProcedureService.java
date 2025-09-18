@@ -20,7 +20,7 @@ public class TrialDataProcedureService extends XhibitProcedureService<XhibitTria
     }
 
     @Override
-    protected Object getEntityId(XhibitTrialDataEntity e) {
+    protected int getEntityId(XhibitTrialDataEntity e) {
         return e.getId();
     }
 

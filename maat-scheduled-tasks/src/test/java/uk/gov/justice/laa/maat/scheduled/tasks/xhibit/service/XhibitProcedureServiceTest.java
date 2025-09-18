@@ -95,7 +95,7 @@ class XhibitProcedureServiceTest {
         }
 
         @Override
-        protected Object getEntityId(TestEntity e) {
+        protected int getEntityId(TestEntity e) {
             return e.id();
         }
 

@@ -52,7 +52,7 @@ public abstract class XhibitProcedureService<T> {
         }
     }
 
-    protected abstract Object getEntityId(T entity);
+    protected abstract int getEntityId(T entity);
 
     protected abstract StoredProcedure getStoredProcedure();
 
