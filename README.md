@@ -41,3 +41,14 @@ pull down the env file and run the application.
 ```sh
 ./start-local.sh
 ```
+
+## Testing the application locally
+
+The postman collection for testing the endpoints set up for triggering the current scheduled tasks
+can be found [here](https://dsdmoj.atlassian.net/wiki/spaces/ASLST/pages/5906956444/MST+Runbook).
+
+Please update this whenever you add more scheduled tasks, along with the controllers to trigger them.
+
+### Open-API docs
+These can be found via localhost:8499/swagger-ui/index.html or by using the /swagger-ui/index.html
+with one of the MST deployed environment URLs. 
