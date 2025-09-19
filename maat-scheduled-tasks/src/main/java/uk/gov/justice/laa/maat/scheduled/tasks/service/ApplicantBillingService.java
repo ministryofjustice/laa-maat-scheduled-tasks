@@ -1,20 +1,19 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
-
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
+
+import static uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils.batchList;
 
 @Slf4j
 @Service
@@ -34,10 +33,7 @@ public class ApplicantBillingService {
             return;
         }
 
-        List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
-
-        resetApplicantBilling(
-            ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
+        resetApplicantBilling(applicants, userModified);
 
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
             applicants.toString());
@@ -56,10 +52,14 @@ public class ApplicantBillingService {
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
     }
 
-    private void resetApplicantBilling(ResetApplicantBillingDTO resetApplicantBillingDTO) {
-        int updatedRows = applicantBillingRepository.resetApplicantBilling(
-            resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
-        log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
-    }
+    private void resetApplicantBilling(List<ApplicantBillingDTO> applicants, String userModified) {
+        // Batching IDs due to Oracle hard limit of 1000 on IN clause.
+        List<List<Integer>> batchedIds = batchList(
+            applicants.stream().map(ApplicantBillingDTO::getId).toList(), 1000);
 
+        for (List<Integer> batch : batchedIds) {
+            int updatedRows = applicantBillingRepository.resetApplicantBilling(batch, userModified);
+            log.info("CCLF Flag reset for batch of {} applicants", updatedRows);
+        }
+    }
 }
