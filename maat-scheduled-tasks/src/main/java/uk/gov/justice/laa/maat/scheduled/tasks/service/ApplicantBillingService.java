@@ -55,8 +55,7 @@ public class ApplicantBillingService {
     private void resetApplicantBilling(List<ApplicantBillingDTO> applicants, String userModified) {
         // Batching IDs due to Oracle hard limit of 1000 on IN clause.
         List<List<Integer>> batchedIds = batchList(
-            applicants.stream().map(ApplicantBillingDTO::getId).toList(),
-            1000); 
+            applicants.stream().map(ApplicantBillingDTO::getId).toList(), 1000);
 
         for (List<Integer> batch : batchedIds) {
             int updatedRows = applicantBillingRepository.resetApplicantBilling(batch, userModified);

@@ -14,7 +14,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtTrialOutcome;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 
 @Component
 public class TestModelDataBuilder {
