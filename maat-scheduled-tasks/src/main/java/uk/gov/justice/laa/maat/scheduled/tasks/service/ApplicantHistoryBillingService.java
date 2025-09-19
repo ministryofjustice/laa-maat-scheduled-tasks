@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientResponseException;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
@@ -13,6 +14,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
@@ -23,6 +25,9 @@ public class ApplicantHistoryBillingService {
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
+
+    private static final String SENT_TO_CCLF_FAILURE_FLAG = "Y";
+    private static final String REQUEST_LABEL = "applicant history";
 
     @Transactional
     public void sendApplicantHistoryToBilling(String userModified) {
@@ -45,8 +50,20 @@ public class ApplicantHistoryBillingService {
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();
 
-        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
-        log.info("Extracted applicant history data has been sent to the billing team.");
+        try {
+            crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+            log.info("Extracted applicant history data has been sent to the billing team.");
+        } catch (RestClientResponseException exception) {
+            log.warn("Some applicant history failed to update in the CCR/CCLF database. This applicant history will be updated to be re-sent next time.");
+            
+            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(exception.getResponseBodyAsByteArray(), REQUEST_LABEL);
+            
+            if (!failedIds.isEmpty()) {
+                applicantHistoryBillingRepository.setCclfFlag(failedIds, userModified, SENT_TO_CCLF_FAILURE_FLAG);
+            }
+        }
+        
+        
     }
 
     private List<ApplicantHistoryBillingDTO> extractApplicantHistory() {

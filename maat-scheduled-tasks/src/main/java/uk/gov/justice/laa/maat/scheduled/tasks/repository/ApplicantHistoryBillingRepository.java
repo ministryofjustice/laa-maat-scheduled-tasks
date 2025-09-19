@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 
 @Repository
@@ -26,7 +25,8 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
                             A1.DATE_CREATED,
                             A1.USER_CREATED,
                             A1.DATE_MODIFIED,
-                            A1.USER_MODIFIED
+                            A1.USER_MODIFIED,
+                            A1.SEND_TO_CCLF
                         FROM TOGDATA.APPLICANT_HISTORY A1
                         JOIN TOGDATA.MAAT_REFS_TO_EXTRACT M
                         ON A1.ID = M.APHI_ID
@@ -45,7 +45,8 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
                             A2.DATE_CREATED,
                             A2.USER_CREATED,
                             A2.DATE_MODIFIED,
-                            A2.USER_MODIFIED
+                            A2.USER_MODIFIED,
+                            A2.SEND_TO_CCLF
                         FROM TOGDATA.APPLICANT_HISTORY A2
                         WHERE A2.SEND_TO_CCLF = 'Y'
                         """, nativeQuery = true)
@@ -64,4 +65,15 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
         """, nativeQuery = true)
     int resetApplicantHistory(@Param("userModified") String userModified,
         @Param("ids") List<Integer> ids);
+
+    @Modifying
+    @Query(value = """
+        UPDATE TOGDATA.APPLICANT_HISTORY
+        SET     SEND_TO_CCLF = :sendToCclf,
+                DATE_MODIFIED = SYSDATE,
+                USER_MODIFIED = :username
+        WHERE ID IN (:ids)
+        """, nativeQuery = true)
+    int setCclfFlag(@Param("ids") List<Integer> ids, @Param("username") String username, 
+        @Param("sendToCclf") String sendToCclf);
 }
