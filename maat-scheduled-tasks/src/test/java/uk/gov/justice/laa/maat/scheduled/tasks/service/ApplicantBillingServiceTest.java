@@ -15,7 +15,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingReposi
 
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
-import uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils;
 
 import static org.mockito.Mockito.*;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedApplicantBillingEntity;
