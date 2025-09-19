@@ -22,7 +22,6 @@ public class TestEntityDataBuilder {
 
     public static ApplicantHistoryBillingEntity getApplicantHistoryBillingEntity(Integer id) {
         return ApplicantHistoryBillingEntity.builder()
-            .id(id)
             .applId(id)
             .asAtDate(LocalDate.parse("2006-10-06"))
             .firstName("test_first")
