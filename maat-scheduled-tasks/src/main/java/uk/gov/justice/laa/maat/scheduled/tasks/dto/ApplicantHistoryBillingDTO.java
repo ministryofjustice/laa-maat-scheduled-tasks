@@ -7,17 +7,16 @@ import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApplicantHistoryBillingDTO {
-
-    @NotNull
-    @JsonProperty("id")
-    private Integer id;
+public class ApplicantHistoryBillingDTO extends BillingDTO {
 
     @JsonProperty("as_at_date")
     private LocalDate asAtDate;

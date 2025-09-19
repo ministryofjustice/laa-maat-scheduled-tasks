@@ -29,20 +29,30 @@ public class BillingScheduler {
     private final ApplicantHistoryBillingService applicantHistoryBillingService;
 
     @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
-    public void extractCCLFBillingData() {
+    public void extractBillingData() {
         try {
             log.info("Starting extract for CCLF billing data...");
             maatReferenceService.populateMaatReferences();
 
-            applicantBillingService.sendApplicantsToBilling(billingConfiguration.getUserModified());
-            applicantHistoryBillingService.sendApplicantHistoryToBilling(
-                billingConfiguration.getUserModified());
-            repOrderBillingService.sendRepOrdersToBilling(billingConfiguration.getUserModified());
+            applicantBillingService.sendApplicantsToBilling(getUserModified());
+            applicantHistoryBillingService.sendApplicantHistoryToBilling(getUserModified());
+            repOrderBillingService.sendRepOrdersToBilling(getUserModified());
         } catch (Exception exception) {
             log.error("Error running extract for CCLF billing data: {}", exception.getMessage());
         } finally {
             maatReferenceService.deleteMaatReferences();
             log.info("End of extract for CCLF billing data.");
+        }
+    }
+
+    public void resendBillingData() {
+        try {
+            applicantBillingService.resendApplicantsToBilling(getUserModified());
+            applicantHistoryBillingService.resendApplicantHistoryToBilling(getUserModified());
+            repOrderBillingService.resendRepOrdersToBilling(getUserModified());
+        } catch (Exception exception) {
+            log.error("Error running manual extract for CCLF billing data: {}", exception.getMessage());
+            throw exception;
         }
     }
 
@@ -53,5 +63,9 @@ public class BillingScheduler {
 
         Long logsDeleted = billingDataFeedLogService.deleteLogsBeforeDate(dateThreshold);
         log.info("Billing data feed log cleanup completed. {} entries deleted.", logsDeleted);
+    }
+
+    private String getUserModified() {
+        return billingConfiguration.getUserModified();
     }
 }

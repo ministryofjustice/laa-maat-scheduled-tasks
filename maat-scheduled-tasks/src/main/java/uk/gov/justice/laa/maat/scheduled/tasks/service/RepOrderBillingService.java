@@ -1,15 +1,20 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
 
@@ -22,6 +27,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
 public class RepOrderBillingService {
 
     private final RepOrderBillingRepository repOrderBillingRepository;
+    private final BillingDataFeedLogMapper billingDataFeedLogMapper;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
 
@@ -33,13 +39,32 @@ public class RepOrderBillingService {
             return;
         }
 
+        sendRepOrdersToBilling(repOrders, userModified);
+    }
+
+    public void resendRepOrdersToBilling(String userModified) {
+        List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.REP_ORDER);
+
+        List<RepOrderBillingDTO> repOrders = billingLogEntities.stream()
+            .map(billingDataFeedLogMapper::mapEntityToRepOrderBillingDtos)
+            .flatMap(Collection::stream)
+            .filter(Objects::nonNull)
+            .toList();
+
+        if (repOrders.isEmpty()) {
+            return;
+        }
+
+        sendRepOrdersToBilling(repOrders, userModified);
+    }
+
+    private void sendRepOrdersToBilling(List<RepOrderBillingDTO> repOrders, String userModified) {
         List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
 
         resetRepOrdersSentForBilling(
             ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
 
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
-            repOrders.toString());
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, repOrders);
 
         UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
             .repOrders(repOrders).build();
