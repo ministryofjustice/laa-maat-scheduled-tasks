@@ -1,10 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -48,11 +44,11 @@ class RepOrderBillingServiceTest {
         RepOrderBillingDTO dto = getRepOrderBillingDTO(TEST_ID);
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity));
-        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString())).thenReturn(1);
 
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
-        verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED, List.of(TEST_ID));
+        verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(dto).toString());
         verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
     }
@@ -65,7 +61,7 @@ class RepOrderBillingServiceTest {
 
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
-        verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(USER_MODIFIED, List.of(TEST_ID));
+        verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(USER_MODIFIED);
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(dto).toString());
         verify(crownCourtLitigatorFeesApiClient, never()).updateRepOrders(any(UpdateRepOrdersRequest.class));
     }

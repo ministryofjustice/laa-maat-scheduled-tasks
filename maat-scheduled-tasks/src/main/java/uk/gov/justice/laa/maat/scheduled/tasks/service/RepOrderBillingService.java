@@ -31,7 +31,8 @@ public class RepOrderBillingService {
             return;
         }
 
-        repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified);
+        int updatedRows = repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified);
+        log.info("CCLF Flag reset for {} rep orders", updatedRows);
 
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
             repOrders.toString());

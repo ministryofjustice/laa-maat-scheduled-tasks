@@ -55,14 +55,6 @@ public class TestModelDataBuilder {
             .build();
     }
 
-    public static ResetBillingDTO getResetBillingDTO() {
-        return ResetBillingDTO.builder()
-            .userModified(USER_NAME)
-            .ids(List.of(1, 2, 3))
-            .build();
-    }
-
-
     public static RepOrderBillingDTO getRepOrderBillingDTO(Integer id) {
         return RepOrderBillingDTO.builder()
                 .id(id)
@@ -89,19 +81,4 @@ public class TestModelDataBuilder {
                 .caseType(CrownCourtCaseType.EITHER_WAY.getValue())
                 .build();
     }
-
-    public static ResetApplicantBillingDTO getResetApplicantBillingDTO() {
-        return ResetApplicantBillingDTO.builder()
-                .userModified("joe-bloggs")
-                .ids(List.of(1003456, 1003457))
-                .build();
-    }
-
-    public static ResetRepOrderBillingDTO getResetRepOrderBillingDTO() {
-        return ResetRepOrderBillingDTO.builder()
-            .userModified("joe-bloggs")
-            .ids(List.of(1003456, 1003457))
-            .build();
-    }
-
 }
