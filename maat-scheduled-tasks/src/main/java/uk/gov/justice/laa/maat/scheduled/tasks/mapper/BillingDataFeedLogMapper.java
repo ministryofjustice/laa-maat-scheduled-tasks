@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
@@ -14,6 +15,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class BillingDataFeedLogMapper {
@@ -35,7 +37,8 @@ public class BillingDataFeedLogMapper {
     public List<ApplicantBillingDTO> mapEntityToApplicantBillingDtos(BillingDataFeedLogEntity entity) {
         try {
             return objectMapper.readValue(entity.getPayload(), new TypeReference<>() {});
-        } catch (JsonProcessingException | IllegalArgumentException e) {
+        } catch (JsonProcessingException | IllegalArgumentException ex) {
+            logDeserialisationException(entity, ex);
             return null;
         }
     }
@@ -43,7 +46,8 @@ public class BillingDataFeedLogMapper {
     public List<ApplicantHistoryBillingDTO> mapEntityToApplicationHistoryBillingDtos(BillingDataFeedLogEntity entity) {
         try {
             return objectMapper.readValue(entity.getPayload(), new TypeReference<>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException | IllegalArgumentException ex) {
+            logDeserialisationException(entity, ex);
             return null;
         }
     }
@@ -51,8 +55,13 @@ public class BillingDataFeedLogMapper {
     public List<RepOrderBillingDTO> mapEntityToRepOrderBillingDtos(BillingDataFeedLogEntity entity) {
         try {
             return objectMapper.readValue(entity.getPayload(), new TypeReference<>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException | IllegalArgumentException ex) {
+            logDeserialisationException(entity, ex);
             return null;
         }
+    }
+
+    private void logDeserialisationException(BillingDataFeedLogEntity entity, Exception ex) {
+        log.error("Unable to deserialise entity payload of type {}", entity.getRecordType(), ex);
     }
 }
