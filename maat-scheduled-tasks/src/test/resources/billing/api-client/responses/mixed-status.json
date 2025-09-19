@@ -1,0 +1,9 @@
+{
+  "partial_success": true,
+  "errors": [
+    {
+      "id": "2",
+      "message": "Oracle DB Error\n"
+    }
+  ]
+}

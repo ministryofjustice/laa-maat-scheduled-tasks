@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.repository;
 
-import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -37,6 +36,7 @@ public interface RepOrderBillingRepository extends
               , r.date_modified
               , r.user_modified
               , r.caty_case_type
+              , r.send_to_cclf
         FROM    TOGDATA.REP_ORDERS r
         JOIN    TOGDATA.MAAT_REFS_TO_EXTRACT ex
         ON      r.ID = ex.MAAT_ID
@@ -54,5 +54,14 @@ public interface RepOrderBillingRepository extends
     """, nativeQuery = true)
     int resetBillingFlagForRepOrderIds(@Param("userModified") String userModified, @Param("ids") List<Integer> ids);
 
-
+    @Modifying
+    @Query(value = """
+        UPDATE TOGDATA.REP_ORDERS
+        SET     SEND_TO_CCLF = :sendToCclf,
+                DATE_MODIFIED = SYSDATE,
+                USER_MODIFIED = :username
+        WHERE ID IN (:ids)
+        """, nativeQuery = true)
+    int setCclfFlag(@Param("ids") List<Integer> ids, @Param("username") String username, 
+        @Param("sendToCclf") String sendToCclf);
 }

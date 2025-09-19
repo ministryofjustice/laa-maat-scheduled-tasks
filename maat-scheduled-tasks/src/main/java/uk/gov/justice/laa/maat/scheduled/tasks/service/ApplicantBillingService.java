@@ -1,10 +1,10 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientResponseException;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
@@ -15,6 +15,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingReposi
 
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
@@ -25,6 +26,8 @@ public class ApplicantBillingService {
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantMapper applicantMapper;
+    private static final String SENT_TO_CCLF_FAILURE_FLAG = "Y";
+    private static final String REQUEST_LABEL = "applicant";
 
     @Transactional
     public void sendApplicantsToBilling(String userModified) {
@@ -45,8 +48,18 @@ public class ApplicantBillingService {
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
             .defendants(applicants).build();
 
-        crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
-        log.info("Extracted applicant data has been sent to the billing team.");
+        try {
+            crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
+            log.info("Extracted applicant data has been sent to the billing team.");
+        } catch (RestClientResponseException exception) {
+            log.warn("Some applicants failed to update in the CCR/CCLF database. These applicants will be updated to be re-sent next time.");
+            
+            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(exception.getResponseBodyAsByteArray(), REQUEST_LABEL);
+            
+            if (!failedIds.isEmpty()) {
+                applicantBillingRepository.setCclfFlag(failedIds, userModified, SENT_TO_CCLF_FAILURE_FLAG);
+            }
+        }
     }
 
     private List<ApplicantBillingDTO> findAllApplicantsForBilling() {
@@ -61,5 +74,4 @@ public class ApplicantBillingService {
             resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
         log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
     }
-
 }

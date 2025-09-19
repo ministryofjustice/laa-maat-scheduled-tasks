@@ -6,8 +6,11 @@ spring:
     allow-bean-definition-overriding: true
   application:
     name: maat-scheduled-tasks
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
   datasource:
-    url: jdbc:h2:mem:mla;MODE=Oracle;DB_CLOSE_DELAY=-1;IGNORE_CATALOGS=TRUE;NON_KEYWORDS=VALUE;INIT=CREATE SCHEMA IF NOT EXISTS togdata\;SET SCHEMA togdata
+    url: jdbc:h2:mem:mla;MODE=Oracle;DB_CLOSE_DELAY=-1;IGNORE_CATALOGS=TRUE;NON_KEYWORDS=VALUE;INIT=CREATE SCHEMA IF NOT EXISTS togdata\;CREATE SCHEMA IF NOT EXISTS hub\;SET SCHEMA togdata
     username: sa
     password:
     driver-class-name: org.h2.Driver
