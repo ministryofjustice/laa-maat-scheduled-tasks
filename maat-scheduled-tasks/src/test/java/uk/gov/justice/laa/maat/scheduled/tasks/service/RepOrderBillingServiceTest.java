@@ -1,17 +1,12 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getApplicantHistoryBillingEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedRepOrderForBilling;
-import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantHistoryBillingDTO;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getRepOrderBillingDTO;
 
 
@@ -22,17 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder;
-import uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
-import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
-import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
 
