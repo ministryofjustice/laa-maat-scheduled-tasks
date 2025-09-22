@@ -7,12 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
+
+import static uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils.batchList;
 
 @Slf4j
 @Service
@@ -32,11 +33,7 @@ public class ApplicantHistoryBillingService {
             return;
         }
 
-        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
-            .toList();
-
-        resetApplicantHistory(
-            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
+        resetApplicantHistory(applicantHistories, userModified);
 
         billingDataFeedLogService.saveBillingDataFeed(
             BillingDataFeedRecordType.APPLICANT_HISTORY,
@@ -59,9 +56,16 @@ public class ApplicantHistoryBillingService {
             .toList();
     }
 
-    private void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
-        log.info("Resetting CCLF flag for extracted applicant histories.");
-        applicantHistoryBillingRepository.resetApplicantHistory(resetBillingDTO.getUserModified(),
-            resetBillingDTO.getIds());
+    private void resetApplicantHistory(List<ApplicantHistoryBillingDTO> applicantHistories,
+        String userModified) {
+        // Batching IDs due to Oracle hard limit of 1000 on IN clause.
+        List<List<Integer>> batchedIds = batchList(
+            applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId).toList(), 1000);
+
+        for (List<Integer> batch : batchedIds) {
+            int updatedRows = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
+                batch);
+            log.info("CCLF Flag reset for batch of {} applicant histories", updatedRows);
+        }
     }
 }
