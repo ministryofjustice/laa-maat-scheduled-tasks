@@ -20,7 +20,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "XHIBIT_TRIAL_DATA", schema = "HUB")
-public class XhibitTrialDataEntity {
+public class XhibitTrialDataEntity implements XhibitEntity {
 
     @Id
     @Column(name = "ID")
@@ -31,14 +31,14 @@ public class XhibitTrialDataEntity {
     @Column(name = "FILENAME")
     private String filename;
 
-    @Column(name = "XML_CLOB")
     @Lob
+    @Column(name = "XML_CLOB")
     private String data;
 
     public static XhibitTrialDataEntity fromDto(RecordSheet dto) {
         return builder()
-            .data(dto.data())
-            .filename(dto.filename())
-            .build();
+                .data(dto.data())
+                .filename(dto.filename())
+                .build();
     }
 }

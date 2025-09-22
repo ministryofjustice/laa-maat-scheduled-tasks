@@ -10,12 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheetsPage;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.entity.XhibitEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.ProcedureResult;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class XhibitDataServiceBase<T> {
+public abstract class XhibitDataServiceBase<T extends XhibitEntity> {
 
     private final XhibitS3Service xhibitS3Service;
     private final JpaRepository<T, Integer> repository;
@@ -42,14 +43,14 @@ public abstract class XhibitDataServiceBase<T> {
 
         // Process only the entities we just saved
         List<T> toProcess = repository.findAllById(
-                entities.stream().map(this::getEntityId).toList()
+                entities.stream().map(XhibitEntity::getId).toList()
         );
 
         // Partition results
         Map<Boolean, List<String>> results = toProcess.stream()
                 .collect(Collectors.partitioningBy(
                         e -> procedureService.call(e) == ProcedureResult.SUCCESS,
-                        Collectors.mapping(this::getFilename, Collectors.toList())
+                        Collectors.mapping(XhibitEntity::getFilename, Collectors.toList())
                 ));
 
         List<String> processed = results.get(true);
@@ -69,10 +70,6 @@ public abstract class XhibitDataServiceBase<T> {
     }
 
     protected abstract T fromDto(RecordSheet dto);
-
-    protected abstract Integer getEntityId(T entity);
-
-    protected abstract String getFilename(T entity);
 
     protected abstract RecordSheetType getRecordSheetType();
 }

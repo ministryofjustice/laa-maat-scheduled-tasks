@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.StoredProcedureService;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheetsPage;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.entity.XhibitEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.ProcedureResult;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.enums.RecordSheetType;
 
@@ -187,7 +188,7 @@ class XhibitDataServiceBaseTest {
     }
 
 
-    static class TestDataServiceBase extends XhibitDataServiceBase<TestEntity> {
+    private static class TestDataServiceBase extends XhibitDataServiceBase<TestEntity> {
 
         public TestDataServiceBase(XhibitS3Service xhibitS3Service,
                 JpaRepository<TestEntity, Integer> repository,
@@ -204,20 +205,21 @@ class XhibitDataServiceBaseTest {
         protected TestEntity fromDto(RecordSheet dto) {
             return new TestEntity(1, dto.filename(), "");
         }
-
-        @Override
-        protected Integer getEntityId(TestEntity entity) {
-            return entity.id();
-        }
-
-        @Override
-        protected String getFilename(TestEntity entity) {
-            return entity.filename();
-        }
     }
 
     @Builder
-    private record TestEntity(Integer id, String filename, String data) {}
+    private record TestEntity(Integer id, String filename, String data) implements XhibitEntity {
+
+        @Override
+        public Integer getId() {
+            return id;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+    }
 
 
 }

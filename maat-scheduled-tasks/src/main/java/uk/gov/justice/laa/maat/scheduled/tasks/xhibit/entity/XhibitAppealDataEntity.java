@@ -14,13 +14,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.dto.RecordSheet;
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@Entity
 @Data
+@Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "XHIBIT_APPEAL_DATA", schema = "HUB")
-public class XhibitAppealDataEntity {
+public class XhibitAppealDataEntity implements XhibitEntity{
     @Id
     @Column(name = "ID")
     @SequenceGenerator(name = "xhibit_appeal_data_gen_seq", sequenceName = "XHIBIT_APPEAL_DATA_SEQ", allocationSize = 1, schema = "HUB")
@@ -30,14 +30,14 @@ public class XhibitAppealDataEntity {
     @Column(name = "FILENAME")
     private String filename;
 
-    @Column(name = "XML_CLOB")
     @Lob
+    @Column(name = "XML_CLOB")
     private String data;
 
     public static XhibitAppealDataEntity fromDto(RecordSheet dto) {
         return builder()
-            .data(dto.data())
-            .filename(dto.filename())
-            .build();
+                .data(dto.data())
+                .filename(dto.filename())
+                .build();
     }
 }

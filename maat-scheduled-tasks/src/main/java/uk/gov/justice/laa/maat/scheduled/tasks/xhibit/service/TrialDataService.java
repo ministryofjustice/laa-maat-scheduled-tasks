@@ -19,22 +19,12 @@ public class TrialDataService extends XhibitDataServiceBase<XhibitTrialDataEntit
     }
 
     @Override
-    protected RecordSheetType getRecordSheetType() {
-        return RecordSheetType.TRIAL;
-    }
-
-    @Override
     protected XhibitTrialDataEntity fromDto(RecordSheet dto) {
         return XhibitTrialDataEntity.fromDto(dto);
     }
 
     @Override
-    protected Integer getEntityId(XhibitTrialDataEntity entity) {
-        return entity.getId();
-    }
-
-    @Override
-    protected String getFilename(XhibitTrialDataEntity entity) {
-        return entity.getFilename();
+    protected RecordSheetType getRecordSheetType() {
+        return RecordSheetType.TRIAL;
     }
 }

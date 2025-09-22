@@ -19,22 +19,12 @@ public class AppealDataService extends XhibitDataServiceBase<XhibitAppealDataEnt
     }
 
     @Override
-    protected RecordSheetType getRecordSheetType() {
-        return RecordSheetType.APPEAL;
-    }
-
-    @Override
     protected XhibitAppealDataEntity fromDto(RecordSheet dto) {
         return XhibitAppealDataEntity.fromDto(dto);
     }
 
     @Override
-    protected Integer getEntityId(XhibitAppealDataEntity entity) {
-        return entity.getId();
-    }
-
-    @Override
-    protected String getFilename(XhibitAppealDataEntity entity) {
-        return entity.getFilename();
+    protected RecordSheetType getRecordSheetType() {
+        return RecordSheetType.APPEAL;
     }
 }
