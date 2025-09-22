@@ -20,7 +20,9 @@ public enum StoredProcedure {
     MAAT_BATCH_PROCESS_CORRESPONDENCE(Schema.TOGDATA, "maat_batch", "process_correspondence"),
 
     TRIAL_DATA_TO_MAAT_PROCEDURE(Schema.HUB, "xhibit_file_load", "process_trial_record"),
-    APPEAL_DATA_TO_MAAT_PROCEDURE(Schema.HUB, "xhibit_file_load", "process_appeal_record");
+    APPEAL_DATA_TO_MAAT_PROCEDURE(Schema.HUB, "xhibit_file_load", "process_appeal_record"),
+
+    TEST_PROCEDURE(Schema.TOGDATA, "test", "process_test");
 
     private final String schema;
     private final String packageName;
