@@ -21,6 +21,7 @@ def versions = [
 		wmStubRunnerVersion		: "4.3.0",
 		commonsLang3Version		: "3.18.0",
 		awsSdkVersion			: "2.32.14",
+		springdocVersion		: "2.8.13",
 		localstack				: "1.21.3",
 		localstackUtils			: "0.2.23"
 ]
@@ -57,6 +58,7 @@ dependencies {
 	implementation "org.mapstruct:mapstruct:$versions.mapstructVersion"
 	implementation "uk.gov.justice.service.laa-crime:crime-commons-classes:$versions.crimeCommonsClasses"
 	implementation "org.apache.commons:commons-lang3:$versions.commonsLang3Version"
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$versions.springdocVersion"
 
 	compileOnly "org.projectlombok:lombok"
 
