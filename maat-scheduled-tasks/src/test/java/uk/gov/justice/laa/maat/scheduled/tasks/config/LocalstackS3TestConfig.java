@@ -14,7 +14,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
-@Profile("test")
+@Profile("integration")
 @TestConfiguration
 public class LocalstackS3TestConfig {
 
