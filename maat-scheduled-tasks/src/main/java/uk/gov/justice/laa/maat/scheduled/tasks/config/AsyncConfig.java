@@ -14,7 +14,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 @EnableAsync
 @Configuration
-@Profile("!test")
+@Profile("!integration")
 public class AsyncConfig implements AsyncConfigurer {
 
     @Value("${aws.region}")

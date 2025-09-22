@@ -45,7 +45,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.util.ObjectKeyHelper;
 
 @SpringBootTest
 @Testcontainers
-@ActiveProfiles("test")
+@ActiveProfiles("integration")
 @TestInstance(Lifecycle.PER_CLASS)
 @Import(LocalstackS3TestConfig.class)
 @EnableConfigurationProperties(XhibitConfiguration.class)
