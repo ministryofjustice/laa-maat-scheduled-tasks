@@ -54,13 +54,17 @@ class ApplicantBillingServiceTest {
     void givenNoDataAvailable_whenSendApplicantsToBillingIsInvoked_thenNoActionsPerformed() {
         ApplicantBillingDTO dto = getApplicantDTO(APPLICANT_TEST_ID);
 
-        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
+        when(applicantBillingRepository.findAllApplicantsForBilling())
+            .thenReturn(Collections.emptyList());
 
         applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 
-        verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(APPLICANT_TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto));
-        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(any(UpdateApplicantsRequest.class));
+        verify(applicantBillingRepository, never()).resetApplicantBilling(
+            List.of(APPLICANT_TEST_ID), USER_MODIFIED);
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(
+            BillingDataFeedRecordType.APPLICANT, List.of(dto));
+        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(
+            any(UpdateApplicantsRequest.class));
     }
 
     @Test
@@ -70,13 +74,17 @@ class ApplicantBillingServiceTest {
 
         when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity));
         when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
-        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
+        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString()))
+            .thenReturn(1);
 
         applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 
-        verify(applicantBillingRepository).resetApplicantBilling(List.of(APPLICANT_TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto));
-        verify(crownCourtLitigatorFeesApiClient).updateApplicants(any(UpdateApplicantsRequest.class));
+        verify(applicantBillingRepository).resetApplicantBilling(
+            List.of(APPLICANT_TEST_ID), USER_MODIFIED);
+        verify(billingDataFeedLogService).saveBillingDataFeed(
+            BillingDataFeedRecordType.APPLICANT, List.of(dto));
+        verify(crownCourtLitigatorFeesApiClient).updateApplicants(
+            any(UpdateApplicantsRequest.class));
     }
 
     @Test
@@ -86,26 +94,34 @@ class ApplicantBillingServiceTest {
 
         applicantBillingService.resendApplicantsToBilling(USER_MODIFIED);
 
-        verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(APPLICANT_TEST_ID), USER_MODIFIED);
+        verify(applicantBillingRepository, never()).resetApplicantBilling(
+            List.of(APPLICANT_TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(any(), any());
-        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(any(UpdateApplicantsRequest.class));
+        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(
+            any(UpdateApplicantsRequest.class));
     }
 
     @Test
     void givenDataAvailable_whenResendApplicantsToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled()
         throws JsonProcessingException {
         ApplicantBillingDTO applicantDto = getApplicantDTO(APPLICANT_TEST_ID);
-        BillingDataFeedLogEntity billingEntity = getPopulatedBillingFeedLogEntity(123, applicantDto, objectMapper);
+        BillingDataFeedLogEntity billingEntity = getPopulatedBillingFeedLogEntity(
+            123, applicantDto, objectMapper);
 
         when(billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT))
             .thenReturn(List.of(billingEntity));
-        when(billingDataFeedLogMapper.mapEntityToApplicantBillingDtos(billingEntity)).thenReturn(List.of(applicantDto));
-        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
+        when(billingDataFeedLogMapper.mapEntityToApplicantBillingDtos(billingEntity))
+            .thenReturn(List.of(applicantDto));
+        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).
+            thenReturn(1);
 
         applicantBillingService.resendApplicantsToBilling(USER_MODIFIED);
 
-        verify(applicantBillingRepository).resetApplicantBilling(List.of(APPLICANT_TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(applicantDto));
-        verify(crownCourtLitigatorFeesApiClient).updateApplicants(any(UpdateApplicantsRequest.class));
+        verify(applicantBillingRepository).resetApplicantBilling(
+            List.of(APPLICANT_TEST_ID), USER_MODIFIED);
+        verify(billingDataFeedLogService).saveBillingDataFeed(
+            BillingDataFeedRecordType.APPLICANT, List.of(applicantDto));
+        verify(crownCourtLitigatorFeesApiClient).updateApplicants(
+            any(UpdateApplicantsRequest.class));
     }
 }
