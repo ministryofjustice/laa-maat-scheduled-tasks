@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.mapper;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantDTO;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantHistoryBillingDTO;
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -56,7 +54,7 @@ class BillingDataFeedLogMapperTest {
 
         BillingDataFeedLogEntity entity = mapper.mapDtoToEntity(BillingDataFeedRecordType.APPLICANT, dtos);
 
-        assertEquals(expectedPayload, entity.getPayload());
+        assertThat(expectedPayload).isEqualTo(entity.getPayload());
     }
 
 
@@ -74,7 +72,7 @@ class BillingDataFeedLogMapperTest {
 
         List<ApplicantBillingDTO> actualDtos = mapper.mapEntityToApplicantBillingDtos(entity);
 
-        assertEquals(expectedDtos, actualDtos);
+        assertThat(expectedDtos).isEqualTo(actualDtos);
     }
 
     @Test
@@ -87,7 +85,7 @@ class BillingDataFeedLogMapperTest {
 
         List<ApplicantBillingDTO> deserialisedDtos = mapper.mapEntityToApplicantBillingDtos(entity);
 
-        assertNull(deserialisedDtos);
+        assertThat(deserialisedDtos).isNull();
     }
 
     @Test
@@ -104,7 +102,7 @@ class BillingDataFeedLogMapperTest {
 
         List<ApplicantHistoryBillingDTO> actualDtos = mapper.mapEntityToApplicationHistoryBillingDtos(entity);
 
-        assertEquals(expectedDtos, actualDtos);
+        assertThat(expectedDtos).isEqualTo(actualDtos);
     }
 
     @Test
@@ -117,7 +115,7 @@ class BillingDataFeedLogMapperTest {
 
         List<ApplicantHistoryBillingDTO> deserialisedDtos = mapper.mapEntityToApplicationHistoryBillingDtos(entity);
 
-        assertNull(deserialisedDtos);
+        assertThat(deserialisedDtos).isNull();
     }
 
     @Test
@@ -134,7 +132,7 @@ class BillingDataFeedLogMapperTest {
 
         List<RepOrderBillingDTO> actualDtos = mapper.mapEntityToRepOrderBillingDtos(entity);
 
-        assertEquals(expectedDtos, actualDtos);
+        assertThat(expectedDtos).isEqualTo(actualDtos);
     }
 
     @Test
@@ -147,6 +145,6 @@ class BillingDataFeedLogMapperTest {
 
         List<RepOrderBillingDTO> deserialisedDtos = mapper.mapEntityToRepOrderBillingDtos(entity);
 
-        assertNull(deserialisedDtos);
+        assertThat(deserialisedDtos).isNull();
     }
 }
