@@ -89,7 +89,7 @@ jwt:
 scope: maat-scheduled-tasks-dev
 
 cclfApi:
-  baseUrl: https://cclf-dev.apps.live.cloud-platform.service.justice.gov.uk/cclf/api/v1
+  baseUrl: http://laa-crown-court-litigator-fees-app.laa-crown-court-litigator-fees-dev.svc.cluster.local/cclf/api/v1
   oauthUrl: https://cclf-dev.auth.eu-west-2.amazoncognito.com/oauth2/token
 
 ccrApi:

@@ -45,7 +45,6 @@ public interface RepOrderBillingRepository extends
 
 
     @Modifying
-    @Transactional
     @Query(value = """
         UPDATE  TOGDATA.REP_ORDERS r
         SET     r.SEND_TO_CCLF = null,

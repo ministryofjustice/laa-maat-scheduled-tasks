@@ -1,76 +1,75 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.safePopulate;
+
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.StoredProcedureQuery;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.StoredProcedure;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class StoredProcedureService {
 
-    public static final String EMPTY_PROCEDURE_NAME_MESSAGE = "Stored procedure name cannot be null or empty";
+    private static final String STORED_PROCEDURE_FAILURE_MESSAGE = "Failed to execute stored procedure: ";
 
     @PersistenceContext
     private EntityManager entityManager;
 
     @Transactional
-    public void callStoredProcedure(String storedProcedureName) {
-        createAndExecuteStoredProcedure(storedProcedureName, Collections.emptyMap(), Collections.emptyMap());
+    public void callStoredProcedure(StoredProcedure storedProcedure) {
+        createAndExecuteStoredProcedure(storedProcedure, Collections.emptyList());
     }
 
     @Transactional
-    public void callStoredProcedure(String storedProcedureName, Map<String, Object> inputParams, Map<String, Class<?>> outputParams) {
-        createAndExecuteStoredProcedure(storedProcedureName, inputParams, outputParams);
+    public StoredProcedureResponse callStoredProcedure(StoredProcedure storedProcedure, List<StoredProcedureParameter<?>> parameters) {
+        return createAndExecuteStoredProcedure(storedProcedure, parameters);
     }
 
-    private void createAndExecuteStoredProcedure(String storedProcedureName, Map<String, Object> inputParams, Map<String, Class<?>> outputParams) {
-        if (!StringUtils.hasText(storedProcedureName)) {
-            throw new IllegalArgumentException(EMPTY_PROCEDURE_NAME_MESSAGE);
-        }
+    private StoredProcedureResponse createAndExecuteStoredProcedure(StoredProcedure storedProcedure, List<StoredProcedureParameter<?>> parameters) {
+        Objects.requireNonNull(storedProcedure, "Stored procedure must not be null");
 
-        StoredProcedureQuery storedProcedureQuery = entityManager.createStoredProcedureQuery(storedProcedureName);
-        for (var entry : inputParams.entrySet()) {
-            storedProcedureQuery.registerStoredProcedureParameter(entry.getKey(), entry.getValue().getClass(), ParameterMode.IN);
-            storedProcedureQuery.setParameter(entry.getKey(), entry.getValue());
-        }
-        for (var entry : outputParams.entrySet()) {
-            storedProcedureQuery.registerStoredProcedureParameter(entry.getKey(), entry.getValue(), ParameterMode.OUT);
-        }
+        StoredProcedureQuery storedProcedureQuery = getStoredProcedureQuery(storedProcedure.getQualifiedName(), parameters);
 
         try {
-            log.info("Executing stored procedure: {}", storedProcedureName);
             storedProcedureQuery.execute();
-            log.info("Completed stored procedure: { procedure: {} outputParameters: {} }",
-                storedProcedureName,
-                getOutputParamValues(outputParams, storedProcedureQuery));
+            log.info("Completed stored procedure: { procedure: {} }", storedProcedure.getQualifiedName());
+            return getStoredProcedureResponse(storedProcedureQuery, parameters);
         } catch (Exception e) {
-            log.error("Error executing stored procedure { procedure: {}, outputParameters: {}, exception: {} }",
-                storedProcedureName,
-                getOutputParamValues(outputParams, storedProcedureQuery),
-                e.getMessage());
-            throw new StoredProcedureException("Failed to execute stored procedure: " + storedProcedureName, e);
+            log.error("Error executing stored procedure { procedure: {} }", storedProcedure.getQualifiedName(), e);
+            throw new StoredProcedureException(STORED_PROCEDURE_FAILURE_MESSAGE + storedProcedure.getQualifiedName(), e);
         }
     }
 
-    private Map<String, String> getOutputParamValues(Map<String, Class<?>> outputParams, StoredProcedureQuery storedProcedureQuery) {
-        return outputParams.keySet()
-            .stream()
-            .collect(Collectors.toMap(
-                Function.identity(),
-                k -> String.valueOf(storedProcedureQuery.getOutputParameterValue(k))
-            ));
+    private StoredProcedureQuery getStoredProcedureQuery(String name, List<StoredProcedureParameter<?>> parameters) {
+        StoredProcedureQuery storedProcedureQuery = entityManager.createStoredProcedureQuery(name);
+        for (StoredProcedureParameter<?> parameter : parameters) {
+            String parameterName = parameter.getName();
+            storedProcedureQuery.registerStoredProcedureParameter(parameterName, parameter.getType(), parameter.getMode());
+            if (parameter.isInputParameter()) {
+                storedProcedureQuery.setParameter(parameterName, parameter.getValue());
+            }
+        }
+        return storedProcedureQuery;
+    }
+
+    private StoredProcedureResponse getStoredProcedureResponse(StoredProcedureQuery storedProcedureQuery, List<StoredProcedureParameter<?>> parameters) {
+        List<StoredProcedureParameter<?>> outputParametersWithValues = parameters.stream()
+            .filter(StoredProcedureParameter::isOutputParameter)
+            .map(p -> safePopulate(p, storedProcedureQuery.getOutputParameterValue(p.getName())))
+            .collect(Collectors.toList());
+        return new StoredProcedureResponse(outputParametersWithValues);
     }
 }

@@ -52,7 +52,6 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
     List<ApplicantHistoryBillingEntity> extractApplicantHistoryForBilling();
 
     @Modifying
-    @Transactional
     @Query(value = """
                         UPDATE
                             TOGDATA.APPLICANT_HISTORY 

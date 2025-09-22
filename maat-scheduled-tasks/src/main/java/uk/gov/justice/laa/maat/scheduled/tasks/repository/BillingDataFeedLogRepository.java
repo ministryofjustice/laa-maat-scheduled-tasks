@@ -7,6 +7,5 @@ import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 
 @Repository
 public interface BillingDataFeedLogRepository extends JpaRepository<BillingDataFeedLogEntity, Integer> {
-    
     Long deleteByDateCreatedBefore(LocalDateTime date);
 }

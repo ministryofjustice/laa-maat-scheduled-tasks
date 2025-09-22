@@ -1,5 +1,11 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.inputParameter;
+import static uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter.outputParameter;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -7,19 +13,22 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.XhibitRecordSheetDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.XhibitTrialDataEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.RecordSheetType;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.StoredProcedure;
+import uk.gov.justice.laa.maat.scheduled.tasks.exception.StoredProcedureException;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureParameter;
+import uk.gov.justice.laa.maat.scheduled.tasks.helper.StoredProcedureResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.XhibitTrialDataRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.responses.GetRecordSheetsResponse;
-
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TrialDataService {
 
-    static final Map<String, Class<?>> OUTPUT_PARAMS = Map.of("p_error_code", String.class, "p_err_msg", String.class);
-    static final String TRIAL_DATA_TO_MAAT_PROCEDURE = "hub.xhibit_file_load.process_trial_record";
+    static final Collection<StoredProcedureParameter<?>> OUTPUT_PARAMETERS = List.of(
+            outputParameter("p_error_code", String.class),
+            outputParameter("p_err_msg", String.class)
+    );
 
     private final XhibitDataService xhibitDataService;
     private final XhibitTrialDataRepository trialDataRepository;
@@ -29,42 +38,80 @@ public class TrialDataService {
     public void populateAndProcessTrialDataInToMaat() {
         RecordSheetType recordSheetType = RecordSheetType.TRIAL;
 
-        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(recordSheetType);
-
-        List<XhibitRecordSheetDTO> erroredRecordSheets = recordSheetsResponse.getErroredRecordSheets();
-        if (!erroredRecordSheets.isEmpty()) {
-            xhibitDataService.markRecordSheetsAsErrored(erroredRecordSheets, recordSheetType);
-            log.info("Marked errored record sheets { records: {} }.", erroredRecordSheets.size());
-        }
-
+        GetRecordSheetsResponse recordSheetsResponse = xhibitDataService.getAllRecordSheets(
+                recordSheetType);
         List<XhibitRecordSheetDTO> recordSheets = recordSheetsResponse.getRetrievedRecordSheets();
-        if (recordSheets.isEmpty()) {
+        List<XhibitRecordSheetDTO> erroredRecordSheets = recordSheetsResponse.getErroredRecordSheets();
+
+        if (recordSheets.isEmpty() && erroredRecordSheets.isEmpty()) {
             log.info("No trial data found to process, aborting");
             return;
         }
+
+        List<String> processedFilenames = new ArrayList<>();
+        List<String> erroredFilenames = new ArrayList<>(
+                erroredRecordSheets.stream().map(XhibitRecordSheetDTO::getFilename).toList());
 
         saveRecordSheets(recordSheets);
         log.info("Populated trial data in to hub.");
 
         List<XhibitTrialDataEntity> toProcess = trialDataRepository.findAll();
-        if (toProcess.isEmpty()) {
-            log.info("No trial data found to process, aborting");
-            return;
-        }
-
         for (XhibitTrialDataEntity record : toProcess) {
-            Map<String, Object> inputParams = Map.of("id", record.getId());
-            storedProcedureService.callStoredProcedure(TRIAL_DATA_TO_MAAT_PROCEDURE, inputParams, OUTPUT_PARAMS);
+            processTrialRecord(record, erroredFilenames, processedFilenames);
         }
-        log.info("Processed trial data in to MAAT. { records: {} }", toProcess.size());
 
-        xhibitDataService.markRecordSheetsAsProcessed(recordSheets, recordSheetType);
-        log.info("Marked trial record sheets as processed.");
+        if (!erroredFilenames.isEmpty()) {
+            xhibitDataService.markRecordSheetsAsErrored(erroredFilenames, recordSheetType);
+            log.info("Marked trial record sheets as errored { records: {} }.",
+                    erroredFilenames.size());
+        }
+
+        if (!processedFilenames.isEmpty()) {
+            xhibitDataService.markRecordSheetsAsProcessed(processedFilenames, recordSheetType);
+            log.info("Marked trial record sheets as processed. {records: {} }.",
+                    processedFilenames.size());
+        }
+    }
+
+    private void processTrialRecord(XhibitTrialDataEntity record,
+            List<String> failedProcedureFilenames, List<String> successfulProcedureFilenames) {
+        List<StoredProcedureParameter<?>> parameters = getProcedureParameters(record);
+        try {
+            StoredProcedureResponse storedProcedureResponse =
+                    storedProcedureService.callStoredProcedure(
+                            StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE, parameters);
+            if (isErrored(storedProcedureResponse)) {
+                log.error(
+                        "Trial data stored procedure returned an error: { procedure: {}, recordId: {}, errorCode: {}, errorMessage: {} }",
+                        StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE.getQualifiedName(),
+                        record.getId(),
+                        storedProcedureResponse.getValue("p_error_code"),
+                        storedProcedureResponse.getValue("p_err_msg")
+                );
+                failedProcedureFilenames.add(record.getFilename());
+            } else {
+                successfulProcedureFilenames.add(record.getFilename());
+            }
+        } catch (StoredProcedureException e) {
+            failedProcedureFilenames.add(record.getFilename());
+        }
+    }
+
+    private static boolean isErrored(StoredProcedureResponse storedProcedureResponse) {
+        return storedProcedureResponse.hasValue("p_err_msg") && storedProcedureResponse.hasValue(
+                "p_error_code");
+    }
+
+    private static List<StoredProcedureParameter<?>> getProcedureParameters(
+            XhibitTrialDataEntity record) {
+        List<StoredProcedureParameter<?>> parameters = new ArrayList<>(OUTPUT_PARAMETERS);
+        parameters.add(inputParameter("id", record.getId()));
+        return parameters;
     }
 
     private void saveRecordSheets(List<XhibitRecordSheetDTO> recordSheets) {
-        List<XhibitTrialDataEntity> entities = recordSheets.stream().map(XhibitTrialDataEntity::fromDto).toList();
-        trialDataRepository.saveAll(entities);
+        List<XhibitTrialDataEntity> entities = recordSheets.stream()
+                .map(XhibitTrialDataEntity::fromDto).toList();
+        trialDataRepository.saveAllAndFlush(entities);
     }
-
 }

@@ -1,13 +1,14 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.StoredProcedure;
 
 @ExtendWith(MockitoExtension.class)
 class LocalManagementReportsServiceTest {
@@ -30,16 +31,16 @@ class LocalManagementReportsServiceTest {
 
         // Assert
         verify(storedProcedureService, times(1))
-                .callStoredProcedure("maat_batch.process_reports_batch_1");
+                .callStoredProcedure(StoredProcedure.REPORTS_BATCH_1);
         verify(storedProcedureService, times(1))
-                .callStoredProcedure("maat_batch.process_reports_batch_2");
+                .callStoredProcedure(StoredProcedure.REPORTS_BATCH_2);
         verify(storedProcedureService, times(1))
-                .callStoredProcedure("maat_batch.process_reports_batch_3");
+                .callStoredProcedure(StoredProcedure.REPORTS_BATCH_3);
         verify(storedProcedureService, times(1))
-                .callStoredProcedure("maat_batch.process_reports_batch_4");
+                .callStoredProcedure(StoredProcedure.REPORTS_BATCH_4);
         verify(storedProcedureService, times(1))
-                .callStoredProcedure("maat_batch.process_reports_batch_5");
+                .callStoredProcedure(StoredProcedure.REPORTS_BATCH_5);
         verify(storedProcedureService, times(1))
-                .callStoredProcedure("maat_batch.process_reports_batch_6");
+                .callStoredProcedure(StoredProcedure.REPORTS_BATCH_6);
     }
 }

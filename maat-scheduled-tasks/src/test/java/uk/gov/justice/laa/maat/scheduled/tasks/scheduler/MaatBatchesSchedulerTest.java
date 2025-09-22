@@ -1,22 +1,19 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.StoredProcedure;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.LocalManagementReportsService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.StoredProcedureService;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 @ExtendWith(MockitoExtension.class)
 class MaatBatchesSchedulerTest {
-
-    private static final String MAAT_BATCH_PROCESS_CORRESPONDENCE = "maat_batch.process_correspondence";
-    private static final String MAAT_BATCH_INACTIVE_USERS = "maat_batch.process_inactive_users";
-    private static final String MAAT_BATCH_FA_FIX = "maat_batch.FA_fix";
 
     @InjectMocks
     private MaatBatchesScheduler scheduler;
@@ -44,7 +41,7 @@ class MaatBatchesSchedulerTest {
 
         // Then
         verify(storedProcedureService, times(1))
-                .callStoredProcedure(MAAT_BATCH_PROCESS_CORRESPONDENCE);
+                .callStoredProcedure(StoredProcedure.MAAT_BATCH_PROCESS_CORRESPONDENCE);
     }
 
     @Test
@@ -54,7 +51,7 @@ class MaatBatchesSchedulerTest {
 
         // Then
         verify(storedProcedureService, times(1))
-                .callStoredProcedure(MAAT_BATCH_INACTIVE_USERS);
+                .callStoredProcedure(StoredProcedure.MAAT_BATCH_INACTIVE_USERS);
     }
 
     @Test
@@ -64,6 +61,6 @@ class MaatBatchesSchedulerTest {
 
         // Then
         verify(storedProcedureService, times(1))
-                .callStoredProcedure(MAAT_BATCH_FA_FIX);
+                .callStoredProcedure(StoredProcedure.MAAT_BATCH_FA_FIX);
     }
 }

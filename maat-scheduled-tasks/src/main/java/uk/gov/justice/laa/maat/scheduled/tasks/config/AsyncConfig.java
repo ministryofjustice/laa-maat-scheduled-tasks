@@ -3,6 +3,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -11,8 +12,9 @@ import java.util.concurrent.Executor;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
-@Configuration
 @EnableAsync
+@Configuration
+@Profile("!test")
 public class AsyncConfig implements AsyncConfigurer {
 
     @Value("${aws.region}")
