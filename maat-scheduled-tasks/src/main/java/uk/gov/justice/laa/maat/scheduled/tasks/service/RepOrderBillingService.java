@@ -2,9 +2,9 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClientResponseException;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
@@ -47,18 +47,19 @@ public class RepOrderBillingService {
 
         UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
             .repOrders(repOrders).build();
-
-        try {
-            crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
-            log.info("Extracted rep order data has been sent to the billing team.");
-        } catch (RestClientResponseException exception) {
+        
+        ResponseEntity<String> response = crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
+        
+        if (response.getStatusCode().value() == 207) {
             log.warn("Some rep order data failed to update in the CCR/CCLF database. This rep order data will be updated to be re-sent next time.");
-            
-            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(exception.getResponseBodyAsByteArray(), REQUEST_LABEL);
+
+            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(response.getBody(), REQUEST_LABEL);
 
             if (!failedIds.isEmpty()) {
                 repOrderBillingRepository.setCclfFlag(failedIds, userModified, SENT_TO_CCLF_FAILURE_FLAG);
             }
+        } else {
+            log.info("Extracted rep order data has been sent to the billing team.");
         }
     }
 

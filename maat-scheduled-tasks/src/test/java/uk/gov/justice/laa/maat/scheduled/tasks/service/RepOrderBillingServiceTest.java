@@ -3,14 +3,12 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedRepOrderForBilling;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getRepOrderBillingDTO;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -19,7 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.client.RestClientResponseException;
+import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
@@ -50,8 +48,9 @@ class RepOrderBillingServiceTest {
         RepOrderBillingDTO dto = getRepOrderBillingDTO(TEST_ID);
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity));
-        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(),
-                anyList())).thenReturn(1);
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
+        ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
+        when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(apiResponse);
 
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
@@ -87,16 +86,9 @@ class RepOrderBillingServiceTest {
         RepOrderBillingDTO failingDTO = getRepOrderBillingDTO(FAILING_TEST_ID);
 
         String responseBodyJson = FileUtils.readResourceToString("billing/api-client/responses/mixed-status.json");
-        byte[] responseBody = responseBodyJson.getBytes(StandardCharsets.UTF_8);
 
-        UpdateRepOrdersRequest updateRepOrdersRequest = UpdateRepOrdersRequest.builder()
-            .repOrders(List.of(successDTO, failingDTO)).build();
-
-        RestClientResponseException expectedException = new RestClientResponseException(
-            "Multi-Status", HttpStatus.MULTI_STATUS, "Multi-Status", null, responseBody, null
-        );
-
-        doThrow(expectedException).when(crownCourtLitigatorFeesApiClient).updateRepOrders(updateRepOrdersRequest);
+        ResponseEntity<String> apiResponse = new ResponseEntity<>(responseBodyJson, HttpStatus.MULTI_STATUS);
+        when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(apiResponse);
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(successEntity, failingEntity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);

@@ -9,12 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ResponseUtils {
-    public static List<Integer> getErroredIdsFromResponseBody(byte[] responseBodyBytes, String requestLabel) {
+    public static List<Integer> getErroredIdsFromResponseBody(String responseBody, String requestLabel) {
         List<Integer> failedIds = new ArrayList<>();
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode body = objectMapper.readTree(responseBodyBytes);
+            JsonNode body = objectMapper.readTree(responseBody);
 
             JsonNode errorsArray = body.get("errors");
 

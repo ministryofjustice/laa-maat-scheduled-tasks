@@ -3,12 +3,11 @@ package uk.gov.justice.laa.maat.scheduled.tasks.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getApplicantHistoryBillingEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedApplicantBillingEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedRepOrderForBilling;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -17,8 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.web.client.RestClientResponseException;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
@@ -69,15 +68,12 @@ public class BillingSchedulerIntegrationTest {
         repOrderBillingRepository.saveAll(List.of(repOrderSuccessEntity, repOrderFailingEntity));
         
         String responseBodyJson = FileUtils.readResourceToString("billing/api-client/responses/mixed-status.json");
-        byte[] responseBody = responseBodyJson.getBytes(StandardCharsets.UTF_8);
 
-        RestClientResponseException expectedException = new RestClientResponseException(
-            "Multi-Status", HttpStatus.MULTI_STATUS, "Multi-Status", null, responseBody, null
-        );
-
-        doThrow(expectedException).when(crownCourtLitigatorFeesApiClient).updateApplicants(any());
-        doThrow(expectedException).when(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any());
-        doThrow(expectedException).when(crownCourtLitigatorFeesApiClient).updateRepOrders(any());
+        ResponseEntity<String> apiResponse = new ResponseEntity<>(responseBodyJson, HttpStatus.MULTI_STATUS);
+        
+        when(crownCourtLitigatorFeesApiClient.updateApplicants(any())).thenReturn(apiResponse);
+        when(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(any())).thenReturn(apiResponse);
+        when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(apiResponse);
 
         scheduler.extractCCLFBillingData();
 

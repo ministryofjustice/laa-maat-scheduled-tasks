@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.client.RestClientResponseException;
+import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
@@ -50,7 +49,9 @@ class ApplicantBillingServiceTest {
         when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity));
         when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
-
+        ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
+        when(crownCourtLitigatorFeesApiClient.updateApplicants(any())).thenReturn(apiResponse);
+        
         applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 
         verify(applicantBillingRepository).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
@@ -79,16 +80,9 @@ class ApplicantBillingServiceTest {
         ApplicantBillingDTO failingDTO = getApplicantDTO(FAILING_TEST_ID);
 
         String responseBodyJson = FileUtils.readResourceToString("billing/api-client/responses/mixed-status.json");
-        byte[] responseBody = responseBodyJson.getBytes(StandardCharsets.UTF_8);
-        
-        UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
-            .defendants(List.of(successDTO, failingDTO)).build();
-        
-        RestClientResponseException expectedException = new RestClientResponseException(
-            "Multi-Status", HttpStatus.MULTI_STATUS, "Multi-Status", null, responseBody, null
-        );
 
-        doThrow(expectedException).when(crownCourtLitigatorFeesApiClient).updateApplicants(applicantsRequest);
+        ResponseEntity<String> apiResponse = new ResponseEntity<>(responseBodyJson, HttpStatus.MULTI_STATUS);
+        when(crownCourtLitigatorFeesApiClient.updateApplicants(any())).thenReturn(apiResponse);
         
         when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(successEntity, failingEntity));
         when(applicantMapper.mapEntityToDTO(successEntity)).thenReturn(successDTO);

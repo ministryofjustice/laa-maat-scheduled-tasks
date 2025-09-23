@@ -3,9 +3,9 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClientResponseException;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
@@ -49,21 +49,20 @@ public class ApplicantHistoryBillingService {
 
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();
-
-        try {
-            crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
-            log.info("Extracted applicant history data has been sent to the billing team.");
-        } catch (RestClientResponseException exception) {
+        
+        ResponseEntity<String> response = crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+        
+        if (response.getStatusCode().value() == 207) {
             log.warn("Some applicant history failed to update in the CCR/CCLF database. This applicant history will be updated to be re-sent next time.");
             
-            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(exception.getResponseBodyAsByteArray(), REQUEST_LABEL);
+            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(response.getBody(), REQUEST_LABEL);
             
             if (!failedIds.isEmpty()) {
                 applicantHistoryBillingRepository.setCclfFlag(failedIds, userModified, SENT_TO_CCLF_FAILURE_FLAG);
             }
+        } else {
+            log.info("Extracted applicant history data has been sent to the billing team.");
         }
-        
-        
     }
 
     private List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
