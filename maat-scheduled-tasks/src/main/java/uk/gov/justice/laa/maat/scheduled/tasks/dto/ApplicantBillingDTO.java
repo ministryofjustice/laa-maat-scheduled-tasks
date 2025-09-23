@@ -1,10 +1,8 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -45,12 +43,14 @@ public final class ApplicantBillingDTO implements Serializable {
     private String foreignId;
 
     @JsonProperty("date_created")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
     private LocalDateTime dateCreated;
 
     @JsonProperty("user_created")
     private String userCreated;
 
     @JsonProperty("date_modified")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
     private LocalDateTime dateModified;
 
     @JsonProperty("user_modified")
