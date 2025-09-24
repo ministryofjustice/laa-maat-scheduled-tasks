@@ -2,13 +2,11 @@ package uk.gov.justice.laa.maat.scheduled.tasks.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import lombok.experimental.SuperBuilder;
 
 @Data
@@ -65,18 +63,6 @@ public class RepOrderBillingDTO extends BillingDTO {
 
     @JsonProperty("ccoo_outcome")
     private String crownCourtOutcome;
-
-    @JsonProperty("date_created")
-    private LocalDate dateCreated;
-
-    @JsonProperty("user_created")
-    private String userCreated;
-
-    @JsonProperty("date_modified")
-    private LocalDateTime dateModified;
-
-    @JsonProperty("user_modified")
-    private String userModified;
 
     @JsonProperty("caty_case_type")
     private String caseType;
