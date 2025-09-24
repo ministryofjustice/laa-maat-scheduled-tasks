@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.maat.scheduled.tasks.annotation.StandardApiResponse;
-import uk.gov.justice.laa.maat.scheduled.tasks.scheduler.XhibitBatchesScheduler;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.scheduler.XhibitBatchesScheduler;
 
 
 @Slf4j
