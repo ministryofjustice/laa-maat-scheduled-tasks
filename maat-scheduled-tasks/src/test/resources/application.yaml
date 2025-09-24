@@ -7,16 +7,6 @@ spring:
   application:
     name: maat-scheduled-tasks
   jpa:
-    hibernate:
-      ddl-auto: create-drop
-  datasource:
-    url: jdbc:h2:mem:mla;MODE=Oracle;DB_CLOSE_DELAY=-1;IGNORE_CATALOGS=TRUE;NON_KEYWORDS=VALUE;INIT=CREATE SCHEMA IF NOT EXISTS togdata\;CREATE SCHEMA IF NOT EXISTS hub\;SET SCHEMA togdata
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-    name: TOGDATA
-
-  jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     show-sql: true
     hibernate:
@@ -24,6 +14,13 @@ spring:
     properties:
       hibernate.enable_lazy_load_no_trans: true
       hibernate.jdbc.lob.non_contextual_creation: true
+  datasource:
+    url: jdbc:h2:mem:mla;MODE=Oracle;DB_CLOSE_DELAY=-1;IGNORE_CATALOGS=TRUE;NON_KEYWORDS=VALUE;INIT=CREATE SCHEMA IF NOT EXISTS togdata\;CREATE SCHEMA IF NOT EXISTS hub\;SET SCHEMA togdata
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    name: TOGDATA
+
   sql:
     init:
       platform: h2
