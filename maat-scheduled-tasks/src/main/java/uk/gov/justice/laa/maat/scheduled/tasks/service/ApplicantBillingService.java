@@ -2,6 +2,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +51,7 @@ public class ApplicantBillingService {
         
         ResponseEntity<String> response = crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
 
-        if (response.getStatusCode().value() == 207) {
+        if (response.getStatusCode().value() == HttpStatus.MULTI_STATUS.value()) {
             log.warn("Some applicants failed to update in the CCR/CCLF database. These applicants will be updated to be re-sent next time.");
 
             List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(response.getBody(), REQUEST_LABEL);
