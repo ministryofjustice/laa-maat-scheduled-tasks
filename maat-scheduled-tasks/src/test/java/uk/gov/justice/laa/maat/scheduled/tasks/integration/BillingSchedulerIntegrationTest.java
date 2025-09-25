@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getApplicantHistoryBillingEntity;
@@ -79,26 +78,26 @@ public class BillingSchedulerIntegrationTest {
 
         Optional<ApplicantBillingEntity> successfulApplicant = applicantBillingRepository.findById(TEST_ID);
         Optional<ApplicantBillingEntity> failedApplicant = applicantBillingRepository.findById(FAILING_TEST_ID);
-        assertTrue(successfulApplicant.isPresent());
-        assertTrue(failedApplicant.isPresent());
+        assertThat(successfulApplicant.isPresent()).isTrue();
+        assertThat(failedApplicant.isPresent()).isTrue();
         // If successful, send_to_cclf is reset to null
-        assertEquals(null, successfulApplicant.get().getSendToCclf());
-        assertEquals("Y", failedApplicant.get().getSendToCclf());
+        assertThat(successfulApplicant.get().getSendToCclf()).isEqualTo(null);
+        assertThat(failedApplicant.get().getSendToCclf()).isEqualTo("Y");
 
         Optional<ApplicantHistoryBillingEntity> successfulApplicantHistory = applicantHistoryBillingRepository.findById(TEST_ID);
         Optional<ApplicantHistoryBillingEntity> failedApplicantHistory = applicantHistoryBillingRepository.findById(FAILING_TEST_ID);
-        assertTrue(successfulApplicantHistory.isPresent());
-        assertTrue(failedApplicantHistory.isPresent());
+        assertThat(successfulApplicantHistory.isPresent()).isTrue();
+        assertThat(failedApplicantHistory.isPresent()).isTrue();
         // If successful, send_to_cclf is reset to null
-        assertEquals(null, successfulApplicantHistory.get().getSendToCclf());
-        assertEquals("Y", failedApplicantHistory.get().getSendToCclf());
+        assertThat(successfulApplicantHistory.get().getSendToCclf()).isEqualTo(null);
+        assertThat(failedApplicantHistory.get().getSendToCclf()).isEqualTo("Y");
         
         Optional<RepOrderBillingEntity> successfulRepOrders = repOrderBillingRepository.findById(TEST_ID);
         Optional<RepOrderBillingEntity> failedRepOrders = repOrderBillingRepository.findById(FAILING_TEST_ID);
-        assertTrue(successfulRepOrders.isPresent());
-        assertTrue(failedRepOrders.isPresent());
+        assertThat(successfulRepOrders.isPresent()).isTrue();
+        assertThat(failedRepOrders.isPresent()).isTrue();
         // If successful, send_to_cclf is reset to null
-        assertEquals(null, successfulRepOrders.get().getSendToCclf());
-        assertEquals("Y", failedRepOrders.get().getSendToCclf());
+        assertThat(successfulRepOrders.get().getSendToCclf()).isEqualTo(null);
+        assertThat(failedRepOrders.get().getSendToCclf()).isEqualTo("Y");
     }
 }
