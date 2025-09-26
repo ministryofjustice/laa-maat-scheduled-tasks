@@ -34,9 +34,9 @@ public class BillingScheduler {
             log.info("Starting extract for CCLF billing data...");
             maatReferenceService.populateMaatReferences();
 
-            applicantBillingService.sendApplicantsToBilling(getUserModified());
-            applicantHistoryBillingService.sendApplicantHistoryToBilling(getUserModified());
-            repOrderBillingService.sendRepOrdersToBilling(getUserModified());
+            applicantBillingService.sendApplicantsToBilling(billingConfiguration.getUserModified());
+            applicantHistoryBillingService.sendApplicantHistoryToBilling(billingConfiguration.getUserModified());
+            repOrderBillingService.sendRepOrdersToBilling(billingConfiguration.getUserModified());
         } catch (Exception exception) {
             log.error("Error running extract for CCLF billing data: {}", exception.getMessage());
         } finally {
@@ -47,9 +47,9 @@ public class BillingScheduler {
 
     public void resendBillingData() {
         try {
-            applicantBillingService.resendApplicantsToBilling(getUserModified());
-            applicantHistoryBillingService.resendApplicantHistoryToBilling(getUserModified());
-            repOrderBillingService.resendRepOrdersToBilling(getUserModified());
+            applicantBillingService.resendApplicantsToBilling(billingConfiguration.getUserModified());
+            applicantHistoryBillingService.resendApplicantHistoryToBilling(billingConfiguration.getUserModified());
+            repOrderBillingService.resendRepOrdersToBilling(billingConfiguration.getUserModified());
         } catch (Exception exception) {
             log.error("Error running manual extract for CCLF billing data: {}", exception.getMessage());
             throw exception;
@@ -63,9 +63,5 @@ public class BillingScheduler {
 
         Long logsDeleted = billingDataFeedLogService.deleteLogsBeforeDate(dateThreshold);
         log.info("Billing data feed log cleanup completed. {} entries deleted.", logsDeleted);
-    }
-
-    private String getUserModified() {
-        return billingConfiguration.getUserModified();
     }
 }
