@@ -28,7 +28,7 @@ public class BillingControllerTest {
 
     @Test
     void givenValidRequest_whenResendBillingDataIsInvoked_thenReturnSuccess() throws Exception {
-        mockMvc.perform(buildRequestGivenContent(HttpMethod.PATCH, "", RESEND_URL, false))
+        mockMvc.perform(buildRequestGivenContent(HttpMethod.POST, "", RESEND_URL, false))
             .andExpect(status().isOk());
 
         verify(billingScheduler, times(1)).resendBillingData();
