@@ -6,9 +6,15 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedBillingFeedLogEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedRepOrderForBilling;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getRepOrderBillingDTO;
 
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -18,30 +24,54 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
 
 @ExtendWith(MockitoExtension.class)
 class RepOrderBillingServiceTest {
 
-    private static final int TEST_ID = 1;
+    private static final int REP_ORDER_TEST_ID = 1;
     private static final String USER_MODIFIED = "TEST";
+
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+        .addModule(new JavaTimeModule())
+        .build();
 
     @Mock
     private RepOrderBillingRepository repOrderBillingRepository;
     @Mock
     private BillingDataFeedLogService billingDataFeedLogService;
     @Mock
+    private BillingDataFeedLogMapper billingDataFeedLogMapper;
+    @Mock
     private CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     @InjectMocks
     private RepOrderBillingService repOrderBillingService;
 
     @Test
-    void giveCCLFDataAvailable_whenSendRepOrdersToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
-        RepOrderBillingEntity entity = getPopulatedRepOrderForBilling(TEST_ID);
-        RepOrderBillingDTO dto = getRepOrderBillingDTO(TEST_ID);
+    void givenNoDataAvailable_whenSendRepOrdersToBillingIsInvoked_thenNoActionsPerformed() {
+        RepOrderBillingDTO dto = getRepOrderBillingDTO(REP_ORDER_TEST_ID);
+
+        when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(Collections.emptyList());
+
+        repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+
+        verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(
+            USER_MODIFIED, List.of(REP_ORDER_TEST_ID));
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(
+            BillingDataFeedRecordType.REP_ORDER, List.of(dto));
+        verify(crownCourtLitigatorFeesApiClient, never()).updateRepOrders(
+            any(UpdateRepOrdersRequest.class));
+    }
+
+    @Test
+    void givenDataAvailable_whenSendRepOrdersToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
+        RepOrderBillingEntity entity = getPopulatedRepOrderForBilling(REP_ORDER_TEST_ID);
+        RepOrderBillingDTO dto = getRepOrderBillingDTO(REP_ORDER_TEST_ID);
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(),
@@ -49,27 +79,47 @@ class RepOrderBillingServiceTest {
 
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
-        verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED,
-                List.of(TEST_ID));
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
-                List.of(dto).toString());
+        verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(
+            USER_MODIFIED, List.of(REP_ORDER_TEST_ID));
+        verify(billingDataFeedLogService).saveBillingDataFeed(
+            BillingDataFeedRecordType.REP_ORDER, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
     }
 
     @Test
-    void givenNoCCLFDataAvailable_whenSendRepOrdersToBillingIsInvoked_thenNoActionsPerformed() {
-        RepOrderBillingDTO dto = getRepOrderBillingDTO(TEST_ID);
+    void givenNoDataAvailable_whenResendApplicantsToBillingIsInvoked_thenNoActionsPerformed() {
+        when(billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.REP_ORDER))
+            .thenReturn(Collections.emptyList());
 
-        when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(
-                Collections.emptyList());
+        repOrderBillingService.resendRepOrdersToBilling(USER_MODIFIED);
 
-        repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
-
-        verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(USER_MODIFIED,
-                List.of(TEST_ID));
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(
-                BillingDataFeedRecordType.REP_ORDER, List.of(dto).toString());
+        verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(
+            USER_MODIFIED, List.of(REP_ORDER_TEST_ID));
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(any(), any());
         verify(crownCourtLitigatorFeesApiClient, never()).updateRepOrders(
-                any(UpdateRepOrdersRequest.class));
+            any(UpdateRepOrdersRequest.class));
+    }
+
+    @Test
+    void givenDataAvailable_whenResendApplicantsToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled()
+        throws JsonProcessingException {
+        RepOrderBillingDTO repOrderDto = getRepOrderBillingDTO(REP_ORDER_TEST_ID);
+        BillingDataFeedLogEntity billingEntity = getPopulatedBillingFeedLogEntity(
+            123, repOrderDto, objectMapper);
+
+        when(billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.REP_ORDER))
+            .thenReturn(List.of(billingEntity));
+        when(billingDataFeedLogMapper.mapEntityToRepOrderBillingDtos(billingEntity))
+            .thenReturn(List.of(repOrderDto));
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList()))
+            .thenReturn(1);
+
+        repOrderBillingService.resendRepOrdersToBilling(USER_MODIFIED);
+
+        verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(
+            USER_MODIFIED, List.of(REP_ORDER_TEST_ID));
+        verify(billingDataFeedLogService).saveBillingDataFeed(
+            BillingDataFeedRecordType.REP_ORDER, List.of(repOrderDto));
+        verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
     }
 }

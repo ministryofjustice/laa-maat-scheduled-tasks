@@ -1,16 +1,21 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 
 import java.util.List;
@@ -25,6 +30,7 @@ public class ApplicantBillingService {
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantMapper applicantMapper;
+    private final BillingDataFeedLogMapper billingDataFeedLogMapper;
 
     @Transactional
     public void sendApplicantsToBilling(String userModified) {
@@ -34,13 +40,32 @@ public class ApplicantBillingService {
             return;
         }
 
-        List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
+        sendApplicantsToBilling(applicants, userModified);
+    }
+
+    public void resendApplicantsToBilling(String userModified) {
+        List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
+
+        List<ApplicantBillingDTO> applicants = billingLogEntities.stream()
+            .map(billingDataFeedLogMapper::mapEntityToApplicantBillingDtos)
+            .flatMap(Collection::stream)
+            .filter(Objects::nonNull)
+            .toList();
+
+        if (applicants.isEmpty()) {
+            return;
+        }
+
+        sendApplicantsToBilling(applicants, userModified);
+    }
+
+    private void sendApplicantsToBilling(List<ApplicantBillingDTO> applicants, String userModified) {
+        List<Integer> ids = applicants.stream().map(BillingDTO::getId).toList();
 
         resetApplicantBilling(
             ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
 
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
-            applicants.toString());
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, applicants);
 
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
             .defendants(applicants).build();

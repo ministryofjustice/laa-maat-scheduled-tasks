@@ -29,20 +29,30 @@ public class BillingScheduler {
     private final ApplicantHistoryBillingService applicantHistoryBillingService;
 
     @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
-    public void extractCCLFBillingData() {
+    public void extractBillingData() {
         try {
             log.info("Starting extract for CCLF billing data...");
             maatReferenceService.populateMaatReferences();
 
             applicantBillingService.sendApplicantsToBilling(billingConfiguration.getUserModified());
-            applicantHistoryBillingService.sendApplicantHistoryToBilling(
-                billingConfiguration.getUserModified());
+            applicantHistoryBillingService.sendApplicantHistoryToBilling(billingConfiguration.getUserModified());
             repOrderBillingService.sendRepOrdersToBilling(billingConfiguration.getUserModified());
         } catch (Exception exception) {
             log.error("Error running extract for CCLF billing data: {}", exception.getMessage());
         } finally {
             maatReferenceService.deleteMaatReferences();
             log.info("End of extract for CCLF billing data.");
+        }
+    }
+
+    public void resendBillingData() {
+        try {
+            applicantBillingService.resendApplicantsToBilling(billingConfiguration.getUserModified());
+            applicantHistoryBillingService.resendApplicantHistoryToBilling(billingConfiguration.getUserModified());
+            repOrderBillingService.resendRepOrdersToBilling(billingConfiguration.getUserModified());
+        } catch (Exception exception) {
+            log.error("Error running manual extract for CCLF billing data: {}", exception.getMessage());
+            throw exception;
         }
     }
 
