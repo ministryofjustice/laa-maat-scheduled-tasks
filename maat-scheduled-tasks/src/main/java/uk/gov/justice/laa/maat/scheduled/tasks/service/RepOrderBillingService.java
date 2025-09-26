@@ -1,8 +1,9 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.text.MessageFormat;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
@@ -15,6 +16,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingReposit
 
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
@@ -24,6 +26,9 @@ public class RepOrderBillingService {
     private final RepOrderBillingRepository repOrderBillingRepository;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+
+    private static final String SENT_TO_CCLF_FAILURE_FLAG = "Y";
+    private static final String REQUEST_LABEL = "rep order";
 
     @Transactional
     public void sendRepOrdersToBilling(String userModified) {
@@ -43,9 +48,26 @@ public class RepOrderBillingService {
 
         UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
             .repOrders(repOrders).build();
+        
+        ResponseEntity<String> response = crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
+        
+        if (response.getStatusCode().value() == HttpStatus.MULTI_STATUS.value()) {
+            log.warn("Some rep order data failed to update in the CCR/CCLF database. This rep order data will be updated to be re-sent next time.");
 
-        crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
-        log.info("Extracted rep order data has been sent to the billing team.");
+            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(response.getBody(), REQUEST_LABEL);
+
+            if (!failedIds.isEmpty()) {
+                List<RepOrderBillingEntity> failedRepOrders = repOrderBillingRepository.findAllById(failedIds);
+                for (RepOrderBillingEntity failedRepOrder : failedRepOrders) {
+                    failedRepOrder.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);
+                    failedRepOrder.setUserModified(userModified);
+                }
+
+                repOrderBillingRepository.saveAll(failedRepOrders);
+            }
+        } else {
+            log.info("Extracted rep order data has been sent to the billing team.");
+        }
     }
 
     private List<RepOrderBillingDTO> getRepOrdersForBilling() {
@@ -60,5 +82,4 @@ public class RepOrderBillingService {
         repOrderBillingRepository.resetBillingFlagForRepOrderIds(
             resetRepOrderBillingDTO.getUserModified(), resetRepOrderBillingDTO.getIds());
     }
-
 }

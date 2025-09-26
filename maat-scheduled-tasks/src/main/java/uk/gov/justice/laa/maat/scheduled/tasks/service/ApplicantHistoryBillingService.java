@@ -3,6 +3,8 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
@@ -13,6 +15,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
@@ -23,6 +26,9 @@ public class ApplicantHistoryBillingService {
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
+
+    private static final String SENT_TO_CCLF_FAILURE_FLAG = "Y";
+    private static final String REQUEST_LABEL = "applicant history";
 
     @Transactional
     public void sendApplicantHistoryToBilling(String userModified) {
@@ -44,9 +50,26 @@ public class ApplicantHistoryBillingService {
 
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();
+        
+        ResponseEntity<String> response = crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+        
+        if (response.getStatusCode().value() == HttpStatus.MULTI_STATUS.value()) {
+            log.warn("Some applicant history failed to update in the CCR/CCLF database. This applicant history will be updated to be re-sent next time.");
+            
+            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(response.getBody(), REQUEST_LABEL);
+            
+            if (!failedIds.isEmpty()) {
+                List<ApplicantHistoryBillingEntity> failedApplicantHistory = applicantHistoryBillingRepository.findAllById(failedIds);
+                for (ApplicantHistoryBillingEntity failedHistory : failedApplicantHistory) {
+                    failedHistory.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);
+                    failedHistory.setUserModified(userModified);
+                }
 
-        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
-        log.info("Extracted applicant history data has been sent to the billing team.");
+                applicantHistoryBillingRepository.saveAll(failedApplicantHistory);
+            }
+        } else {
+            log.info("Extracted applicant history data has been sent to the billing team.");
+        }
     }
 
     private List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
