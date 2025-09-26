@@ -57,7 +57,13 @@ public class ApplicantBillingService {
             List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(response.getBody(), REQUEST_LABEL);
             
             if (!failedIds.isEmpty()) {
-                applicantBillingRepository.setCclfFlag(failedIds, userModified, SENT_TO_CCLF_FAILURE_FLAG);
+                List<ApplicantBillingEntity> failedApplicants = applicantBillingRepository.findAllById(failedIds);
+                for (ApplicantBillingEntity failedApplicant : failedApplicants) {
+                    failedApplicant.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);
+                    failedApplicant.setUserModified(userModified);
+                }
+                
+                applicantBillingRepository.saveAll(failedApplicants);
             }
         } else {
             log.info("Extracted applicant data has been sent to the billing team.");

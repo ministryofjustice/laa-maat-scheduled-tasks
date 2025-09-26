@@ -28,7 +28,7 @@ public interface ApplicantBillingRepository extends JpaRepository<ApplicantBilli
             nativeQuery = true)
     List<ApplicantBillingEntity> findAllApplicantsForBilling();
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query(value = """
         UPDATE TOGDATA.applicants
         SET     send_to_cclf = NULL,
@@ -38,15 +38,4 @@ public interface ApplicantBillingRepository extends JpaRepository<ApplicantBilli
         """, nativeQuery = true)
     int resetApplicantBilling(@Param("ids") List<Integer> ids, 
         @Param("username") String username);
-
-    @Modifying
-    @Query(value = """
-        UPDATE TOGDATA.applicants
-        SET     send_to_cclf = :sendToCclf,
-                date_modified = SYSDATE,
-                user_modified = :username
-        WHERE id IN (:ids)
-        """, nativeQuery = true)
-    int setCclfFlag(@Param("ids") List<Integer> ids, 
-        @Param("username") String username, @Param("sendToCclf") String sendToCclf);
 }

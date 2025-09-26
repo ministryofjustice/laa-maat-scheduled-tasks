@@ -57,7 +57,13 @@ public class RepOrderBillingService {
             List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(response.getBody(), REQUEST_LABEL);
 
             if (!failedIds.isEmpty()) {
-                repOrderBillingRepository.setCclfFlag(failedIds, userModified, SENT_TO_CCLF_FAILURE_FLAG);
+                List<RepOrderBillingEntity> failedRepOrders = repOrderBillingRepository.findAllById(failedIds);
+                for (RepOrderBillingEntity failedRepOrder : failedRepOrders) {
+                    failedRepOrder.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);
+                    failedRepOrder.setUserModified(userModified);
+                }
+
+                repOrderBillingRepository.saveAll(failedRepOrders);
             }
         } else {
             log.info("Extracted rep order data has been sent to the billing team.");

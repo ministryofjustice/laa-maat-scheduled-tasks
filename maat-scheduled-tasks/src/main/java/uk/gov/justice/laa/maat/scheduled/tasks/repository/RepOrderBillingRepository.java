@@ -44,7 +44,7 @@ public interface RepOrderBillingRepository extends
     List<RepOrderBillingEntity> getRepOrdersForBilling();
 
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query(value = """
         UPDATE  TOGDATA.REP_ORDERS r
         SET     r.SEND_TO_CCLF = null,
@@ -53,15 +53,4 @@ public interface RepOrderBillingRepository extends
         WHERE   r.ID IN :ids
     """, nativeQuery = true)
     int resetBillingFlagForRepOrderIds(@Param("userModified") String userModified, @Param("ids") List<Integer> ids);
-
-    @Modifying
-    @Query(value = """
-        UPDATE TOGDATA.REP_ORDERS
-        SET     SEND_TO_CCLF = :sendToCclf,
-                DATE_MODIFIED = SYSDATE,
-                USER_MODIFIED = :username
-        WHERE ID IN (:ids)
-        """, nativeQuery = true)
-    int setCclfFlag(@Param("ids") List<Integer> ids, @Param("username") String username, 
-        @Param("sendToCclf") String sendToCclf);
 }

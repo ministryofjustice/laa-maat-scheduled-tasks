@@ -52,7 +52,7 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
                         """, nativeQuery = true)
     List<ApplicantHistoryBillingEntity> extractApplicantHistoryForBilling();
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query(value = """
                         UPDATE
                             TOGDATA.APPLICANT_HISTORY 
@@ -65,15 +65,4 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
         """, nativeQuery = true)
     int resetApplicantHistory(@Param("userModified") String userModified,
         @Param("ids") List<Integer> ids);
-
-    @Modifying
-    @Query(value = """
-        UPDATE TOGDATA.APPLICANT_HISTORY
-        SET     SEND_TO_CCLF = :sendToCclf,
-                DATE_MODIFIED = SYSDATE,
-                USER_MODIFIED = :username
-        WHERE ID IN (:ids)
-        """, nativeQuery = true)
-    int setCclfFlag(@Param("ids") List<Integer> ids, @Param("username") String username, 
-        @Param("sendToCclf") String sendToCclf);
 }

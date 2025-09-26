@@ -79,7 +79,7 @@ class RepOrderBillingServiceTest {
     }
 
     @Test
-    void givenSomeFailuresFromCCLF_whenSendRepOrdersToBillingIsInvoked_thenSetCclfFlagIsCalled() throws Exception {
+    void givenSomeFailuresFromCCLF_whenSendRepOrdersToBillingIsInvoked_thenFailingEntitiesAreUpdated() throws Exception {
         RepOrderBillingEntity successEntity = getPopulatedRepOrderForBilling(TEST_ID);
         RepOrderBillingEntity failingEntity = getPopulatedRepOrderForBilling(FAILING_TEST_ID);
         RepOrderBillingDTO successDTO = getRepOrderBillingDTO(TEST_ID);
@@ -91,12 +91,13 @@ class RepOrderBillingServiceTest {
         when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(apiResponse);
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(successEntity, failingEntity));
+        when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
 
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(successDTO, failingDTO).toString());
         verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
-        verify(repOrderBillingRepository).setCclfFlag(List.of(FAILING_TEST_ID), USER_MODIFIED, "Y");
+        verify(repOrderBillingRepository).saveAll(List.of(failingEntity));
     }
 }

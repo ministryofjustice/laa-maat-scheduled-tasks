@@ -73,7 +73,7 @@ class ApplicantBillingServiceTest {
     }
 
     @Test
-    void givenSomeFailuresFromCCLF_whenSendApplicantsToBillingIsInvoked_thenSetCclfFlagIsCalled() throws Exception {
+    void givenSomeFailuresFromCCLF_whenSendApplicantsToBillingIsInvoked_thenFailingEntitiesAreUpdated() throws Exception {
         ApplicantBillingEntity successEntity = getPopulatedApplicantBillingEntity(TEST_ID);
         ApplicantBillingEntity failingEntity = getPopulatedApplicantBillingEntity(FAILING_TEST_ID);
         ApplicantBillingDTO successDTO = getApplicantDTO(TEST_ID);
@@ -85,6 +85,7 @@ class ApplicantBillingServiceTest {
         when(crownCourtLitigatorFeesApiClient.updateApplicants(any())).thenReturn(apiResponse);
         
         when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(successEntity, failingEntity));
+        when(applicantBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(applicantMapper.mapEntityToDTO(successEntity)).thenReturn(successDTO);
         when(applicantMapper.mapEntityToDTO(failingEntity)).thenReturn(failingDTO);
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
@@ -93,6 +94,6 @@ class ApplicantBillingServiceTest {
         
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(successDTO, failingDTO).toString());
         verify(crownCourtLitigatorFeesApiClient).updateApplicants(any(UpdateApplicantsRequest.class));
-        verify(applicantBillingRepository).setCclfFlag(List.of(FAILING_TEST_ID), USER_MODIFIED, "Y");
+        verify(applicantBillingRepository).saveAll(List.of(failingEntity));
     }
 }
