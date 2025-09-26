@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,18 +24,11 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 @ExtendWith(MockitoExtension.class)
 class BillingDataFeedLogMapperTest {
 
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+        .addModule(new JavaTimeModule())
+        .build();
 
-    private BillingDataFeedLogMapper mapper;
-
-    @BeforeEach
-    void setUp() {
-        objectMapper = JsonMapper.builder()
-            .addModule(new JavaTimeModule())
-            .build();
-
-        mapper = new BillingDataFeedLogMapper(objectMapper);
-    }
+    private final BillingDataFeedLogMapper mapper = new BillingDataFeedLogMapper(objectMapper);
 
     @Test
     void givenEmptyPayloadProvided_whenMapDtoToEntityIsInvoked_thenExceptionIsThrown() {
@@ -56,7 +48,6 @@ class BillingDataFeedLogMapperTest {
 
         assertThat(expectedPayload).isEqualTo(entity.getPayload());
     }
-
 
     @Test
     void givenValidBillingEntityForApplicantDto_whenMapEntityToApplicantBillingDtosIsInvoked_thenPopulatedDtoIsReturned()
