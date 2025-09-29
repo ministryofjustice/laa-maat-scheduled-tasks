@@ -17,6 +17,10 @@ env:
     value: {{ .Values.sentry.sampleRate | quote }}
   - name: SCOPE_SCHEDULED_TASKS
     value: {{ .Values.scope }}
+  - name: BILLING_REQUEST_BATCH_SIZE
+    value: {{ .Values.billing.requestBatchSize | quote }}
+  - name: BILLING_RESET_BATCH_SIZE
+    value: {{ .Values.billing.resetBatchSize | quote }}
   - name: LMR_REPORTS
     valueFrom:
         secretKeyRef:

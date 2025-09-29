@@ -98,3 +98,7 @@ ccrApi:
 
 xhibitBatch:
   fetchSize: 1
+
+billing:
+  requestBatchSize: 100
+  resetBatchSize: 1000

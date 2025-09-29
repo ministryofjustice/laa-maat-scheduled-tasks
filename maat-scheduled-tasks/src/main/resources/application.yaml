@@ -86,6 +86,8 @@ billing:
     cron_expression: ${BILLING_CCLF_EXTRACT_CRON_EXPRESSION}
   cleanup_data_feed_log:
     cron_expression: ${BILLING_LOG_CLEANUP_CRON_EXPRESSION}
+  request-batch-size: ${BILLING_REQUEST_BATCH_SIZE}
+  reset-batch-size: ${BILLING_RESET_BATCH_SIZE}
   
 sentry:
   dsn: ${SENTRY_DSN}
