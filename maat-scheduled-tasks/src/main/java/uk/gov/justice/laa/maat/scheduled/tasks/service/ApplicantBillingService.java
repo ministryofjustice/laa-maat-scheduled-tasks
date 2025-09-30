@@ -2,7 +2,6 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import java.util.Collection;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,7 +39,12 @@ public class ApplicantBillingService {
             return;
         }
 
-        sendApplicantsToBilling(applicants, userModified);
+        List<Integer> ids = applicants.stream().map(BillingDTO::getId).toList();
+
+        resetApplicantBillingFlag(
+            ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
+
+        sendApplicantsToBilling(applicants);
     }
 
     public void resendApplicantsToBilling(String userModified) {
@@ -56,15 +60,10 @@ public class ApplicantBillingService {
             return;
         }
 
-        sendApplicantsToBilling(applicants, userModified);
+        sendApplicantsToBilling(applicants);
     }
 
-    private void sendApplicantsToBilling(List<ApplicantBillingDTO> applicants, String userModified) {
-        List<Integer> ids = applicants.stream().map(BillingDTO::getId).toList();
-
-        resetApplicantBilling(
-            ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
-
+    private void sendApplicantsToBilling(List<ApplicantBillingDTO> applicants) {
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, applicants);
 
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
@@ -81,9 +80,10 @@ public class ApplicantBillingService {
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
     }
 
-    private void resetApplicantBilling(ResetApplicantBillingDTO resetApplicantBillingDTO) {
+    private void resetApplicantBillingFlag(ResetApplicantBillingDTO resetApplicantBillingDTO) {
         int updatedRows = applicantBillingRepository.resetApplicantBilling(
             resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
+
         log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
     }
 
