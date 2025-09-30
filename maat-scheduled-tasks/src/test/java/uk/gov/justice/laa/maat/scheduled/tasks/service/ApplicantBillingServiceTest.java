@@ -94,8 +94,7 @@ class ApplicantBillingServiceTest {
 
         applicantBillingService.resendApplicantsToBilling(USER_MODIFIED);
 
-        verify(applicantBillingRepository, never()).resetApplicantBilling(
-            List.of(APPLICANT_TEST_ID), USER_MODIFIED);
+        verify(applicantBillingRepository, never()).resetApplicantBilling(any(), any());
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(any(), any());
         verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(
             any(UpdateApplicantsRequest.class));
@@ -112,13 +111,10 @@ class ApplicantBillingServiceTest {
             .thenReturn(List.of(billingEntity));
         when(billingDataFeedLogMapper.mapEntityToApplicantBillingDtos(billingEntity))
             .thenReturn(List.of(applicantDto));
-        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).
-            thenReturn(1);
 
         applicantBillingService.resendApplicantsToBilling(USER_MODIFIED);
 
-        verify(applicantBillingRepository).resetApplicantBilling(
-            List.of(APPLICANT_TEST_ID), USER_MODIFIED);
+        verify(applicantBillingRepository, never()).resetApplicantBilling(any(), any());
         verify(billingDataFeedLogService).saveBillingDataFeed(
             BillingDataFeedRecordType.APPLICANT, List.of(applicantDto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicants(
