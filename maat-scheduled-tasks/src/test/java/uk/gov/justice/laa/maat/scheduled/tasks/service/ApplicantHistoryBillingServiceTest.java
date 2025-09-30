@@ -64,7 +64,7 @@ class ApplicantHistoryBillingServiceTest {
         applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
 
         verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(
-            USER_MODIFIED, List.of(APPLICANT_HISTORY_TEST_ID));
+            List.of(APPLICANT_HISTORY_TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(
             BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient, never()).updateApplicantsHistory(
@@ -81,12 +81,12 @@ class ApplicantHistoryBillingServiceTest {
             List.of(entity));
         when(applicantHistoryBillingMapper.mapEntityToDTO(entity)).thenReturn(dto);
         when(applicantHistoryBillingRepository.resetApplicantHistory(
-            anyString(), anyList())).thenReturn(1);
+            anyList(), anyString())).thenReturn(1);
 
         applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
 
-        verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED,
-            List.of(APPLICANT_HISTORY_TEST_ID));
+        verify(applicantHistoryBillingRepository).resetApplicantHistory(
+            List.of(APPLICANT_HISTORY_TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(
             BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(
