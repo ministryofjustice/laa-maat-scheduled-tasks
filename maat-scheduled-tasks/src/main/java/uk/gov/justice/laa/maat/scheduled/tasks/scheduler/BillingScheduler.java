@@ -46,17 +46,6 @@ public class BillingScheduler {
         }
     }
 
-    public void resendBillingData() {
-        try {
-            applicantBillingService.resendApplicantsToBilling(billingConfiguration.getUserModified());
-            applicantHistoryBillingService.resendApplicantHistoryToBilling(billingConfiguration.getUserModified());
-            repOrderBillingService.resendRepOrdersToBilling(billingConfiguration.getUserModified());
-        } catch (Exception exception) {
-            log.error("Error running manual extract for CCLF billing data: {}", exception.getMessage());
-            throw exception;
-        }
-    }
-
     @Scheduled(cron = "${billing.cleanup_data_feed_log.cron_expression}")
     public void cleanupBillingDataFeedLog() {
         log.info("Starting billing data feed log cleanup...");
