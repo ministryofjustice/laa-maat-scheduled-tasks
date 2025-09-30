@@ -3,9 +3,10 @@ package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,11 +41,14 @@ public class BillingSchedulerTest {
     @Mock
     private BillingDataFeedLogService billingDataFeedLogService;
 
-    @Test
-    void givenNoExceptions_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformed() {
-        when(billingConfiguration.getUserModified()).thenReturn("test");
+    @BeforeEach
+    void setUp() {
+        lenient().when(billingConfiguration.getUserModified()).thenReturn("test");
+    }
 
-        scheduler.extractCCLFBillingData();
+    @Test
+    void givenNoExceptions_whenExtractBillingDataIsInvoked_thenExtractIsPerformed() {
+        scheduler.extractBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
         verify(applicantBillingService).sendApplicantsToBilling(anyString());
@@ -54,13 +58,15 @@ public class BillingSchedulerTest {
     }
 
     @Test
-    void givenExceptionThrown_whenExtractCCLFBillingDataIsInvoked_thenMaatReferencesDeleted() {
-        doThrow(new MAATScheduledTasksException(
-            "The maat references table is already populated.")).when(maatReferenceService)
-            .populateMaatReferences();
+    void givenExceptionThrown_whenExtractBillingDataIsInvoked_thenMaatReferencesDeleted() {
+        doThrow(new MAATScheduledTasksException("The maat references table is already populated."))
+            .when(maatReferenceService).populateMaatReferences();
 
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
+        verify(applicantBillingService, never()).sendApplicantsToBilling(anyString());
+        verify(applicantHistoryBillingService, never()).sendApplicantHistoryToBilling(anyString());
+        verify(repOrderBillingService, never()).sendRepOrdersToBilling(anyString());
         verify(maatReferenceService).deleteMaatReferences();
     }
 

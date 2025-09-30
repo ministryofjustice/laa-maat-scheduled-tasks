@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
@@ -30,10 +31,14 @@ public class BillingDataFeedLogEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "billing_log_gen_seq")
     @Column(name = "id")
     private Integer id;
+
     @Column(name = "record_type")
     private String recordType;
+
     @Column(name = "date_created")
     private LocalDateTime dateCreated;
+
     @Column(name = "payload")
+    @Lob
     private String payload;
 }

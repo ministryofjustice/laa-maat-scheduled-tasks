@@ -1,16 +1,19 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Collection;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 
 import java.util.List;
@@ -25,6 +28,7 @@ public class ApplicantBillingService {
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantMapper applicantMapper;
+    private final BillingDataFeedLogMapper billingDataFeedLogMapper;
 
     @Transactional
     public void sendApplicantsToBilling(String userModified) {
@@ -34,13 +38,28 @@ public class ApplicantBillingService {
             return;
         }
 
-        List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
+        resetApplicantBillingFlag(applicants, userModified);
+        sendApplicantsToBilling(applicants);
+    }
 
-        resetApplicantBilling(
-            ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
+    public void resendApplicantsToBilling() {
+        List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
 
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
-            applicants.toString());
+        List<ApplicantBillingDTO> applicants = billingLogEntities.stream()
+            .map(billingDataFeedLogMapper::mapEntityToApplicantBillingDtos)
+            .flatMap(Collection::stream)
+            .filter(Objects::nonNull)
+            .toList();
+
+        if (applicants.isEmpty()) {
+            return;
+        }
+
+        sendApplicantsToBilling(applicants);
+    }
+
+    private void sendApplicantsToBilling(List<ApplicantBillingDTO> applicants) {
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, applicants);
 
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
             .defendants(applicants).build();
@@ -56,9 +75,12 @@ public class ApplicantBillingService {
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
     }
 
-    private void resetApplicantBilling(ResetApplicantBillingDTO resetApplicantBillingDTO) {
+    private void resetApplicantBillingFlag(List<ApplicantBillingDTO> applicants, String userModified) {
+        List<Integer> applicantIds = applicants.stream().map(BillingDTO::getId).toList();
+
         int updatedRows = applicantBillingRepository.resetApplicantBilling(
-            resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
+            applicantIds, userModified);
+
         log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
     }
 

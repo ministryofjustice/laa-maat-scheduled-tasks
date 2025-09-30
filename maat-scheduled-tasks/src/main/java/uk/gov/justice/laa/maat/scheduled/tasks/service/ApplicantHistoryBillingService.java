@@ -1,16 +1,19 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
 
@@ -23,6 +26,7 @@ public class ApplicantHistoryBillingService {
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
+    private final BillingDataFeedLogMapper billingDataFeedLogMapper;
 
     @Transactional
     public void sendApplicantHistoryToBilling(String userModified) {
@@ -32,15 +36,28 @@ public class ApplicantHistoryBillingService {
             return;
         }
 
-        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
+        resetApplicantHistoryFlag(applicantHistories, userModified);
+        sendApplicantHistoryToBilling(applicantHistories);
+    }
+
+    public void resendApplicantHistoryToBilling() {
+        List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT_HISTORY);
+
+        List<ApplicantHistoryBillingDTO> applicantHistories = billingLogEntities.stream()
+            .map(billingDataFeedLogMapper::mapEntityToApplicationHistoryBillingDtos)
+            .flatMap(Collection::stream)
+            .filter(Objects::nonNull)
             .toList();
 
-        resetApplicantHistory(
-            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
+        if (applicantHistories.isEmpty()) {
+            return;
+        }
 
-        billingDataFeedLogService.saveBillingDataFeed(
-            BillingDataFeedRecordType.APPLICANT_HISTORY,
-            applicantHistories.toString());
+        sendApplicantHistoryToBilling(applicantHistories);
+    }
+
+    private void sendApplicantHistoryToBilling(List<ApplicantHistoryBillingDTO> applicantHistories) {
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, applicantHistories);
 
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();
@@ -59,9 +76,14 @@ public class ApplicantHistoryBillingService {
             .toList();
     }
 
-    private void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
-        log.info("Resetting CCLF flag for extracted applicant histories.");
-        applicantHistoryBillingRepository.resetApplicantHistory(resetBillingDTO.getUserModified(),
-            resetBillingDTO.getIds());
+    private void resetApplicantHistoryFlag(
+        List<ApplicantHistoryBillingDTO> applicantHistories, String userModified) {
+        List<Integer> applicantHistoryIds = applicantHistories.stream()
+            .map(ApplicantHistoryBillingDTO::getId)
+            .toList();
+
+        applicantHistoryBillingRepository.resetApplicantHistory(applicantHistoryIds, userModified);
+
+        log.info("Reset CCLF flag for extracted applicant histories.");
     }
 }
