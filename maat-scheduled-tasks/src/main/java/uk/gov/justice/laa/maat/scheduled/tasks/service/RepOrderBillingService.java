@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -8,9 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -39,11 +36,7 @@ public class RepOrderBillingService {
             return;
         }
 
-        List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
-
-        resetRepOrdersSentForBilling(
-            ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
-
+        resetRepOrdersSentForBilling(repOrders, userModified);
         sendRepOrdersToBilling(repOrders);
     }
 
@@ -81,9 +74,10 @@ public class RepOrderBillingService {
             .toList();
     }
 
-    private void resetRepOrdersSentForBilling(ResetRepOrderBillingDTO resetRepOrderBillingDTO) {
-        repOrderBillingRepository.resetBillingFlagForRepOrderIds(
-            resetRepOrderBillingDTO.getUserModified(), resetRepOrderBillingDTO.getIds());
+    private void resetRepOrdersSentForBilling(List<RepOrderBillingDTO> repOrders, String userModified) {
+        List<Integer> repOrderIds = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
+
+        repOrderBillingRepository.resetBillingFlagForRepOrderIds(repOrderIds, userModified);
     }
 
 }

@@ -61,7 +61,7 @@ class RepOrderBillingServiceTest {
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
         verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(
-            USER_MODIFIED, List.of(REP_ORDER_TEST_ID));
+            List.of(REP_ORDER_TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(
             BillingDataFeedRecordType.REP_ORDER, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient, never()).updateRepOrders(
@@ -74,13 +74,13 @@ class RepOrderBillingServiceTest {
         RepOrderBillingDTO dto = getRepOrderBillingDTO(REP_ORDER_TEST_ID);
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity));
-        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(),
-                anyList())).thenReturn(1);
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyList(), anyString()))
+            .thenReturn(1);
 
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
         verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(
-            USER_MODIFIED, List.of(REP_ORDER_TEST_ID));
+            List.of(REP_ORDER_TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(
             BillingDataFeedRecordType.REP_ORDER, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));

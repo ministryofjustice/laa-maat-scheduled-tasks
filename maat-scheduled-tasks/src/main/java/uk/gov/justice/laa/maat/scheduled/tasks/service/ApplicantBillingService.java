@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -39,11 +38,7 @@ public class ApplicantBillingService {
             return;
         }
 
-        List<Integer> ids = applicants.stream().map(BillingDTO::getId).toList();
-
-        resetApplicantBillingFlag(
-            ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
-
+        resetApplicantBillingFlag(applicants, userModified);
         sendApplicantsToBilling(applicants);
     }
 
@@ -80,9 +75,11 @@ public class ApplicantBillingService {
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
     }
 
-    private void resetApplicantBillingFlag(ResetApplicantBillingDTO resetApplicantBillingDTO) {
+    private void resetApplicantBillingFlag(List<ApplicantBillingDTO> applicants, String userModified) {
+        List<Integer> applicantIds = applicants.stream().map(BillingDTO::getId).toList();
+
         int updatedRows = applicantBillingRepository.resetApplicantBilling(
-            resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
+            applicantIds, userModified);
 
         log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
     }

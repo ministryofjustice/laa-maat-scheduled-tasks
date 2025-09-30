@@ -8,9 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -38,12 +36,7 @@ public class ApplicantHistoryBillingService {
             return;
         }
 
-        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
-            .toList();
-
-        resetApplicantHistory(
-            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
-
+        resetApplicantHistoryFlag(applicantHistories, userModified);
         sendApplicantHistoryToBilling(applicantHistories);
     }
 
@@ -83,9 +76,14 @@ public class ApplicantHistoryBillingService {
             .toList();
     }
 
-    private void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
-        log.info("Resetting CCLF flag for extracted applicant histories.");
-        applicantHistoryBillingRepository.resetApplicantHistory(resetBillingDTO.getUserModified(),
-            resetBillingDTO.getIds());
+    private void resetApplicantHistoryFlag(
+        List<ApplicantHistoryBillingDTO> applicantHistories, String userModified) {
+        List<Integer> applicantHistoryIds = applicantHistories.stream()
+            .map(ApplicantHistoryBillingDTO::getId)
+            .toList();
+
+        applicantHistoryBillingRepository.resetApplicantHistory(applicantHistoryIds, userModified);
+
+        log.info("Reset CCLF flag for extracted applicant histories.");
     }
 }
