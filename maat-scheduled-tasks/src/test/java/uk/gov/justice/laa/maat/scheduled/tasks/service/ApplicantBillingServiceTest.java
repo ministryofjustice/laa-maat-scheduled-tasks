@@ -92,7 +92,7 @@ class ApplicantBillingServiceTest {
         when(billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT))
             .thenReturn(Collections.emptyList());
 
-        applicantBillingService.resendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.resendApplicantsToBilling();
 
         verify(applicantBillingRepository, never()).resetApplicantBilling(any(), any());
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(any(), any());
@@ -112,7 +112,7 @@ class ApplicantBillingServiceTest {
         when(billingDataFeedLogMapper.mapEntityToApplicantBillingDtos(billingEntity))
             .thenReturn(List.of(applicantDto));
 
-        applicantBillingService.resendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.resendApplicantsToBilling();
 
         verify(applicantBillingRepository, never()).resetApplicantBilling(any(), any());
         verify(billingDataFeedLogService).saveBillingDataFeed(
