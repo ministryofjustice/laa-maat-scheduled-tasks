@@ -45,38 +45,7 @@ class ApplicantBillingServiceTest {
     private ApplicantBillingService applicantBillingService;
 
     @Test
-    void giveCCLFDataAvailable_whenSendApplicantsToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
-        ApplicantBillingEntity entity = getPopulatedApplicantBillingEntity(TEST_ID);
-        ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
-
-        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity));
-        when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
-        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
-        when(billingConfiguration.getRequestBatchSize()).thenReturn("1");
-        when(billingConfiguration.getResetBatchSize()).thenReturn("1000");
-
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
-
-        verify(applicantBillingRepository).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient, times(1)).updateApplicants(any(UpdateApplicantsRequest.class));
-    }
-
-    @Test
-    void givenNoCCLFDataAvailable_whenSendApplicantsToBillingIsInvoked_thenNoActionsPerformed() {
-        ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
-
-        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
-
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
-
-        verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(any(UpdateApplicantsRequest.class));
-    }
-
-    @Test
-    void givenApplicantDataDoesNotRequireBatchedRequests_whenSendApplicantsToBillingIsInvoked_thenBillingIsCalledOnce() {
+    void givenDataDoesNotRequireBatchedRequests_whenSendApplicantsToBillingIsInvoked_thenBillingIsCalledOnce() {
         ApplicantBillingEntity entity = getPopulatedApplicantBillingEntity(TEST_ID);
         ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
 
@@ -94,7 +63,7 @@ class ApplicantBillingServiceTest {
     }
 
     @Test
-    void givenApplicantDataRequiresBatchedRequests_whenSendApplicantsToBillingIsInvoked_thenBillingIsCalledMultipleTimes() {
+    void givenDataRequiresBatchedRequests_whenSendApplicantsToBillingIsInvoked_thenBillingIsCalledMultipleTimes() {
         ApplicantBillingEntity entity = getPopulatedApplicantBillingEntity(TEST_ID);
         ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
 
@@ -102,12 +71,25 @@ class ApplicantBillingServiceTest {
         when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
         when(billingConfiguration.getRequestBatchSize()).thenReturn("1");
-        when(billingConfiguration.getResetBatchSize()).thenReturn("1000");
+        when(billingConfiguration.getResetBatchSize()).thenReturn("1");
 
         applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 
-        verify(applicantBillingRepository, times(1)).resetApplicantBilling(List.of(TEST_ID, TEST_ID), USER_MODIFIED);
+        verify(applicantBillingRepository, times(2)).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto, dto).toString());
         verify(crownCourtLitigatorFeesApiClient, times(2)).updateApplicants(any(UpdateApplicantsRequest.class));
+    }
+
+    @Test
+    void givenNoCCLFDataAvailable_whenSendApplicantsToBillingIsInvoked_thenNoActionsPerformed() {
+        ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
+
+        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
+
+        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+
+        verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
+        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(any(UpdateApplicantsRequest.class));
     }
 }

@@ -43,7 +43,8 @@ public class ApplicantHistoryBillingService {
 
         int requestBatchSize = Integer.parseInt(billingConfiguration.getRequestBatchSize());
 
-        List<List<ApplicantHistoryBillingDTO>> batchedApplicantHistories = batchList(applicantHistories, requestBatchSize);
+        List<List<ApplicantHistoryBillingDTO>> batchedApplicantHistories = batchList(
+            applicantHistories, requestBatchSize);
 
         for (List<ApplicantHistoryBillingDTO> currentBatch : batchedApplicantHistories) {
             UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
@@ -71,7 +72,8 @@ public class ApplicantHistoryBillingService {
 
         // Batching IDs due to Oracle hard limit of 1000 on IN clause.
         List<List<Integer>> batchedIds = batchList(
-            applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId).toList(), resetBatchSize);
+            applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId).toList(),
+            resetBatchSize);
 
         for (List<Integer> batch : batchedIds) {
             int updatedRows = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
