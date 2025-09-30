@@ -78,9 +78,9 @@ public class BillingSchedulerTest {
     void givenNoExceptions_whenResendBillingDataIsInvoked_thenResendIsPerformed() {
         scheduler.resendBillingData();
 
-        verify(applicantBillingService).resendApplicantsToBilling(anyString());
-        verify(applicantHistoryBillingService).resendApplicantHistoryToBilling(anyString());
-        verify(repOrderBillingService).resendRepOrdersToBilling(anyString());
+        verify(applicantBillingService).resendApplicantsToBilling();
+        verify(applicantHistoryBillingService).resendApplicantHistoryToBilling();
+        verify(repOrderBillingService).resendRepOrdersToBilling();
     }
 
     @Test
@@ -88,16 +88,16 @@ public class BillingSchedulerTest {
         MAATScheduledTasksException expectedException = new MAATScheduledTasksException("Something went wrong.");
 
         doThrow(expectedException)
-            .when(applicantBillingService).resendApplicantsToBilling(anyString());
+            .when(applicantBillingService).resendApplicantsToBilling();
 
         MAATScheduledTasksException actualException = assertThrows(MAATScheduledTasksException.class,
             () -> scheduler.resendBillingData());
 
         assertEquals(expectedException, actualException);
 
-        verify(applicantBillingService, times(1)).resendApplicantsToBilling(anyString());
-        verify(applicantHistoryBillingService, never()).resendApplicantHistoryToBilling(anyString());
-        verify(repOrderBillingService, never()).resendRepOrdersToBilling(anyString());
+        verify(applicantBillingService, times(1)).resendApplicantsToBilling();
+        verify(applicantHistoryBillingService, never()).resendApplicantHistoryToBilling();
+        verify(repOrderBillingService, never()).resendRepOrdersToBilling();
     }
 
     @Test

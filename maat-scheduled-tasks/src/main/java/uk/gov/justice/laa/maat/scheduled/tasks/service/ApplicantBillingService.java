@@ -47,7 +47,7 @@ public class ApplicantBillingService {
         sendApplicantsToBilling(applicants);
     }
 
-    public void resendApplicantsToBilling(String userModified) {
+    public void resendApplicantsToBilling() {
         List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
 
         List<ApplicantBillingDTO> applicants = billingLogEntities.stream()

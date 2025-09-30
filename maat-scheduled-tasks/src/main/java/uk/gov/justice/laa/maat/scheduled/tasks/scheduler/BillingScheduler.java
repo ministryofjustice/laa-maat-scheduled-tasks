@@ -47,9 +47,9 @@ public class BillingScheduler {
 
     public void resendBillingData() {
         try {
-            applicantBillingService.resendApplicantsToBilling(billingConfiguration.getUserModified());
-            applicantHistoryBillingService.resendApplicantHistoryToBilling(billingConfiguration.getUserModified());
-            repOrderBillingService.resendRepOrdersToBilling(billingConfiguration.getUserModified());
+            applicantBillingService.resendApplicantsToBilling();
+            applicantHistoryBillingService.resendApplicantHistoryToBilling();
+            repOrderBillingService.resendRepOrdersToBilling();
         } catch (Exception exception) {
             log.error("Error running manual extract for CCLF billing data: {}", exception.getMessage());
             throw exception;

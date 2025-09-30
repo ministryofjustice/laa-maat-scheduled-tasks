@@ -38,10 +38,16 @@ public class ApplicantHistoryBillingService {
             return;
         }
 
-        sendApplicantHistoryToBilling(applicantHistories, userModified);
+        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
+            .toList();
+
+        resetApplicantHistory(
+            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
+
+        sendApplicantHistoryToBilling(applicantHistories);
     }
 
-    public void resendApplicantHistoryToBilling(String userModified) {
+    public void resendApplicantHistoryToBilling() {
         List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT_HISTORY);
 
         List<ApplicantHistoryBillingDTO> applicantHistories = billingLogEntities.stream()
@@ -54,16 +60,10 @@ public class ApplicantHistoryBillingService {
             return;
         }
 
-        sendApplicantHistoryToBilling(applicantHistories, userModified);
+        sendApplicantHistoryToBilling(applicantHistories);
     }
 
-    public void sendApplicantHistoryToBilling(List<ApplicantHistoryBillingDTO> applicantHistories, String userModified) {
-        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
-            .toList();
-
-        resetApplicantHistory(
-            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
-
+    private void sendApplicantHistoryToBilling(List<ApplicantHistoryBillingDTO> applicantHistories) {
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, applicantHistories);
 
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()

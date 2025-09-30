@@ -39,10 +39,15 @@ public class RepOrderBillingService {
             return;
         }
 
-        sendRepOrdersToBilling(repOrders, userModified);
+        List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
+
+        resetRepOrdersSentForBilling(
+            ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
+
+        sendRepOrdersToBilling(repOrders);
     }
 
-    public void resendRepOrdersToBilling(String userModified) {
+    public void resendRepOrdersToBilling() {
         List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.REP_ORDER);
 
         List<RepOrderBillingDTO> repOrders = billingLogEntities.stream()
@@ -55,15 +60,10 @@ public class RepOrderBillingService {
             return;
         }
 
-        sendRepOrdersToBilling(repOrders, userModified);
+        sendRepOrdersToBilling(repOrders);
     }
 
-    private void sendRepOrdersToBilling(List<RepOrderBillingDTO> repOrders, String userModified) {
-        List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
-
-        resetRepOrdersSentForBilling(
-            ResetRepOrderBillingDTO.builder().userModified(userModified).ids(ids).build());
-
+    private void sendRepOrdersToBilling(List<RepOrderBillingDTO> repOrders) {
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, repOrders);
 
         UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
