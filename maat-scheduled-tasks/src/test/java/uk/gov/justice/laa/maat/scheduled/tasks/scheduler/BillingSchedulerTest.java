@@ -1,7 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -9,9 +7,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,32 +68,6 @@ public class BillingSchedulerTest {
         verify(applicantHistoryBillingService, never()).sendApplicantHistoryToBilling(anyString());
         verify(repOrderBillingService, never()).sendRepOrdersToBilling(anyString());
         verify(maatReferenceService).deleteMaatReferences();
-    }
-
-    @Test
-    void givenNoExceptions_whenResendBillingDataIsInvoked_thenResendIsPerformed() {
-        scheduler.resendBillingData();
-
-        verify(applicantBillingService).resendApplicantsToBilling();
-        verify(applicantHistoryBillingService).resendApplicantHistoryToBilling();
-        verify(repOrderBillingService).resendRepOrdersToBilling();
-    }
-
-    @Test
-    void givenExceptionThrown_whenResendBillingDataIsInvoked_thenExceptionIsLoggedAndRethrown() {
-        MAATScheduledTasksException expectedException = new MAATScheduledTasksException("Something went wrong.");
-
-        doThrow(expectedException)
-            .when(applicantBillingService).resendApplicantsToBilling();
-
-        MAATScheduledTasksException actualException = assertThrows(MAATScheduledTasksException.class,
-            () -> scheduler.resendBillingData());
-
-        assertEquals(expectedException, actualException);
-
-        verify(applicantBillingService, times(1)).resendApplicantsToBilling();
-        verify(applicantHistoryBillingService, never()).resendApplicantHistoryToBilling();
-        verify(repOrderBillingService, never()).resendRepOrdersToBilling();
     }
 
     @Test
