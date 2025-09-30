@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -21,6 +22,7 @@ import static uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils.batchList;
 public class ApplicantHistoryBillingService {
 
     private final ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
+    private final BillingConfiguration billingConfiguration;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
@@ -39,10 +41,17 @@ public class ApplicantHistoryBillingService {
             BillingDataFeedRecordType.APPLICANT_HISTORY,
             applicantHistories.toString());
 
-        UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
-            .defendantHistories(applicantHistories).build();
+        int requestBatchSize = Integer.parseInt(billingConfiguration.getRequestBatchSize());
 
-        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+        List<List<ApplicantHistoryBillingDTO>> batchedApplicantHistories = batchList(applicantHistories, requestBatchSize);
+
+        for (List<ApplicantHistoryBillingDTO> currentBatch : batchedApplicantHistories) {
+            UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
+                .defendantHistories(currentBatch).build();
+
+            crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+        }
+
         log.info("Extracted applicant history data has been sent to the billing team.");
     }
 
@@ -58,9 +67,11 @@ public class ApplicantHistoryBillingService {
 
     private void resetApplicantHistory(List<ApplicantHistoryBillingDTO> applicantHistories,
         String userModified) {
+        int resetBatchSize = Integer.parseInt(billingConfiguration.getResetBatchSize());
+
         // Batching IDs due to Oracle hard limit of 1000 on IN clause.
         List<List<Integer>> batchedIds = batchList(
-            applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId).toList(), 1000);
+            applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId).toList(), resetBatchSize);
 
         for (List<Integer> batch : batchedIds) {
             int updatedRows = applicantHistoryBillingRepository.resetApplicantHistory(userModified,

@@ -51,19 +51,11 @@ public class ApplicantBillingService {
 
         int requestBatchSize = Integer.parseInt(billingConfiguration.getRequestBatchSize());
 
-        List<List<ApplicantBillingDTO>> batchedApplicants = ListUtils.batchList(applicants, requestBatchSize);
+        List<List<ApplicantBillingDTO>> batchedApplicants = batchList(applicants, requestBatchSize);
 
         for (List<ApplicantBillingDTO> currentBatch : batchedApplicants) {
             UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
                 .defendants(currentBatch).build();
-
-            String requestString = null;
-            try {
-                requestString = objectMapper.writeValueAsString(applicantsRequest);
-            } catch (JsonProcessingException e) {
-                // do nothing
-            }
-            log.info(requestString);
 
             crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
         }
