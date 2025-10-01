@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApplicantHistoryBillingDTO {
+public class ApplicantHistoryBillingDTO implements BillingDTO {
 
     @NotNull
     @JsonProperty("id")

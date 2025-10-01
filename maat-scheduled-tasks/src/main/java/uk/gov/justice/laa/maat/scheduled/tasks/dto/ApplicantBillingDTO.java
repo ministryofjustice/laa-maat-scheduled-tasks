@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public final class ApplicantBillingDTO implements Serializable {
+public final class ApplicantBillingDTO implements Serializable, BillingDTO {
 
     @JsonProperty("id")
     private Integer id;

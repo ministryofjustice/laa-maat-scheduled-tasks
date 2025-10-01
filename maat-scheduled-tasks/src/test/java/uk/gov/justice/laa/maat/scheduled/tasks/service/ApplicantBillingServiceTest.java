@@ -52,7 +52,7 @@ class ApplicantBillingServiceTest {
         ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
         when(crownCourtLitigatorFeesApiClient.updateApplicants(any())).thenReturn(apiResponse);
         
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.sendToBilling(USER_MODIFIED);
 
         verify(applicantBillingRepository).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
@@ -65,7 +65,7 @@ class ApplicantBillingServiceTest {
 
         when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
 
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.sendToBilling(USER_MODIFIED);
 
         verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
@@ -90,7 +90,7 @@ class ApplicantBillingServiceTest {
         when(applicantMapper.mapEntityToDTO(failingEntity)).thenReturn(failingDTO);
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
 
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.sendToBilling(USER_MODIFIED);
         
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(successDTO, failingDTO).toString());
         verify(crownCourtLitigatorFeesApiClient).updateApplicants(any(UpdateApplicantsRequest.class));

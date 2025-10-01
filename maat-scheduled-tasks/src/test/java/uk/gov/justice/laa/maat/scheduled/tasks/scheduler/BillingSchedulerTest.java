@@ -47,9 +47,9 @@ public class BillingSchedulerTest {
         scheduler.extractCCLFBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
-        verify(applicantBillingService).sendApplicantsToBilling(anyString());
-        verify(applicantHistoryBillingService).sendApplicantHistoryToBilling(anyString());
-        verify(repOrderBillingService).sendRepOrdersToBilling(anyString());
+        verify(applicantBillingService).sendToBilling(anyString());
+        verify(applicantHistoryBillingService).sendToBilling(anyString());
+        verify(repOrderBillingService).sendToBilling(anyString());
         verify(maatReferenceService).deleteMaatReferences();
     }
 

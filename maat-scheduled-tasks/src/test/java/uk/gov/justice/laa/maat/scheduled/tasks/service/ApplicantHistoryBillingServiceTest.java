@@ -57,7 +57,7 @@ class ApplicantHistoryBillingServiceTest {
         ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
         when(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(any())).thenReturn(apiResponse);
         
-        applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+        applicantHistoryBillingService.sendToBilling(USER_MODIFIED);
 
         verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED,
                 List.of(TEST_ID));
@@ -74,7 +74,7 @@ class ApplicantHistoryBillingServiceTest {
         when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(
                 Collections.emptyList());
 
-        applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+        applicantHistoryBillingService.sendToBilling(USER_MODIFIED);
 
         verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(USER_MODIFIED,
                 List.of(TEST_ID));
@@ -102,7 +102,7 @@ class ApplicantHistoryBillingServiceTest {
         when(applicantHistoryBillingMapper.mapEntityToDTO(failingEntity)).thenReturn(failingDTO);
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
 
-        applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+        applicantHistoryBillingService.sendToBilling(USER_MODIFIED);
 
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(successDTO, failingDTO).toString());
         verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any(UpdateApplicantHistoriesRequest.class));

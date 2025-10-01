@@ -52,7 +52,7 @@ class RepOrderBillingServiceTest {
         ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
         when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(apiResponse);
 
-        repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+        repOrderBillingService.sendToBilling(USER_MODIFIED);
 
         verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED,
                 List.of(TEST_ID));
@@ -68,7 +68,7 @@ class RepOrderBillingServiceTest {
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(
                 Collections.emptyList());
 
-        repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+        repOrderBillingService.sendToBilling(USER_MODIFIED);
 
         verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(USER_MODIFIED,
                 List.of(TEST_ID));
@@ -94,7 +94,7 @@ class RepOrderBillingServiceTest {
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
 
-        repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+        repOrderBillingService.sendToBilling(USER_MODIFIED);
 
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(successDTO, failingDTO).toString());
         verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));

@@ -34,10 +34,10 @@ public class BillingScheduler {
             log.info("Starting extract for CCLF billing data...");
             maatReferenceService.populateMaatReferences();
 
-            applicantBillingService.sendApplicantsToBilling(billingConfiguration.getUserModified());
-            applicantHistoryBillingService.sendApplicantHistoryToBilling(
+            applicantBillingService.sendToBilling(billingConfiguration.getUserModified());
+            applicantHistoryBillingService.sendToBilling(
                 billingConfiguration.getUserModified());
-            repOrderBillingService.sendRepOrdersToBilling(billingConfiguration.getUserModified());
+            repOrderBillingService.sendToBilling(billingConfiguration.getUserModified());
         } catch (Exception exception) {
             log.error("Error running extract for CCLF billing data: {}", exception.getMessage());
         } finally {
