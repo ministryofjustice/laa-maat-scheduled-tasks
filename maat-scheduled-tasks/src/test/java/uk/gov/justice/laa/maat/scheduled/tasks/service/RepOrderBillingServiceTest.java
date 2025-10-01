@@ -49,7 +49,7 @@ class RepOrderBillingServiceTest {
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity, entity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString())).thenReturn(2);
-        when(billingConfiguration.getRequestBatchSize()).thenReturn("5");
+        when(billingConfiguration.getRequestBatchSize()).thenReturn(5);
 
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 
@@ -65,7 +65,7 @@ class RepOrderBillingServiceTest {
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity, entity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString())).thenReturn(2);
-        when(billingConfiguration.getRequestBatchSize()).thenReturn("1");
+        when(billingConfiguration.getRequestBatchSize()).thenReturn(1);
 
         repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
 

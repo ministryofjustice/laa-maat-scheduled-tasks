@@ -52,8 +52,8 @@ class ApplicantBillingServiceTest {
         when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity, entity));
         when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
-        when(billingConfiguration.getRequestBatchSize()).thenReturn("5");
-        when(billingConfiguration.getResetBatchSize()).thenReturn("1000");
+        when(billingConfiguration.getRequestBatchSize()).thenReturn(5);
+        when(billingConfiguration.getResetBatchSize()).thenReturn(1000);
 
         applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 
@@ -70,8 +70,8 @@ class ApplicantBillingServiceTest {
         when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity, entity));
         when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
-        when(billingConfiguration.getRequestBatchSize()).thenReturn("1");
-        when(billingConfiguration.getResetBatchSize()).thenReturn("1");
+        when(billingConfiguration.getRequestBatchSize()).thenReturn(1);
+        when(billingConfiguration.getResetBatchSize()).thenReturn(1);
 
         applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
 

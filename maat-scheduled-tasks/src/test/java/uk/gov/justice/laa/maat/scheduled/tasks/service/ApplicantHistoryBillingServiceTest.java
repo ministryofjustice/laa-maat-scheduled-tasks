@@ -56,8 +56,8 @@ class ApplicantHistoryBillingServiceTest {
         when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(List.of(entity, entity));
         when(applicantHistoryBillingMapper.mapEntityToDTO(entity)).thenReturn(dto);
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
-        when(billingConfiguration.getRequestBatchSize()).thenReturn("5");
-        when(billingConfiguration.getResetBatchSize()).thenReturn("1000");
+        when(billingConfiguration.getRequestBatchSize()).thenReturn(5);
+        when(billingConfiguration.getResetBatchSize()).thenReturn(1000);
 
         applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
 
@@ -75,8 +75,8 @@ class ApplicantHistoryBillingServiceTest {
         when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(List.of(entity, entity));
         when(applicantHistoryBillingMapper.mapEntityToDTO(entity)).thenReturn(dto);
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
-        when(billingConfiguration.getRequestBatchSize()).thenReturn("1");
-        when(billingConfiguration.getResetBatchSize()).thenReturn("1");
+        when(billingConfiguration.getRequestBatchSize()).thenReturn(1);
+        when(billingConfiguration.getResetBatchSize()).thenReturn(1);
 
         applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
 

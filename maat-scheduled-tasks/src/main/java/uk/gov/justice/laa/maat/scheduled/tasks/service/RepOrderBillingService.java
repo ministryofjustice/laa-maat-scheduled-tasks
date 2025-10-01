@@ -40,9 +40,8 @@ public class RepOrderBillingService {
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
             repOrders.toString());
 
-        int requestBatchSize = Integer.parseInt(billingConfiguration.getRequestBatchSize());
-
-        List<List<RepOrderBillingDTO>> batchedRepOrders = batchList(repOrders, requestBatchSize);
+        List<List<RepOrderBillingDTO>> batchedRepOrders = batchList(repOrders,
+            billingConfiguration.getRequestBatchSize());
 
         for (List<RepOrderBillingDTO> currentBatch : batchedRepOrders) {
             UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
