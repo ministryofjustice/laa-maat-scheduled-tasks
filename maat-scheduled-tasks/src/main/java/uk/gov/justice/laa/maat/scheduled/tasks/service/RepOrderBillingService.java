@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
@@ -15,7 +15,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
 
 @Slf4j
 @Service
-public class RepOrderBillingService extends BillingService {
+public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
 
     private final RepOrderBillingRepository repOrderBillingRepository;
     private static final String REQUEST_LABEL = "rep order";
@@ -28,7 +28,7 @@ public class RepOrderBillingService extends BillingService {
     }
 
     @Override
-    protected List<? extends BillingDTO> getBillingDTOList() {
+    protected List<RepOrderBillingDTO> getBillingDTOList() {
         List<RepOrderBillingEntity> extractedRepOrders = repOrderBillingRepository.getRepOrdersForBilling();
 
         return extractedRepOrders.stream()
@@ -37,7 +37,7 @@ public class RepOrderBillingService extends BillingService {
     }
 
     @Override
-    protected void resetBillingCCLFFlag(String userModified, List ids) {
+    protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
         repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified, ids);
         log.info("Resetting CCLF flag for Rep Orders.");
     }
@@ -48,7 +48,7 @@ public class RepOrderBillingService extends BillingService {
     }
 
     @Override
-    protected ResponseEntity<String> updateBillingRecords(List repOrders) {
+    protected ResponseEntity<String> updateBillingRecords(List<RepOrderBillingDTO> repOrders) {
         UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
             .repOrders(repOrders).build();
         return crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
@@ -60,7 +60,7 @@ public class RepOrderBillingService extends BillingService {
     }
 
     @Override
-    protected void updateBillingRecordFailures(List failedIds, String userModified) {
+    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
         List<RepOrderBillingEntity> failedRepOrders = repOrderBillingRepository.findAllById(failedIds);
         for (RepOrderBillingEntity failedRepOrder : failedRepOrders) {
             failedRepOrder.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);

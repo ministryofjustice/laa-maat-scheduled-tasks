@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
@@ -14,7 +15,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 
 @Slf4j
 @Service
-public class ApplicantBillingService extends BillingService {
+public class ApplicantBillingService extends BillingService<ApplicantBillingDTO> {
 
     private final ApplicantBillingRepository applicantBillingRepository;
     private final ApplicantMapper applicantMapper;
@@ -29,7 +30,7 @@ public class ApplicantBillingService extends BillingService {
     }
 
     @Override
-    protected List getBillingDTOList() {
+    protected List<ApplicantBillingDTO> getBillingDTOList() {
         List<ApplicantBillingEntity> applicants = applicantBillingRepository.findAllApplicantsForBilling();
         log.info("Extracted data for {} applicants", applicants.size());
 
@@ -37,7 +38,7 @@ public class ApplicantBillingService extends BillingService {
     }
 
     @Override
-    protected void resetBillingCCLFFlag(String userModified, List ids) {
+    protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
         int updatedRows = applicantBillingRepository.resetApplicantBilling(
             ids, userModified);
         log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
@@ -49,7 +50,7 @@ public class ApplicantBillingService extends BillingService {
     }
 
     @Override
-    protected ResponseEntity<String> updateBillingRecords(List applicants) {
+    protected ResponseEntity<String> updateBillingRecords(List<ApplicantBillingDTO> applicants) {
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
             .defendants(applicants).build();
 
@@ -62,7 +63,7 @@ public class ApplicantBillingService extends BillingService {
     }
 
     @Override
-    protected void updateBillingRecordFailures(List failedIds, String userModified) {
+    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
             List<ApplicantBillingEntity> failedApplicants = applicantBillingRepository.findAllById(failedIds);
             for (ApplicantBillingEntity failedApplicant : failedApplicants) {
                 failedApplicant.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);

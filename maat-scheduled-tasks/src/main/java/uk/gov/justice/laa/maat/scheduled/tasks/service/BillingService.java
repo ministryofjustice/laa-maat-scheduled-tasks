@@ -20,18 +20,17 @@ public abstract class BillingService <T extends BillingDTO>{
     protected final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     protected static final String SENT_TO_CCLF_FAILURE_FLAG = "Y";
 
-    protected abstract List<? extends BillingDTO> getBillingDTOList();
+    protected abstract List<T> getBillingDTOList();
     protected abstract void resetBillingCCLFFlag(String userModified, List<Integer> ids);
     protected abstract BillingDataFeedRecordType getBillingDataFeedRecordType();
     protected abstract ResponseEntity<String> updateBillingRecords(
-        List<? extends BillingDTO> billingDTOList);
+        List<T> billingDTOList);
     protected abstract String getRequestLabel();
     protected abstract void updateBillingRecordFailures(List<Integer> failedIds, String userModified);
 
-
     @Transactional
     public void sendToBilling(String userModified) {
-        List<? extends BillingDTO> billingDTOList = getBillingDTOList();
+        List<T> billingDTOList = getBillingDTOList();
 
         if (billingDTOList.isEmpty()) {
             return;

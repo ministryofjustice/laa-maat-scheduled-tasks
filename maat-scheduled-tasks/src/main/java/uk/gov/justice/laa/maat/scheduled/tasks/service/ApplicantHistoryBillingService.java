@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
@@ -14,7 +14,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesR
 
 @Slf4j
 @Service
-public class ApplicantHistoryBillingService extends BillingService {
+public class ApplicantHistoryBillingService extends BillingService<ApplicantHistoryBillingDTO> {
 
     private final ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
@@ -30,7 +30,7 @@ public class ApplicantHistoryBillingService extends BillingService {
     }
 
     @Override
-    protected List<? extends BillingDTO> getBillingDTOList() {
+    protected List<ApplicantHistoryBillingDTO> getBillingDTOList() {
         List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
         log.info("Application histories successfully extracted for billing data.");
 
@@ -41,7 +41,7 @@ public class ApplicantHistoryBillingService extends BillingService {
     }
 
     @Override
-    protected void resetBillingCCLFFlag(String userModified, List ids) {
+    protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
         applicantHistoryBillingRepository.resetApplicantHistory(userModified, ids);
         log.info("Resetting CCLF flag for extracted applicant histories.");
     }
@@ -52,7 +52,7 @@ public class ApplicantHistoryBillingService extends BillingService {
     }
 
     @Override
-    protected ResponseEntity<String> updateBillingRecords(List applicantHistories) {
+    protected ResponseEntity<String> updateBillingRecords(List<ApplicantHistoryBillingDTO> applicantHistories) {
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();
 
@@ -65,7 +65,7 @@ public class ApplicantHistoryBillingService extends BillingService {
     }
 
     @Override
-    protected void updateBillingRecordFailures(List failedIds, String userModified) {
+    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
         List<ApplicantHistoryBillingEntity> failedApplicantHistory = applicantHistoryBillingRepository.findAllById(failedIds);
         for (ApplicantHistoryBillingEntity failedHistory : failedApplicantHistory) {
             failedHistory.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);
