@@ -51,7 +51,7 @@ public class RepOrderBillingService {
     private void resetRepOrderBilling(List<RepOrderBillingDTO> repOrders, String userModified) {
         List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
 
-        repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified, ids);
-        log.debug("CCLF Flag reset for rep orders.");
+        int rowsUpdated = repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified, ids);
+        log.debug("CCLF Flag reset for {} rep orders.", rowsUpdated);
     }
 }

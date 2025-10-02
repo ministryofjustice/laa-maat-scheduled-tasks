@@ -47,7 +47,7 @@ public class ApplicantBillingService {
     private void resetApplicantBilling(List<ApplicantBillingDTO> applicants, String userModified) {
         List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
 
-        applicantBillingRepository.resetApplicantBilling(ids, userModified);
-        log.debug("CCLF Flag reset for applicants.");
+        int rowsUpdated = applicantBillingRepository.resetApplicantBilling(ids, userModified);
+        log.debug("CCLF Flag reset for {} applicants.", rowsUpdated);
     }
 }

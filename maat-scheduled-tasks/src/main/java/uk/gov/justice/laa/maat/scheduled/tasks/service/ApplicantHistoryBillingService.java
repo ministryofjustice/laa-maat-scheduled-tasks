@@ -53,7 +53,7 @@ public class ApplicantHistoryBillingService {
         List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
             .toList();
 
-        applicantHistoryBillingRepository.resetApplicantHistory(userModified, ids);
-        log.debug("CCLF Flag reset for applicant histories.");
+        int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(userModified, ids);
+        log.debug("CCLF Flag reset for {} applicant histories.", rowsUpdated);
     }
 }
