@@ -1,13 +1,10 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
@@ -18,48 +15,61 @@ import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class ApplicantBillingService {
+public class ApplicantBillingService extends BillingService<ApplicantBillingDTO> {
 
     private final ApplicantBillingRepository applicantBillingRepository;
-    private final BillingDataFeedLogService billingDataFeedLogService;
-    private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantMapper applicantMapper;
+    private static final String REQUEST_LABEL = "applicant";
 
-    @Transactional
-    public void sendApplicantsToBilling(String userModified) {
-        List<ApplicantBillingDTO> applicants = findAllApplicantsForBilling();
-
-        if (applicants.isEmpty()) {
-            return;
-        }
-
-        List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
-
-        resetApplicantBilling(
-            ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
-
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
-            applicants.toString());
-
-        UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
-            .defendants(applicants).build();
-
-        crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
-        log.info("Extracted applicant data has been sent to the billing team.");
+    public ApplicantBillingService(BillingDataFeedLogService billingDataFeedLogService,
+        CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
+        ApplicantBillingRepository applicantBillingRepository, ApplicantMapper applicantMapper) {
+        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient);
+      this.applicantBillingRepository = applicantBillingRepository;
+      this.applicantMapper = applicantMapper;
     }
 
-    private List<ApplicantBillingDTO> findAllApplicantsForBilling() {
+    @Override
+    protected List<ApplicantBillingDTO> getBillingDTOList() {
         List<ApplicantBillingEntity> applicants = applicantBillingRepository.findAllApplicantsForBilling();
         log.info("Extracted data for {} applicants", applicants.size());
 
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
     }
 
-    private void resetApplicantBilling(ResetApplicantBillingDTO resetApplicantBillingDTO) {
+    @Override
+    protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
         int updatedRows = applicantBillingRepository.resetApplicantBilling(
-            resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
+            ids, userModified);
         log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
     }
 
+    @Override
+    protected BillingDataFeedRecordType getBillingDataFeedRecordType() {
+        return BillingDataFeedRecordType.APPLICANT;
+    }
+
+    @Override
+    protected ResponseEntity<String> updateBillingRecords(List<ApplicantBillingDTO> applicants) {
+        UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
+            .defendants(applicants).build();
+
+        return crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
+    }
+
+    @Override
+    protected String getRequestLabel() {
+        return REQUEST_LABEL;
+    }
+
+    @Override
+    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
+            List<ApplicantBillingEntity> failedApplicants = applicantBillingRepository.findAllById(failedIds);
+            for (ApplicantBillingEntity failedApplicant : failedApplicants) {
+                failedApplicant.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);
+                failedApplicant.setUserModified(userModified);
+            }
+
+            applicantBillingRepository.saveAll(failedApplicants);
+    }
 }

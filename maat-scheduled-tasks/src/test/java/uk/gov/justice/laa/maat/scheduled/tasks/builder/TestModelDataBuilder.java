@@ -85,7 +85,7 @@ public class TestModelDataBuilder {
                 .repOrderStatus("CURR")
                 .appealTypeCode(AppealType.ACN.getCode())
                 .crownCourtOutcome(CrownCourtTrialOutcome.CONVICTED.getValue())
-                .dateCreated(LocalDate.of(2025, 6, 20))
+                .dateCreated(LocalDate.of(2025, 6, 20).atStartOfDay())
                 .userCreated(USER_NAME)
                 .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
                 .userModified(USER_NAME)
