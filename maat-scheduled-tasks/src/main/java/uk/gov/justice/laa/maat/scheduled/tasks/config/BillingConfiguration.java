@@ -13,8 +13,5 @@ public class BillingConfiguration {
     private final String userModified;
 
     @NotNull
-    private final int requestBatchSize;
-
-    @NotNull
-    private final int resetBatchSize;
+    private final int batchSize;
 }

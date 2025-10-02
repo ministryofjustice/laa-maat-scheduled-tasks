@@ -24,7 +24,9 @@ public class BillingDataFeedLogService {
             .dateCreated(LocalDateTime.now())
             .payload(payload)
             .build();
+
         billingDataFeedLogRepository.save(entity);
+        log.debug("Data feed saved for applicants.");
     }
     
     @Transactional

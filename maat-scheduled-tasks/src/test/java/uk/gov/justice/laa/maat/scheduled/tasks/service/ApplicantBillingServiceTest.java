@@ -1,12 +1,8 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import java.util.Collections;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,7 +51,7 @@ class ApplicantBillingServiceTest {
         when(billingConfiguration.getRequestBatchSize()).thenReturn(5);
         when(billingConfiguration.getResetBatchSize()).thenReturn(1000);
 
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.extractApplicantBillingData(USER_MODIFIED);
 
         verify(applicantBillingRepository, times(1)).resetApplicantBilling(List.of(TEST_ID, TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto, dto).toString());
@@ -73,7 +69,7 @@ class ApplicantBillingServiceTest {
         when(billingConfiguration.getRequestBatchSize()).thenReturn(1);
         when(billingConfiguration.getResetBatchSize()).thenReturn(1);
 
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.extractApplicantBillingData(USER_MODIFIED);
 
         verify(applicantBillingRepository, times(2)).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto, dto).toString());
@@ -86,7 +82,7 @@ class ApplicantBillingServiceTest {
 
         when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
 
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.extractApplicantBillingData(USER_MODIFIED);
 
         verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());

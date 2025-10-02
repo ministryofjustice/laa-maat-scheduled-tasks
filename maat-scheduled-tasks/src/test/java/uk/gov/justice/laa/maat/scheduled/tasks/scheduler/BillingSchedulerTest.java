@@ -7,7 +7,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -47,9 +46,9 @@ public class BillingSchedulerTest {
         scheduler.extractCCLFBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
-        verify(applicantBillingService).sendApplicantsToBilling(anyString());
-        verify(applicantHistoryBillingService).sendApplicantHistoryToBilling(anyString());
-        verify(repOrderBillingService).sendRepOrdersToBilling(anyString());
+        verify(applicantBillingService).extractApplicantBillingData(anyString());
+        verify(applicantHistoryBillingService).extractApplicantHistoryBillingData(anyString());
+        verify(repOrderBillingService).extractRepOrderBillingData(anyString());
         verify(maatReferenceService).deleteMaatReferences();
     }
 

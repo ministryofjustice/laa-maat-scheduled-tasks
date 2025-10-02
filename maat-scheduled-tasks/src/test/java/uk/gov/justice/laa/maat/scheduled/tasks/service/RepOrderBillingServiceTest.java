@@ -51,7 +51,7 @@ class RepOrderBillingServiceTest {
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString())).thenReturn(2);
         when(billingConfiguration.getRequestBatchSize()).thenReturn(5);
 
-        repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+        repOrderBillingService.extractRepOrderBillingData(USER_MODIFIED);
 
         verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(dto, dto).toString());
@@ -67,7 +67,7 @@ class RepOrderBillingServiceTest {
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString())).thenReturn(2);
         when(billingConfiguration.getRequestBatchSize()).thenReturn(1);
 
-        repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+        repOrderBillingService.extractRepOrderBillingData(USER_MODIFIED);
 
         verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(dto, dto).toString());
@@ -80,7 +80,7 @@ class RepOrderBillingServiceTest {
 
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(Collections.emptyList());
 
-        repOrderBillingService.sendRepOrdersToBilling(USER_MODIFIED);
+        repOrderBillingService.extractRepOrderBillingData(USER_MODIFIED);
 
         verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(USER_MODIFIED);
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(dto).toString());

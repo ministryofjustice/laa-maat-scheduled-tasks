@@ -22,59 +22,38 @@ import static uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils.batchList;
 public class ApplicantHistoryBillingService {
 
     private final ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
-    private final BillingConfiguration billingConfiguration;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
 
-    @Transactional
-    public void sendApplicantHistoryToBilling(String userModified) {
-        List<ApplicantHistoryBillingDTO> applicantHistories = extractApplicantHistory();
+    public List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
+        List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
+        log.debug("Extracted data for {} applicant histories.", applicantHistoryEntities.size());
 
-        if (applicantHistories.isEmpty()) {
-            return;
-        }
-
-        resetApplicantHistory(applicantHistories, userModified);
-
-        billingDataFeedLogService.saveBillingDataFeed(
-            BillingDataFeedRecordType.APPLICANT_HISTORY,
-            applicantHistories.toString());
-
-        List<List<ApplicantHistoryBillingDTO>> batchedApplicantHistories = batchList(
-            applicantHistories, billingConfiguration.getRequestBatchSize());
-
-        for (List<ApplicantHistoryBillingDTO> currentBatch : batchedApplicantHistories) {
-            UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
-                .defendantHistories(currentBatch).build();
-
-            crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
-        }
-
-        log.info("Extracted applicant history data has been sent to the billing team.");
+        return applicantHistoryEntities.stream().map(applicantHistoryBillingMapper::mapEntityToDTO)
+            .toList();
     }
 
-    private List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
-        List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
-        log.info("Application histories successfully extracted for billing data.");
+    @Transactional
+    public void sendApplicantHistoryToBilling(List<ApplicantHistoryBillingDTO> applicantHistories,
+        String userModified) {
+        resetApplicantHistory(applicantHistories, userModified);
 
-        return applicantHistoryEntities
-            .stream()
-            .map(applicantHistoryBillingMapper::mapEntityToDTO)
-            .toList();
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY,
+            applicantHistories.toString());
+
+        UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
+            .defendantHistories(applicantHistories).build();
+
+        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
     }
 
     private void resetApplicantHistory(List<ApplicantHistoryBillingDTO> applicantHistories,
         String userModified) {
-        // Batching IDs due to Oracle hard limit of 1000 on IN clause.
-        List<List<Integer>> batchedIds = batchList(
-            applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId).toList(),
-            billingConfiguration.getResetBatchSize());
+        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
+            .toList();
 
-        for (List<Integer> batch : batchedIds) {
-            int updatedRows = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
-                batch);
-            log.info("CCLF Flag reset for batch of {} applicant histories", updatedRows);
-        }
+        applicantHistoryBillingRepository.resetApplicantHistory(userModified, ids);
+        log.debug("CCLF Flag reset for applicant histories.");
     }
 }

@@ -59,7 +59,7 @@ class ApplicantHistoryBillingServiceTest {
         when(billingConfiguration.getRequestBatchSize()).thenReturn(5);
         when(billingConfiguration.getResetBatchSize()).thenReturn(1000);
 
-        applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+        applicantHistoryBillingService.extractApplicantHistoryBillingData(USER_MODIFIED);
 
         verify(applicantHistoryBillingRepository, times(1)).resetApplicantHistory(USER_MODIFIED, List.of(TEST_ID, TEST_ID));
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto, dto).toString());
@@ -78,7 +78,7 @@ class ApplicantHistoryBillingServiceTest {
         when(billingConfiguration.getRequestBatchSize()).thenReturn(1);
         when(billingConfiguration.getResetBatchSize()).thenReturn(1);
 
-        applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+        applicantHistoryBillingService.extractApplicantHistoryBillingData(USER_MODIFIED);
 
         verify(applicantHistoryBillingRepository, times(2)).resetApplicantHistory(USER_MODIFIED, List.of(TEST_ID));
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto, dto).toString());
@@ -92,7 +92,7 @@ class ApplicantHistoryBillingServiceTest {
 
         when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(Collections.emptyList());
 
-        applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+        applicantHistoryBillingService.extractApplicantHistoryBillingData(USER_MODIFIED);
 
         verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(USER_MODIFIED, List.of(TEST_ID));
         verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
