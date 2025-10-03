@@ -60,7 +60,7 @@ class RepOrderBillingServiceTest {
         repOrderBillingService.sendRepOrdersToBilling(List.of(dto), USER_MODIFIED);
 
         verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED, List.of(TEST_ID));
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(dto).toString());
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
     }
 }

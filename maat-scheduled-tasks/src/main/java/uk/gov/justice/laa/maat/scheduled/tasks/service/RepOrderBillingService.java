@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -14,8 +12,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
-
-import static uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils.batchList;
 
 @Slf4j
 @Service
@@ -40,7 +36,7 @@ public class RepOrderBillingService {
         resetRepOrderBilling(repOrders, userModified);
 
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
-            repOrders.toString());
+            repOrders);
 
         UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
             .repOrders(repOrders).build();
@@ -51,7 +47,8 @@ public class RepOrderBillingService {
     private void resetRepOrderBilling(List<RepOrderBillingDTO> repOrders, String userModified) {
         List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
 
-        int rowsUpdated = repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified, ids);
+        int rowsUpdated = repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified,
+            ids);
         log.debug("CCLF Flag reset for {} rep orders.", rowsUpdated);
     }
 }

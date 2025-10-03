@@ -5,19 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
-public class RepOrderBillingDTO {
-
-    @JsonProperty("id")
-    private Integer id;
+public class RepOrderBillingDTO extends BillingDTO {
 
     @JsonProperty("def_id")
     private Integer applicantId;
@@ -66,20 +65,6 @@ public class RepOrderBillingDTO {
 
     @JsonProperty("ccoo_outcome")
     private String crownCourtOutcome;
-
-    @JsonProperty("date_created")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
-    private LocalDate dateCreated;
-
-    @JsonProperty("user_created")
-    private String userCreated;
-
-    @JsonProperty("date_modified")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
-    private LocalDateTime dateModified;
-
-    @JsonProperty("user_modified")
-    private String userModified;
 
     @JsonProperty("caty_case_type")
     private String caseType;

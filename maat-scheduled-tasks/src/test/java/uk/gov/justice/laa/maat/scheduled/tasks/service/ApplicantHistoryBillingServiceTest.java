@@ -67,7 +67,7 @@ class ApplicantHistoryBillingServiceTest {
         verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED,
             List.of(TEST_ID));
         verify(billingDataFeedLogService).saveBillingDataFeed(
-            BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
+            BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(
             any(UpdateApplicantHistoriesRequest.class));
     }

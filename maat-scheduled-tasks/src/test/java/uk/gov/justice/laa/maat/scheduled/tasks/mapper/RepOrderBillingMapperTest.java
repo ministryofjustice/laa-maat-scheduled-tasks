@@ -33,7 +33,7 @@ class RepOrderBillingMapperTest {
             .repOrderStatus("CURR")
             .appealTypeCode("ACN")
             .crownCourtOutcome("CONVICTED")
-            .dateCreated(LocalDate.of(2025, 6, 20))
+            .dateCreated(LocalDate.of(2025, 6, 20).atStartOfDay())
             .userCreated("test-u")
             .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
             .userModified("test-u")

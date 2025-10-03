@@ -8,17 +8,15 @@ import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
-public class ApplicantHistoryBillingDTO {
-
-    @NotNull
-    @JsonProperty("id")
-    private Integer id;
+public class ApplicantHistoryBillingDTO extends BillingDTO {
 
     @JsonProperty("as_at_date")
     private LocalDate asAtDate;
@@ -46,21 +44,5 @@ public class ApplicantHistoryBillingDTO {
 
     @JsonProperty("foreign_id")
     private String foreignId;
-
-    @NotNull
-    @JsonProperty("date_created")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
-    private LocalDateTime dateCreated;
-
-    @NotNull
-    @JsonProperty("user_created")
-    private String userCreated;
-
-    @JsonProperty("date_modified")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
-    private LocalDateTime dateModified;
-
-    @JsonProperty("user_modified")
-    private String userModified;
 }
 

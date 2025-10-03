@@ -63,7 +63,7 @@ class ApplicantBillingServiceTest {
 
         verify(applicantBillingRepository).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
-            List.of(dto).toString());
+            List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicants(
             any(UpdateApplicantsRequest.class));
     }
