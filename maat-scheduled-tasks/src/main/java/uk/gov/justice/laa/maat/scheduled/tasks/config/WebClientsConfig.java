@@ -52,7 +52,7 @@ public class WebClientsConfig {
                             HttpClient.create(connectionProvider)
                                     .resolver(DefaultAddressResolverGroup.INSTANCE)
                                     .compress(true)
-                                    .responseTimeout(Duration.ofSeconds(120))
+                                    .responseTimeout(Duration.ofSeconds(300))
                     )
             );
             webClientBuilder.defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
