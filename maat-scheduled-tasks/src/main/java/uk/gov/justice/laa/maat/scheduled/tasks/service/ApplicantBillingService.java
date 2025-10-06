@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
@@ -35,8 +34,6 @@ public class ApplicantBillingService {
 
         List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
 
-        resetApplicantBilling(
-            ResetApplicantBillingDTO.builder().userModified(userModified).ids(ids).build());
 
         billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
             applicants.toString());
@@ -54,11 +51,11 @@ public class ApplicantBillingService {
 
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
     }
+    private void resetApplicantBilling(List<ApplicantBillingDTO> applicants, String userModified) {
+        List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
 
-    private void resetApplicantBilling(ResetApplicantBillingDTO resetApplicantBillingDTO) {
-        int updatedRows = applicantBillingRepository.resetApplicantBilling(
-            resetApplicantBillingDTO.getIds(), resetApplicantBillingDTO.getUserModified());
-        log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
+        int rowsUpdated = applicantBillingRepository.resetApplicantBilling(ids, userModified);
+        log.debug("CCLF Flag reset for {} applicants.", rowsUpdated);
     }
 
 }

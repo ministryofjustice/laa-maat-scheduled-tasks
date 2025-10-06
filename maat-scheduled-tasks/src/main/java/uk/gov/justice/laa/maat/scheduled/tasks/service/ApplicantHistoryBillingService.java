@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
@@ -35,8 +34,6 @@ public class ApplicantHistoryBillingService {
         List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
             .toList();
 
-        resetApplicantHistory(
-            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
 
         billingDataFeedLogService.saveBillingDataFeed(
             BillingDataFeedRecordType.APPLICANT_HISTORY,
@@ -56,12 +53,13 @@ public class ApplicantHistoryBillingService {
         return applicantHistoryEntities
             .stream()
             .map(applicantHistoryBillingMapper::mapEntityToDTO)
+    private void resetApplicantHistory(List<ApplicantHistoryBillingDTO> applicantHistories,
+        String userModified) {
+        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
             .toList();
-    }
 
-    private void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
-        log.info("Resetting CCLF flag for extracted applicant histories.");
-        applicantHistoryBillingRepository.resetApplicantHistory(resetBillingDTO.getUserModified(),
-            resetBillingDTO.getIds());
+        int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
+            ids);
+        log.debug("CCLF Flag reset for {} applicant histories.", rowsUpdated);
     }
 }
