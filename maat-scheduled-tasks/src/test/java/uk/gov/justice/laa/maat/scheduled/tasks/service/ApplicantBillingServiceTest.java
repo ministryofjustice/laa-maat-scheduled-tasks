@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,6 +16,7 @@ import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedApplicantBillingEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantDTO;
 
@@ -37,32 +37,34 @@ class ApplicantBillingServiceTest {
     @InjectMocks
     private ApplicantBillingService applicantBillingService;
 
+
     @Test
-    void giveCCLFDataAvailable_whenSendApplicantsToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
+    void givenApplicantDataExists_whenFindApplicantsForBillingIsInvoked_thenApplicantDataIsReturned() {
         ApplicantBillingEntity entity = getPopulatedApplicantBillingEntity(TEST_ID);
         ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
 
-        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity));
+        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(
+            List.of(entity, entity));
         when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
-        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
 
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+        List<ApplicantBillingDTO> applicants = applicantBillingService.findAllApplicantsForBilling();
 
-        verify(applicantBillingRepository).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient).updateApplicants(any(UpdateApplicantsRequest.class));
+        assertEquals(List.of(dto, dto), applicants);
     }
 
     @Test
-    void givenNoCCLFDataAvailable_whenSendApplicantsToBillingIsInvoked_thenNoActionsPerformed() {
+    void givenValidData_whenSendApplicantsToBillingIsInvoked_thenDatabaseUpdatedAndCCLFCalled() {
         ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
 
-        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
+        when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(
+            1);
 
-        applicantBillingService.sendApplicantsToBilling(USER_MODIFIED);
+        applicantBillingService.sendApplicantsToBilling(List.of(dto), USER_MODIFIED);
 
-        verify(applicantBillingRepository, never()).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicants(any(UpdateApplicantsRequest.class));
+        verify(applicantBillingRepository).resetApplicantBilling(List.of(TEST_ID), USER_MODIFIED);
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
+            List.of(dto));
+        verify(crownCourtLitigatorFeesApiClient).updateApplicants(
+            any(UpdateApplicantsRequest.class));
     }
 }

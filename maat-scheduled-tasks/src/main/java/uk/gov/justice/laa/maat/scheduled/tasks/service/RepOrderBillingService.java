@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import java.text.MessageFormat;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,7 +10,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
-
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
 
@@ -24,34 +22,28 @@ public class RepOrderBillingService {
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
 
-    @Transactional
-    public void sendRepOrdersToBilling(String userModified) {
-        List<RepOrderBillingDTO> repOrders = getRepOrdersForBilling();
-
-        if (repOrders.isEmpty()) {
-            return;
-        }
-
-        List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
-
-
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
-            repOrders.toString());
-
-        UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
-            .repOrders(repOrders).build();
-
-        crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
-        log.info("Extracted rep order data has been sent to the billing team.");
-    }
-
-    private List<RepOrderBillingDTO> getRepOrdersForBilling() {
+    public List<RepOrderBillingDTO> getRepOrdersForBilling() {
         List<RepOrderBillingEntity> extractedRepOrders = repOrderBillingRepository.getRepOrdersForBilling();
+        log.debug("Extracted data for {} rep orders.", extractedRepOrders.size());
 
         return extractedRepOrders.stream()
             .map(RepOrderBillingMapper::mapEntityToDTO)
             .toList();
     }
+
+    @Transactional
+    public void sendRepOrdersToBilling(List<RepOrderBillingDTO> repOrders, String userModified) {
+        resetRepOrderBilling(repOrders, userModified);
+
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
+            repOrders);
+
+        UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
+            .repOrders(repOrders).build();
+
+        crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
+    }
+
     private void resetRepOrderBilling(List<RepOrderBillingDTO> repOrders, String userModified) {
         List<Integer> ids = repOrders.stream().map(RepOrderBillingDTO::getId).toList();
 
@@ -59,5 +51,4 @@ public class RepOrderBillingService {
             ids);
         log.debug("CCLF Flag reset for {} rep orders.", rowsUpdated);
     }
-
 }
