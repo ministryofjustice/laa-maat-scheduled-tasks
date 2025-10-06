@@ -16,11 +16,20 @@ public class ResponseUtils {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode body = objectMapper.readTree(responseBody);
 
+            if (body == null) {
+                return failedIds;
+            }
+            
             JsonNode errorsArray = body.get("errors");
 
-            if (errorsArray != null && errorsArray.isArray()) {
-                for (JsonNode error : errorsArray) {
-                    failedIds.add(error.get("id").asInt());
+            if (errorsArray == null || !errorsArray.isArray()) {
+                return failedIds;
+            }
+            
+            for (JsonNode error : errorsArray) {
+                JsonNode id = error.get("id");
+                if (id != null) {
+                    failedIds.add(id.asInt());
                 }
             }
         } catch (IOException exception) {
