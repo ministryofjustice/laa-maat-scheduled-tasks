@@ -11,4 +11,7 @@ public class BillingConfiguration {
 
     @NotNull
     private final String userModified;
+
+    @NotNull
+    private final int batchSize;
 }
