@@ -108,7 +108,7 @@ public class BillingSchedulerIntegrationTest {
     }
     
     @Test
-    void givenSomeFailuresFromCCLF_whenExtractCCLFBillingDataIsInvoked_thenSendToCclfFlagIsSetToY() throws Exception {
+    void givenSomeFailuresFromCCLF_whenExtractCCLFBillingDataIsInvoked_thenSendToCclfFlagIsSetToTrueForFailedRecords() throws Exception {
         stubForOAuth();
         stubForDefendants();
         stubForDefendantHistories();
