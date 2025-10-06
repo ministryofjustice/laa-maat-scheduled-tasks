@@ -45,7 +45,7 @@ public class ApplicantBillingEntity {
     private String foreignId;
     
     @Column(name = "send_to_cclf")
-    private String sendToCclf;
+    private Boolean sendToCclf;
     
     @Column(name = "date_created")
     private LocalDateTime dateCreated;

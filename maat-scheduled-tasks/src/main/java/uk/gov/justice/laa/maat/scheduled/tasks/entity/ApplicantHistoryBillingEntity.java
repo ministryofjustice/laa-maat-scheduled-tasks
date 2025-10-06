@@ -57,7 +57,7 @@ public class ApplicantHistoryBillingEntity {
     private String foreignId;
 
     @Column(name = "SEND_TO_CCLF")
-    private String sendToCclf;
+    private Boolean sendToCclf;
 
     @CreationTimestamp
     @Column(name = "DATE_CREATED", nullable = false)

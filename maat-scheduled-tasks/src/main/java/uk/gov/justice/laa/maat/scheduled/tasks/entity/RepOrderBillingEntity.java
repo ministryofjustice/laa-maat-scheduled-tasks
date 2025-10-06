@@ -74,7 +74,7 @@ public class RepOrderBillingEntity {
     private String crownCourtOutcome;
     
     @Column(name = "SEND_TO_CCLF")
-    private String sendToCclf;
+    private Boolean sendToCclf;
     
     @Column(name = "DATE_CREATED")
     private LocalDateTime dateCreated;

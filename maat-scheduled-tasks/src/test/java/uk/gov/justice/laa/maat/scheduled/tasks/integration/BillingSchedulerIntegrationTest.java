@@ -81,23 +81,23 @@ public class BillingSchedulerIntegrationTest {
         assertThat(successfulApplicant.isPresent()).isTrue();
         assertThat(failedApplicant.isPresent()).isTrue();
         // If successful, send_to_cclf is reset to null
-        assertThat(successfulApplicant.get().getSendToCclf()).isEqualTo(null);
-        assertThat(failedApplicant.get().getSendToCclf()).isEqualTo("Y");
+        assertThat(successfulApplicant.get().getSendToCclf()).isEqualTo(false);
+        assertThat(failedApplicant.get().getSendToCclf()).isEqualTo(true);
 
         Optional<ApplicantHistoryBillingEntity> successfulApplicantHistory = applicantHistoryBillingRepository.findById(TEST_ID);
         Optional<ApplicantHistoryBillingEntity> failedApplicantHistory = applicantHistoryBillingRepository.findById(FAILING_TEST_ID);
         assertThat(successfulApplicantHistory.isPresent()).isTrue();
         assertThat(failedApplicantHistory.isPresent()).isTrue();
         // If successful, send_to_cclf is reset to null
-        assertThat(successfulApplicantHistory.get().getSendToCclf()).isEqualTo(null);
-        assertThat(failedApplicantHistory.get().getSendToCclf()).isEqualTo("Y");
+        assertThat(successfulApplicantHistory.get().getSendToCclf()).isEqualTo(false);
+        assertThat(failedApplicantHistory.get().getSendToCclf()).isEqualTo(true);
         
         Optional<RepOrderBillingEntity> successfulRepOrders = repOrderBillingRepository.findById(TEST_ID);
         Optional<RepOrderBillingEntity> failedRepOrders = repOrderBillingRepository.findById(FAILING_TEST_ID);
         assertThat(successfulRepOrders.isPresent()).isTrue();
         assertThat(failedRepOrders.isPresent()).isTrue();
         // If successful, send_to_cclf is reset to null
-        assertThat(successfulRepOrders.get().getSendToCclf()).isEqualTo(null);
-        assertThat(failedRepOrders.get().getSendToCclf()).isEqualTo("Y");
+        assertThat(successfulRepOrders.get().getSendToCclf()).isEqualTo(false);
+        assertThat(failedRepOrders.get().getSendToCclf()).isEqualTo(true);
     }
 }

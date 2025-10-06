@@ -18,7 +18,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 public abstract class BillingService <T extends BillingDTO>{
     private final BillingDataFeedLogService billingDataFeedLogService;
     protected final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
-    protected static final String SENT_TO_CCLF_FAILURE_FLAG = "Y";
+    protected static final Boolean SENT_TO_CCLF_FAILURE_FLAG = true;
 
     protected abstract List<T> getBillingDTOList();
     protected abstract void resetBillingCCLFFlag(String userModified, List<Integer> ids);
