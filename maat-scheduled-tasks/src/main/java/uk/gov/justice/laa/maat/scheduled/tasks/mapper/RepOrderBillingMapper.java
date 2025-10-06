@@ -31,7 +31,7 @@ public class RepOrderBillingMapper {
             .repOrderStatus(repOrderEntity.getRepOrderStatus())
             .appealTypeCode(repOrderEntity.getAppealTypeCode())
             .crownCourtOutcome(repOrderEntity.getCrownCourtOutcome())
-            .dateCreated(repOrderEntity.getDateCreated())
+            .dateCreated(repOrderEntity.getDateCreated().atStartOfDay())
             .userCreated(repOrderEntity.getUserCreated())
             .dateModified(repOrderEntity.getDateModified())
             .userModified(repOrderEntity.getUserModified())
