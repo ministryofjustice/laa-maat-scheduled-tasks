@@ -68,7 +68,7 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
         List<ApplicantHistoryBillingEntity> failedApplicantHistory = applicantHistoryBillingRepository.findAllById(failedIds);
         for (ApplicantHistoryBillingEntity failedHistory : failedApplicantHistory) {
-            failedHistory.setSendToCclf(SENT_TO_CCLF_FAILURE_FLAG);
+            failedHistory.setSendToCclf(SEND_TO_CCLF_FAILURE_FLAG);
             failedHistory.setUserModified(userModified);
         }
 
