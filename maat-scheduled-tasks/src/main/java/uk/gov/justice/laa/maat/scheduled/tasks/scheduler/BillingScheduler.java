@@ -1,12 +1,18 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 
+import static uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils.batchList;
+
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
@@ -34,10 +40,9 @@ public class BillingScheduler {
             log.info("Starting extract for CCLF billing data...");
             maatReferenceService.populateMaatReferences();
 
-            applicantBillingService.sendApplicantsToBilling(billingConfiguration.getUserModified());
-            applicantHistoryBillingService.sendApplicantHistoryToBilling(
-                billingConfiguration.getUserModified());
-            repOrderBillingService.sendRepOrdersToBilling(billingConfiguration.getUserModified());
+            extractApplicantBillingData();
+            extractApplicantHistoryBillingData();
+            extractRepOrderBillingData();
         } catch (Exception exception) {
             log.error("Error running extract for CCLF billing data: {}", exception.getMessage());
         } finally {
@@ -53,5 +58,62 @@ public class BillingScheduler {
 
         Long logsDeleted = billingDataFeedLogService.deleteLogsBeforeDate(dateThreshold);
         log.info("Billing data feed log cleanup completed. {} entries deleted.", logsDeleted);
+    }
+
+    private void extractApplicantBillingData() {
+        List<ApplicantBillingDTO> applicants = applicantBillingService.findAllApplicantsForBilling();
+
+        if (applicants.isEmpty()) {
+            return;
+        }
+
+        List<List<ApplicantBillingDTO>> applicantBatches = batchList(applicants,
+            billingConfiguration.getBatchSize());
+
+        for (List<ApplicantBillingDTO> currentBatch : applicantBatches) {
+            log.debug("Processing batch of {} applicants...", currentBatch.size());
+            applicantBillingService.sendApplicantsToBilling(currentBatch,
+                billingConfiguration.getUserModified());
+        }
+
+        log.info("Applicant data has been extracted and sent to the billing team.");
+    }
+
+    private void extractApplicantHistoryBillingData() {
+        List<ApplicantHistoryBillingDTO> applicantHistories = applicantHistoryBillingService.extractApplicantHistory();
+
+        if (applicantHistories.isEmpty()) {
+            return;
+        }
+
+        List<List<ApplicantHistoryBillingDTO>> applicantHistoryBatches = batchList(
+            applicantHistories, billingConfiguration.getBatchSize());
+
+        for (List<ApplicantHistoryBillingDTO> currentBatch : applicantHistoryBatches) {
+            log.debug("Processing batch of {} applicant histories...", currentBatch.size());
+            applicantHistoryBillingService.sendApplicantHistoryToBilling(currentBatch,
+                billingConfiguration.getUserModified());
+        }
+
+        log.info("Applicant history data has been extracted and sent to the billing team.");
+    }
+
+    private void extractRepOrderBillingData() {
+        List<RepOrderBillingDTO> repOrders = repOrderBillingService.getRepOrdersForBilling();
+
+        if (repOrders.isEmpty()) {
+            return;
+        }
+
+        List<List<RepOrderBillingDTO>> repOrderBatches = batchList(repOrders,
+            billingConfiguration.getBatchSize());
+
+        for (List<RepOrderBillingDTO> currentBatch : repOrderBatches) {
+            log.debug("Processing batch of {} rep orders...", currentBatch.size());
+            repOrderBillingService.sendRepOrdersToBilling(currentBatch,
+                billingConfiguration.getUserModified());
+        }
+
+        log.info("Rep order data has been extracted and sent to the billing team.");
     }
 }

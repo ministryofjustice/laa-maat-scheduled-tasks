@@ -8,14 +8,11 @@ import uk.gov.justice.laa.crime.enums.MagCourtOutcome;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetApplicantBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetRepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtCaseType;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.CrownCourtTrialOutcome;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 
 @Component
 public class TestModelDataBuilder {
@@ -58,14 +55,6 @@ public class TestModelDataBuilder {
             .build();
     }
 
-    public static ResetBillingDTO getResetBillingDTO() {
-        return ResetBillingDTO.builder()
-            .userModified(USER_NAME)
-            .ids(List.of(1, 2, 3))
-            .build();
-    }
-
-
     public static RepOrderBillingDTO getRepOrderBillingDTO(Integer id) {
         return RepOrderBillingDTO.builder()
                 .id(id)
@@ -85,26 +74,11 @@ public class TestModelDataBuilder {
                 .repOrderStatus("CURR")
                 .appealTypeCode(AppealType.ACN.getCode())
                 .crownCourtOutcome(CrownCourtTrialOutcome.CONVICTED.getValue())
-                .dateCreated(LocalDate.of(2025, 6, 20))
+                .dateCreated(LocalDateTime.parse("2025-06-20T00:00:00"))
                 .userCreated(USER_NAME)
-                .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
+                .dateModified(LocalDateTime.parse("2025-06-21T00:00:00"))
                 .userModified(USER_NAME)
                 .caseType(CrownCourtCaseType.EITHER_WAY.getValue())
                 .build();
     }
-
-    public static ResetApplicantBillingDTO getResetApplicantBillingDTO() {
-        return ResetApplicantBillingDTO.builder()
-                .userModified("joe-bloggs")
-                .ids(List.of(1003456, 1003457))
-                .build();
-    }
-
-    public static ResetRepOrderBillingDTO getResetRepOrderBillingDTO() {
-        return ResetRepOrderBillingDTO.builder()
-            .userModified("joe-bloggs")
-            .ids(List.of(1003456, 1003457))
-            .build();
-    }
-
 }

@@ -1,27 +1,18 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
-@AllArgsConstructor
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public final class ApplicantBillingDTO implements Serializable {
-
-    @JsonProperty("id")
-    private Integer id;
+public final class ApplicantBillingDTO extends BillingDTO {
 
     @JsonProperty("first_name")
     private String firstName;
@@ -43,21 +34,4 @@ public final class ApplicantBillingDTO implements Serializable {
 
     @JsonProperty("foreign_id")
     private String foreignId;
-
-    @JsonProperty("date_created")
-    private LocalDateTime dateCreated;
-
-    @JsonProperty("user_created")
-    private String userCreated;
-
-    @JsonProperty("date_modified")
-    private LocalDateTime dateModified;
-
-    @JsonProperty("user_modified")
-    private String userModified;
-
-    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public ApplicantBillingDTO(int id) {
-        this.id = id;
-    }
 }

@@ -81,6 +81,7 @@ billing:
     cron_expression: 0 0 9 * * *
   cleanup_data_feed_log:
     cron_expression: 0 0 9 * * *
+  batch-size: 1000
 
 services:
   cclf-api:

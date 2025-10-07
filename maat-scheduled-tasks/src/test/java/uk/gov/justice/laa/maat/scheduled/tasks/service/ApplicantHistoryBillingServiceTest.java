@@ -1,15 +1,14 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getApplicantHistoryBillingEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantHistoryBillingDTO;
 
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,41 +41,34 @@ class ApplicantHistoryBillingServiceTest {
     private ApplicantHistoryBillingService applicantHistoryBillingService;
 
     @Test
-    void giveCCLFDataAvailable_whenSendApplicantHistoryToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
+    void givenApplicantHistoryDataExists_whenExtractApplicantHistoryIsInvoked_thenApplicantHistoryDataIsReturned() {
         ApplicantHistoryBillingEntity entity = getApplicantHistoryBillingEntity(TEST_ID);
         ApplicantHistoryBillingDTO dto = getApplicantHistoryBillingDTO(TEST_ID);
 
         when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(
-                List.of(entity));
+            List.of(entity, entity));
         when(applicantHistoryBillingMapper.mapEntityToDTO(entity)).thenReturn(dto);
-        when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(),
-                anyList())).thenReturn(1);
 
-        applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+        List<ApplicantHistoryBillingDTO> applicantHistories = applicantHistoryBillingService.extractApplicantHistory();
 
-        verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED,
-                List.of(TEST_ID));
-        verify(billingDataFeedLogService).saveBillingDataFeed(
-                BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any(
-                UpdateApplicantHistoriesRequest.class));
+        assertEquals(List.of(dto, dto), applicantHistories);
     }
 
     @Test
-    void givenNoCCLFDataAvailable_whenSendApplicantHistoryToBillingIsInvoked_thenNoActionsPerformed() {
+    void givenValidData_whenSendApplicantHistoryToBillingIsInvoked_thenDatabaseUpdatedAndCCLFCalled() {
         ApplicantHistoryBillingDTO dto = getApplicantHistoryBillingDTO(TEST_ID);
 
-        when(applicantHistoryBillingRepository.extractApplicantHistoryForBilling()).thenReturn(
-                Collections.emptyList());
+        when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(),
+            anyList())).thenReturn(1);
 
-        applicantHistoryBillingService.sendApplicantHistoryToBilling(USER_MODIFIED);
+        applicantHistoryBillingService.sendApplicantHistoryToBilling(List.of(dto), USER_MODIFIED);
 
-        verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(USER_MODIFIED,
-                List.of(TEST_ID));
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(
-                BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient, never()).updateApplicantsHistory(any(
-                UpdateApplicantHistoriesRequest.class));
+        verify(applicantHistoryBillingRepository).resetApplicantHistory(USER_MODIFIED,
+            List.of(TEST_ID));
+        verify(billingDataFeedLogService).saveBillingDataFeed(
+            BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(dto));
+        verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(
+            any(UpdateApplicantHistoriesRequest.class));
     }
 }
 

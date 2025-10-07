@@ -1,17 +1,22 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantDTO;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.BillingDataFeedLogRepository;
@@ -19,21 +24,29 @@ import uk.gov.justice.laa.maat.scheduled.tasks.repository.BillingDataFeedLogRepo
 @ExtendWith(MockitoExtension.class)
 public class BillingDataFeedLogServiceTest {
 
+    private static final int TEST_ID = 1;
     public static final LocalDateTime THRESHOLD_DATE = LocalDateTime.of(2025, 8, 1, 10, 0);
 
     @Mock
     private BillingDataFeedLogRepository billingDataFeedLogRepository;
+    @Mock
+    private ObjectMapper objectMapper;
     @InjectMocks
     private BillingDataFeedLogService billingDataFeedLogService;
 
     @Test
-    void givenValidData_whenSaveBillingDataFeedIsInvoked_thenDataIsSavedToRepository() {
+    void givenValidData_whenSaveBillingDataFeedIsInvoked_thenDataIsSavedToRepository() throws JsonProcessingException {
         BillingDataFeedRecordType recordType = BillingDataFeedRecordType.APPLICANT;
-        String payload =
-                "[ApplicantBillingDTO(id=1, firstName='John', lastName='Doe', dob='1983-02-03'," +
-                        " gender='Male', niNumber='SR096795A', dateCreated='2025-01-01', userCreated='test-u')]";
+        List<ApplicantBillingDTO> billingDTO = List.of(getApplicantDTO(TEST_ID));
 
-        billingDataFeedLogService.saveBillingDataFeed(recordType, payload);
+        when(objectMapper.writeValueAsString(billingDTO)).thenReturn(
+            "[ApplicantBillingDTO(id=1, firstName='test-first-name', lastName='test-last-name', " +
+                "otherNames='test-other-names', dob='2025-07-31', gender='male', niNumber='AB123456C', " +
+                "foreignId='foreign-ID', dateCreated='2024-08-29T11:38:12', userCreated='TEST', " +
+                "dateModified='2024-04-01T10:45:09', userModified='TEST')]"
+        );
+
+        billingDataFeedLogService.saveBillingDataFeed(recordType, billingDTO);
 
         verify(billingDataFeedLogRepository).save(any(BillingDataFeedLogEntity.class));
     }
@@ -44,14 +57,15 @@ public class BillingDataFeedLogServiceTest {
 
         Long logsDeleted = billingDataFeedLogService.deleteLogsBeforeDate(THRESHOLD_DATE);
 
-        assertThat(logsDeleted).isEqualTo(2L);
         verify(billingDataFeedLogRepository).deleteByDateCreatedBefore(THRESHOLD_DATE);
+        assertEquals(2L, logsDeleted);
     }
 
     @Test
     void givenNoDate_whenDeleteLogsBeforeDateInvoked_thenAnIllegalArgumentExceptionIsThrown() {
-        assertThatThrownBy(() -> billingDataFeedLogService.deleteLogsBeforeDate(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("A date must be provided for the logs to be deleted.");
+        assertThatThrownBy(() -> {
+            billingDataFeedLogService.deleteLogsBeforeDate(null);
+        }).isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("A date must be provided for the logs to be deleted.");
     }
 }

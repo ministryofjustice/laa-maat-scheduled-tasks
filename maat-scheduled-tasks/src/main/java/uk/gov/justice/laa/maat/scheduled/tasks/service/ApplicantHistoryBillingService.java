@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ResetBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
@@ -24,44 +23,35 @@ public class ApplicantHistoryBillingService {
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
 
-    @Transactional
-    public void sendApplicantHistoryToBilling(String userModified) {
-        List<ApplicantHistoryBillingDTO> applicantHistories = extractApplicantHistory();
+    public List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
+        List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
+        log.debug("Extracted data for {} applicant histories.", applicantHistoryEntities.size());
 
-        if (applicantHistories.isEmpty()) {
-            return;
-        }
-
-        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
+        return applicantHistoryEntities.stream().map(applicantHistoryBillingMapper::mapEntityToDTO)
             .toList();
+    }
 
-        resetApplicantHistory(
-            ResetBillingDTO.builder().userModified(userModified).ids(ids).build());
+    @Transactional
+    public void sendApplicantHistoryToBilling(List<ApplicantHistoryBillingDTO> applicantHistories,
+        String userModified) {
+        resetApplicantHistory(applicantHistories, userModified);
 
-        billingDataFeedLogService.saveBillingDataFeed(
-            BillingDataFeedRecordType.APPLICANT_HISTORY,
-            applicantHistories.toString());
+        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY,
+            applicantHistories);
 
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();
 
         crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
-        log.info("Extracted applicant history data has been sent to the billing team.");
     }
 
-    private List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
-        List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
-        log.info("Application histories successfully extracted for billing data.");
-
-        return applicantHistoryEntities
-            .stream()
-            .map(applicantHistoryBillingMapper::mapEntityToDTO)
+    private void resetApplicantHistory(List<ApplicantHistoryBillingDTO> applicantHistories,
+        String userModified) {
+        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
             .toList();
-    }
 
-    private void resetApplicantHistory(ResetBillingDTO resetBillingDTO) {
-        log.info("Resetting CCLF flag for extracted applicant histories.");
-        applicantHistoryBillingRepository.resetApplicantHistory(resetBillingDTO.getUserModified(),
-            resetBillingDTO.getIds());
+        int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
+            ids);
+        log.debug("CCLF Flag reset for {} applicant histories.", rowsUpdated);
     }
 }
