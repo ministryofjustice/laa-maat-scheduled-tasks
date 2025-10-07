@@ -3,23 +3,21 @@ package uk.gov.justice.laa.maat.scheduled.tasks.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
-@AllArgsConstructor
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public final class ApplicantBillingDTO implements Serializable, BillingDTO {
-
-    @JsonProperty("id")
-    private Integer id;
+@AllArgsConstructor
+public final class ApplicantBillingDTO extends BillingDTO {
 
     @JsonProperty("first_name")
     private String firstName;
@@ -41,20 +39,6 @@ public final class ApplicantBillingDTO implements Serializable, BillingDTO {
 
     @JsonProperty("foreign_id")
     private String foreignId;
-
-    @JsonProperty("date_created")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
-    private LocalDateTime dateCreated;
-
-    @JsonProperty("user_created")
-    private String userCreated;
-
-    @JsonProperty("date_modified")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
-    private LocalDateTime dateModified;
-
-    @JsonProperty("user_modified")
-    private String userModified;
 
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public ApplicantBillingDTO(int id) {

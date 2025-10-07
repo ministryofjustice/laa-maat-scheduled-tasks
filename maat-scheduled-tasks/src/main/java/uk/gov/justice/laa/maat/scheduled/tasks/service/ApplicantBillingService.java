@@ -4,12 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
-
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 
@@ -23,8 +23,9 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
 
     public ApplicantBillingService(BillingDataFeedLogService billingDataFeedLogService,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
-        ApplicantBillingRepository applicantBillingRepository, ApplicantMapper applicantMapper) {
-        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient);
+        ApplicantBillingRepository applicantBillingRepository, ApplicantMapper applicantMapper, 
+        BillingConfiguration billingConfiguration) {
+        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration);
       this.applicantBillingRepository = applicantBillingRepository;
       this.applicantMapper = applicantMapper;
     }

@@ -50,7 +50,9 @@ public interface RepOrderBillingRepository extends
         SET     r.SEND_TO_CCLF = null,
                 r.DATE_MODIFIED = SYSDATE,
                 r.USER_MODIFIED = :userModified
-        WHERE   r.ID IN :ids
+        WHERE   r.id IN (:ids)
     """, nativeQuery = true)
-    int resetBillingFlagForRepOrderIds(@Param("userModified") String userModified, @Param("ids") List<Integer> ids);
+
+    int resetBillingFlagForRepOrderIds(@Param("userModified") String userModified,
+        @Param("ids") List<Integer> ids);
 }

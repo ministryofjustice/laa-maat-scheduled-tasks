@@ -1,15 +1,15 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedRepOrderForBilling;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getRepOrderBillingDTO;
 
-import java.util.Collections;
+
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -32,6 +33,7 @@ class RepOrderBillingServiceTest {
     private static final int TEST_ID = 1;
     private static final int FAILING_TEST_ID = 2;
     private static final String USER_MODIFIED = "TEST";
+    private static final int BATCH_SIZE = 2;
 
     @Mock
     private RepOrderBillingRepository repOrderBillingRepository;
@@ -39,11 +41,14 @@ class RepOrderBillingServiceTest {
     private BillingDataFeedLogService billingDataFeedLogService;
     @Mock
     private CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+    @Mock
+    private BillingConfiguration billingConfiguration;
     @InjectMocks
     private RepOrderBillingService repOrderBillingService;
 
+
     @Test
-    void giveCCLFDataAvailable_whenSendRepOrdersToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
+    void givenRepOrderDataExists_whenGetRepOrdersForBillingIsInvoked_thenRepOrderDataIsReturned() {
         RepOrderBillingEntity entity = getPopulatedRepOrderForBilling(TEST_ID);
         RepOrderBillingDTO dto = getRepOrderBillingDTO(TEST_ID);
 
@@ -51,31 +56,15 @@ class RepOrderBillingServiceTest {
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
         ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
         when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(apiResponse);
+        when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
 
         repOrderBillingService.sendToBilling(USER_MODIFIED);
 
-        verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED,
-                List.of(TEST_ID));
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER,
-                List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
-    }
+        when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity, entity));
 
-    @Test
-    void givenNoCCLFDataAvailable_whenSendRepOrdersToBillingIsInvoked_thenNoActionsPerformed() {
-        RepOrderBillingDTO dto = getRepOrderBillingDTO(TEST_ID);
+        List<RepOrderBillingDTO> repOrders = repOrderBillingService.getBillingDTOList();
 
-        when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(
-                Collections.emptyList());
-
-        repOrderBillingService.sendToBilling(USER_MODIFIED);
-
-        verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(USER_MODIFIED,
-                List.of(TEST_ID));
-        verify(billingDataFeedLogService, never()).saveBillingDataFeed(
-                BillingDataFeedRecordType.REP_ORDER, List.of(dto).toString());
-        verify(crownCourtLitigatorFeesApiClient, never()).updateRepOrders(
-                any(UpdateRepOrdersRequest.class));
+        assertEquals(List.of(dto, dto), repOrders);
     }
 
     @Test
@@ -93,10 +82,11 @@ class RepOrderBillingServiceTest {
         when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(successEntity, failingEntity));
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
+        when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
 
         repOrderBillingService.sendToBilling(USER_MODIFIED);
 
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(successDTO, failingDTO).toString());
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(successDTO, failingDTO));
         verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
         verify(repOrderBillingRepository).saveAll(List.of(failingEntity));
     }

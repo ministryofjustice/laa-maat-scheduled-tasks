@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -19,12 +20,12 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     private final ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
     private static final String REQUEST_LABEL = "applicant history";
-
+    
     public ApplicantHistoryBillingService(BillingDataFeedLogService billingDataFeedLogService,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
         ApplicantHistoryBillingRepository applicantHistoryBillingRepository,
-        ApplicantHistoryBillingMapper applicantHistoryBillingMapper) {
-            super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient);
+        ApplicantHistoryBillingMapper applicantHistoryBillingMapper, BillingConfiguration billingConfiguration) {
+            super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration);
             this.applicantHistoryBillingRepository = applicantHistoryBillingRepository;
             this.applicantHistoryBillingMapper = applicantHistoryBillingMapper;
     }
@@ -39,11 +40,12 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
             .map(applicantHistoryBillingMapper::mapEntityToDTO)
             .toList();
     }
-
+    
     @Override
     protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
-        applicantHistoryBillingRepository.resetApplicantHistory(userModified, ids);
-        log.info("Resetting CCLF flag for extracted applicant histories.");
+        int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
+            ids);
+        log.debug("CCLF Flag reset for {} applicant histories.", rowsUpdated);
     }
 
     @Override

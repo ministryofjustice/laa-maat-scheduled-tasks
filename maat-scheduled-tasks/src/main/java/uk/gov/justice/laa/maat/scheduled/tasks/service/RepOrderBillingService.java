@@ -4,12 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
-
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
 
@@ -19,23 +19,24 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
 
     private final RepOrderBillingRepository repOrderBillingRepository;
     private static final String REQUEST_LABEL = "rep order";
-
+    
     public RepOrderBillingService(BillingDataFeedLogService billingDataFeedLogService,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
-        RepOrderBillingRepository repOrderBillingRepository) {
-        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient);
+        RepOrderBillingRepository repOrderBillingRepository, BillingConfiguration billingConfiguration) {
+        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration);
       this.repOrderBillingRepository = repOrderBillingRepository;
     }
 
     @Override
     protected List<RepOrderBillingDTO> getBillingDTOList() {
         List<RepOrderBillingEntity> extractedRepOrders = repOrderBillingRepository.getRepOrdersForBilling();
+        log.debug("Extracted data for {} rep orders.", extractedRepOrders.size());
 
         return extractedRepOrders.stream()
             .map(RepOrderBillingMapper::mapEntityToDTO)
             .toList();
     }
-
+    
     @Override
     protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
         repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified, ids);
