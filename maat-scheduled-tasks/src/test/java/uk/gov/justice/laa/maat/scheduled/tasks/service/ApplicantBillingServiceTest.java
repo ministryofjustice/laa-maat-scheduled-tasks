@@ -20,14 +20,14 @@ import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.FileUtils;
 
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedApplicantBillingEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantDTO;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantBillingServiceTest {
 
-    private static final int TEST_ID = 1;
+    private static final int SUCCESSFUL_TEST_ID_1 = 1;
+    private static final int SUCCESSFUL_TEST_ID_2 = 3;
     private static final int FAILING_TEST_ID = 2;
     private static final int BATCH_SIZE = 2;
     private static final String USER_MODIFIED = "TEST";
@@ -44,34 +44,41 @@ class ApplicantBillingServiceTest {
     private BillingConfiguration billingConfiguration;
     @InjectMocks
     private ApplicantBillingService applicantBillingService;
-
-
+    
     @Test
-    void givenApplicantDataExists_whenFindApplicantsForBillingIsInvoked_thenApplicantDataIsReturned() {
-        ApplicantBillingEntity entity = getPopulatedApplicantBillingEntity(TEST_ID);
-        ApplicantBillingDTO dto = getApplicantDTO(TEST_ID);
+    void givenNoApplicantDataExists_whenSendToBillingIsInvoked_thenNoActionsPerformed() {
+        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of());
 
-        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(
-            List.of(entity, entity));
-        when(applicantMapper.mapEntityToDTO(entity)).thenReturn(dto);
+        applicantBillingService.sendToBilling(USER_MODIFIED);
 
+        verify(crownCourtLitigatorFeesApiClient, times(0)).updateApplicants(any());
+    }
+    
+    @Test
+    void givenBatchSizeIs1_whenSendToBillingIsInvokedFor2Applicants_thenProcessBatchIsInvokedTwice() {
+        ApplicantBillingEntity entity1 = getPopulatedApplicantBillingEntity(SUCCESSFUL_TEST_ID_1);
+        ApplicantBillingEntity entity2 = getPopulatedApplicantBillingEntity(SUCCESSFUL_TEST_ID_2);
+        ApplicantBillingDTO dto1 = getApplicantDTO(SUCCESSFUL_TEST_ID_1);
+        ApplicantBillingDTO dto2 = getApplicantDTO(SUCCESSFUL_TEST_ID_2);
+
+        when(applicantBillingRepository.findAllApplicantsForBilling()).thenReturn(List.of(entity1, entity2));
+        when(applicantMapper.mapEntityToDTO(entity1)).thenReturn(dto1);
+        when(applicantMapper.mapEntityToDTO(entity2)).thenReturn(dto2);
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
         ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
         when(crownCourtLitigatorFeesApiClient.updateApplicants(any())).thenReturn(apiResponse);
-        when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
-        
+        when(billingConfiguration.getBatchSize()).thenReturn(1);
+
         applicantBillingService.sendToBilling(USER_MODIFIED);
 
-        List<ApplicantBillingDTO> applicants = applicantBillingService.getBillingDTOList();
-
-        assertEquals(List.of(dto, dto), applicants);
+        verify(crownCourtLitigatorFeesApiClient, times(2)).updateApplicants(any());
     }
 
     @Test
-    void givenSomeFailuresFromCCLF_whenSendApplicantsToBillingIsInvoked_thenFailingEntitiesAreUpdated() throws Exception {
-        ApplicantBillingEntity successEntity = getPopulatedApplicantBillingEntity(TEST_ID);
+    void givenSomeFailuresFromCCLF_whenSendToBillingIsInvoked_thenFailingEntitiesAreUpdated() throws Exception {
+        ApplicantBillingEntity successEntity = getPopulatedApplicantBillingEntity(SUCCESSFUL_TEST_ID_1);
         ApplicantBillingEntity failingEntity = getPopulatedApplicantBillingEntity(FAILING_TEST_ID);
-        ApplicantBillingDTO successDTO = getApplicantDTO(TEST_ID);
+        ApplicantBillingDTO successDTO = getApplicantDTO(SUCCESSFUL_TEST_ID_1);
         ApplicantBillingDTO failingDTO = getApplicantDTO(FAILING_TEST_ID);
 
         String responseBodyJson = FileUtils.readResourceToString("billing/api-client/responses/mixed-status.json");

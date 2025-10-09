@@ -1,9 +1,9 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedRepOrderForBilling;
@@ -30,7 +30,8 @@ import uk.gov.justice.laa.maat.scheduled.tasks.utils.FileUtils;
 @ExtendWith(MockitoExtension.class)
 class RepOrderBillingServiceTest {
 
-    private static final int TEST_ID = 1;
+    private static final int SUCCESSFUL_TEST_ID_1 = 1;
+    private static final int SUCCESSFUL_TEST_ID_2 = 3;
     private static final int FAILING_TEST_ID = 2;
     private static final String USER_MODIFIED = "TEST";
     private static final int BATCH_SIZE = 2;
@@ -46,32 +47,36 @@ class RepOrderBillingServiceTest {
     @InjectMocks
     private RepOrderBillingService repOrderBillingService;
 
-
     @Test
-    void givenRepOrderDataExists_whenGetRepOrdersForBillingIsInvoked_thenRepOrderDataIsReturned() {
-        RepOrderBillingEntity entity = getPopulatedRepOrderForBilling(TEST_ID);
-        RepOrderBillingDTO dto = getRepOrderBillingDTO(TEST_ID);
-
-        when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity));
-        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
-        ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
-        when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(apiResponse);
-        when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
+    void givenNoRepOrderDataExists_whenSendToBillingIsInvoked_thenNoActionsPerformed() {
+        when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of());
 
         repOrderBillingService.sendToBilling(USER_MODIFIED);
 
-        when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity, entity));
-
-        List<RepOrderBillingDTO> repOrders = repOrderBillingService.getBillingDTOList();
-
-        assertEquals(List.of(dto, dto), repOrders);
+        verify(crownCourtLitigatorFeesApiClient, times(0)).updateRepOrders(any());
     }
 
     @Test
-    void givenSomeFailuresFromCCLF_whenSendRepOrdersToBillingIsInvoked_thenFailingEntitiesAreUpdated() throws Exception {
-        RepOrderBillingEntity successEntity = getPopulatedRepOrderForBilling(TEST_ID);
+    void givenBatchSizeIs1_whenSendToBillingIsInvokedFor2RepOrders_thenProcessBatchIsInvokedTwice() {
+        RepOrderBillingEntity entity1 = getPopulatedRepOrderForBilling(SUCCESSFUL_TEST_ID_1);
+        RepOrderBillingEntity entity2 = getPopulatedRepOrderForBilling(SUCCESSFUL_TEST_ID_2);
+
+        when(repOrderBillingRepository.getRepOrdersForBilling()).thenReturn(List.of(entity1, entity2));
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
+        ResponseEntity<String> apiResponse = new ResponseEntity<>("body here", HttpStatus.OK);
+        when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(apiResponse);
+        when(billingConfiguration.getBatchSize()).thenReturn(1);
+
+        repOrderBillingService.sendToBilling(USER_MODIFIED);
+
+        verify(crownCourtLitigatorFeesApiClient, times(2)).updateRepOrders(any());
+    }
+
+    @Test
+    void givenSomeFailuresFromCCLF_whenSendToBillingIsInvoked_thenFailingEntitiesAreUpdated() throws Exception {
+        RepOrderBillingEntity successEntity = getPopulatedRepOrderForBilling(SUCCESSFUL_TEST_ID_1);
         RepOrderBillingEntity failingEntity = getPopulatedRepOrderForBilling(FAILING_TEST_ID);
-        RepOrderBillingDTO successDTO = getRepOrderBillingDTO(TEST_ID);
+        RepOrderBillingDTO successDTO = getRepOrderBillingDTO(SUCCESSFUL_TEST_ID_1);
         RepOrderBillingDTO failingDTO = getRepOrderBillingDTO(FAILING_TEST_ID);
 
         String responseBodyJson = FileUtils.readResourceToString("billing/api-client/responses/mixed-status.json");
