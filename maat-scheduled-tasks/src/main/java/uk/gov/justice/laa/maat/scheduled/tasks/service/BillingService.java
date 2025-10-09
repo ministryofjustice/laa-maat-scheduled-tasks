@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
@@ -33,7 +32,6 @@ public abstract class BillingService <T extends BillingDTO>{
     protected abstract String getRequestLabel();
     protected abstract void updateBillingRecordFailures(List<Integer> failedIds, String userModified);
 
-
     @Transactional
     public void sendToBilling(String userModified) {
         List<T> billingDTOList = getBillingDTOList();
@@ -45,14 +43,16 @@ public abstract class BillingService <T extends BillingDTO>{
         List<List<T>> billingBatches = batchList(billingDTOList,
             billingConfiguration.getBatchSize());
 
+        Integer batchNumber = 0;
         for (List<T> currentBatch : billingBatches) {
-            processBatch(currentBatch, userModified);
+            batchNumber++;
+            processBatch(currentBatch, batchNumber, userModified);
         }
     }
 
     @Transactional
-    protected void processBatch(List<T> currentBatch, String userModified) {
-        log.debug("Processing batch of {} applicants...", currentBatch.size());
+    protected void processBatch(List<T> currentBatch, Integer batchNumber, String userModified) {
+        log.info("Processing {} batch {} containing {} records", getRequestLabel(), batchNumber, currentBatch.size());
 
         List<Integer> ids = currentBatch.stream().map(BillingDTO::getId).toList();
         resetBillingCCLFFlag(userModified, ids);
@@ -71,7 +71,7 @@ public abstract class BillingService <T extends BillingDTO>{
                 updateBillingRecordFailures(failedIds, userModified);
             }
         } else {
-            log.info("Extracted {} data has been sent to the billing team.", getRequestLabel());
+            log.info("Extracted {} data for batch {} has been sent to the billing team.", getRequestLabel(), batchNumber);
         }
     }
 }
