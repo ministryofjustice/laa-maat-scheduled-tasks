@@ -5,17 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@AllArgsConstructor
 public class ResponseUtils {
-    private ObjectMapper objectMapper;
     
-    public ResponseUtils(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    private final ObjectMapper objectMapper;
     
     public List<Integer> getErroredIdsFromResponseBody(String responseBody, String requestLabel) {
         List<Integer> failedIds = new ArrayList<>();
