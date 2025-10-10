@@ -54,59 +54,15 @@ public class BillingSchedulerTest {
 
 
     @Test
-    void givenDataUnderBatchSize_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformedInSingleBatch() {
-        ApplicantBillingDTO applicant = getApplicantDTO(TEST_ID);
-        ApplicantHistoryBillingDTO applicantHistory = getApplicantHistoryBillingDTO(TEST_ID);
-        RepOrderBillingDTO repOrder = getRepOrderBillingDTO(TEST_ID);
-
-        when(applicantBillingService.findAllApplicantsForBilling()).thenReturn(List.of(applicant, applicant));
-        when(applicantHistoryBillingService.extractApplicantHistory()).thenReturn(List.of(applicantHistory, applicantHistory));
-        when(repOrderBillingService.getRepOrdersForBilling()).thenReturn(List.of(repOrder, repOrder));
-        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
-        when(billingConfiguration.getBatchSize()).thenReturn(5);
+    void givenNoExceptions_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformed() {
+        when(billingConfiguration.getUserModified()).thenReturn("test");
 
         scheduler.extractCCLFBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
-        verify(applicantBillingService, times(1)).sendApplicantsToBilling(List.of(applicant, applicant), USER_MODIFIED);
-        verify(applicantHistoryBillingService, times(1)).sendApplicantHistoryToBilling(List.of(applicantHistory, applicantHistory), USER_MODIFIED);
-        verify(repOrderBillingService, times(1)).sendRepOrdersToBilling(List.of(repOrder, repOrder), USER_MODIFIED);
-        verify(maatReferenceService).deleteMaatReferences();
-    }
-
-    @Test
-    void givenDataOverBatchSize_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformedInMultipleBatches() {
-        ApplicantBillingDTO applicant = getApplicantDTO(TEST_ID);
-        ApplicantHistoryBillingDTO applicantHistory = getApplicantHistoryBillingDTO(TEST_ID);
-        RepOrderBillingDTO repOrder = getRepOrderBillingDTO(TEST_ID);
-
-        when(applicantBillingService.findAllApplicantsForBilling()).thenReturn(List.of(applicant, applicant));
-        when(applicantHistoryBillingService.extractApplicantHistory()).thenReturn(List.of(applicantHistory, applicantHistory));
-        when(repOrderBillingService.getRepOrdersForBilling()).thenReturn(List.of(repOrder, repOrder));
-        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
-        when(billingConfiguration.getBatchSize()).thenReturn(1);
-
-        scheduler.extractCCLFBillingData();
-
-        verify(maatReferenceService).populateMaatReferences();
-        verify(applicantBillingService, times(2)).sendApplicantsToBilling(List.of(applicant), USER_MODIFIED);
-        verify(applicantHistoryBillingService, times(2)).sendApplicantHistoryToBilling(List.of(applicantHistory), USER_MODIFIED);
-        verify(repOrderBillingService, times(2)).sendRepOrdersToBilling(List.of(repOrder), USER_MODIFIED);
-        verify(maatReferenceService).deleteMaatReferences();
-    }
-
-    @Test
-    void givenNoExtractData_whenExtractCCLFBillingDataIsInvoked_thenNoActionsPerformed() {
-        when(applicantBillingService.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
-        when(applicantHistoryBillingService.extractApplicantHistory()).thenReturn(Collections.emptyList());
-        when(repOrderBillingService.getRepOrdersForBilling()).thenReturn(Collections.emptyList());
-
-        scheduler.extractCCLFBillingData();
-
-        verify(maatReferenceService).populateMaatReferences();
-        verify(applicantBillingService, times(0)).sendApplicantsToBilling(anyList(), anyString());
-        verify(applicantHistoryBillingService, times(0)).sendApplicantHistoryToBilling(anyList(), anyString());
-        verify(repOrderBillingService, times(0)).sendRepOrdersToBilling(anyList(), anyString());
+        verify(applicantBillingService).sendToBilling(anyString());
+        verify(applicantHistoryBillingService).sendToBilling(anyString());
+        verify(repOrderBillingService).sendToBilling(anyString());
         verify(maatReferenceService).deleteMaatReferences();
     }
 

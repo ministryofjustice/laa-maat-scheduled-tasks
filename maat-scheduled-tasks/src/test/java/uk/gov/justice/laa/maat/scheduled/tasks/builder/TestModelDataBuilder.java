@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.builder;
 
-import java.util.List;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.enums.AppealType;
 import uk.gov.justice.laa.crime.enums.EvidenceFeeLevel;

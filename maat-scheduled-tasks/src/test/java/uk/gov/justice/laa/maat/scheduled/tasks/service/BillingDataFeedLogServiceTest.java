@@ -4,7 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantDTO;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -58,7 +58,7 @@ public class BillingDataFeedLogServiceTest {
         Long logsDeleted = billingDataFeedLogService.deleteLogsBeforeDate(THRESHOLD_DATE);
 
         verify(billingDataFeedLogRepository).deleteByDateCreatedBefore(THRESHOLD_DATE);
-        assertEquals(2L, logsDeleted);
+        assertThat(logsDeleted).isEqualTo(2L);
     }
 
     @Test

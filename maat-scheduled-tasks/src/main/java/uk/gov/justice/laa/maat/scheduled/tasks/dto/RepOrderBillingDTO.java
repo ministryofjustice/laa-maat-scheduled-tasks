@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -12,8 +14,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@AllArgsConstructor
 public class RepOrderBillingDTO extends BillingDTO {
-
+    
     @JsonProperty("def_id")
     private Integer applicantId;
 
@@ -61,7 +64,7 @@ public class RepOrderBillingDTO extends BillingDTO {
 
     @JsonProperty("ccoo_outcome")
     private String crownCourtOutcome;
-
+    
     @JsonProperty("caty_case_type")
     private String caseType;
 }

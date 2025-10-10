@@ -15,7 +15,7 @@ public class BillingDTO {
 
     @NotNull
     @JsonProperty("id")
-    private Integer id;
+    protected Integer id;
 
     @NotNull
     @JsonProperty("date_created")
