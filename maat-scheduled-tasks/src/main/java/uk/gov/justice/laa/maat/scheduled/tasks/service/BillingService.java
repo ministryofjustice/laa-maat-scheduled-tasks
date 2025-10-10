@@ -22,6 +22,7 @@ public abstract class BillingService <T extends BillingDTO>{
     private final BillingDataFeedLogService billingDataFeedLogService;
     protected final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     protected final BillingConfiguration billingConfiguration;
+    protected final ResponseUtils responseUtils;
     protected static final Boolean SEND_TO_CCLF_FAILURE_FLAG = true;
 
     protected abstract List<T> getBillingDTOList();
@@ -65,7 +66,7 @@ public abstract class BillingService <T extends BillingDTO>{
             log.warn("Some {} records failed to update in the CCR/CCLF database. These records will be updated to be re-sent next time.",
                 getRequestLabel());
 
-            List<Integer> failedIds = ResponseUtils.getErroredIdsFromResponseBody(response.getBody(), getRequestLabel());
+            List<Integer> failedIds = responseUtils.getErroredIdsFromResponseBody(response.getBody(), getRequestLabel());
 
             if (!failedIds.isEmpty()) {
                 updateBillingRecordFailures(failedIds, userModified);

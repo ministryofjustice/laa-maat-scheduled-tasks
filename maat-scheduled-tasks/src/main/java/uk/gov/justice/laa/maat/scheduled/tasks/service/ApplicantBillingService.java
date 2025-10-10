@@ -12,6 +12,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
@@ -24,8 +25,8 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
     public ApplicantBillingService(BillingDataFeedLogService billingDataFeedLogService,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
         ApplicantBillingRepository applicantBillingRepository, ApplicantMapper applicantMapper, 
-        BillingConfiguration billingConfiguration) {
-        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration);
+        BillingConfiguration billingConfiguration, ResponseUtils responseUtils) {
+        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration, responseUtils);
       this.applicantBillingRepository = applicantBillingRepository;
       this.applicantMapper = applicantMapper;
     }

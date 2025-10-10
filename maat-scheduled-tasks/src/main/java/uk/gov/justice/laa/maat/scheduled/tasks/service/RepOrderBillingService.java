@@ -12,6 +12,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.RepOrderBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
@@ -22,8 +23,9 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
     
     public RepOrderBillingService(BillingDataFeedLogService billingDataFeedLogService,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
-        RepOrderBillingRepository repOrderBillingRepository, BillingConfiguration billingConfiguration) {
-        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration);
+        RepOrderBillingRepository repOrderBillingRepository, BillingConfiguration billingConfiguration, 
+        ResponseUtils responseUtils) {
+        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration, responseUtils);
       this.repOrderBillingRepository = repOrderBillingRepository;
     }
 

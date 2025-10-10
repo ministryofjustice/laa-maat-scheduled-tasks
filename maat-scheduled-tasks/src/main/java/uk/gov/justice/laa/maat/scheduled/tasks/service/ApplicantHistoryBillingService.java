@@ -12,6 +12,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
@@ -24,8 +25,10 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     public ApplicantHistoryBillingService(BillingDataFeedLogService billingDataFeedLogService,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
         ApplicantHistoryBillingRepository applicantHistoryBillingRepository,
-        ApplicantHistoryBillingMapper applicantHistoryBillingMapper, BillingConfiguration billingConfiguration) {
-            super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration);
+        ApplicantHistoryBillingMapper applicantHistoryBillingMapper, 
+        BillingConfiguration billingConfiguration, ResponseUtils responseUtils) {
+            super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration, 
+                responseUtils);
             this.applicantHistoryBillingRepository = applicantHistoryBillingRepository;
             this.applicantHistoryBillingMapper = applicantHistoryBillingMapper;
     }

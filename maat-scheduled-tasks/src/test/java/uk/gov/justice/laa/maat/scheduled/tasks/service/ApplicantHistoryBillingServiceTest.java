@@ -26,6 +26,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMap
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.FileUtils;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantHistoryBillingServiceTest {
@@ -36,6 +37,8 @@ class ApplicantHistoryBillingServiceTest {
     private static final String USER_MODIFIED = "TEST";
     private static final int BATCH_SIZE = 2;
 
+    @Mock
+    private ResponseUtils responseUtils;
     @Mock
     private ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
     @Mock
@@ -96,6 +99,7 @@ class ApplicantHistoryBillingServiceTest {
         when(applicantHistoryBillingMapper.mapEntityToDTO(failingEntity)).thenReturn(failingDTO);
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
+        when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
         applicantHistoryBillingService.sendToBilling(USER_MODIFIED);
 

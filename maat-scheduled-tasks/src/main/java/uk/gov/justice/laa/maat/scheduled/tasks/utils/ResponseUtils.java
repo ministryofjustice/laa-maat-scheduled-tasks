@@ -6,14 +6,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
 public class ResponseUtils {
-    public static List<Integer> getErroredIdsFromResponseBody(String responseBody, String requestLabel) {
+    private ObjectMapper objectMapper;
+    
+    public ResponseUtils(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+    
+    public List<Integer> getErroredIdsFromResponseBody(String responseBody, String requestLabel) {
         List<Integer> failedIds = new ArrayList<>();
 
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode body = objectMapper.readTree(responseBody);
 
             if (body == null) {

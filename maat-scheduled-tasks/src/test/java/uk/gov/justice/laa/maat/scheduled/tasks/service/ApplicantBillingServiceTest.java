@@ -18,6 +18,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingReposi
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.FileUtils;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 import static org.mockito.Mockito.*;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedApplicantBillingEntity;
@@ -32,6 +33,8 @@ class ApplicantBillingServiceTest {
     private static final int BATCH_SIZE = 2;
     private static final String USER_MODIFIED = "TEST";
 
+    @Mock
+    private ResponseUtils responseUtils;
     @Mock
     private ApplicantBillingRepository applicantBillingRepository;
     @Mock
@@ -92,6 +95,7 @@ class ApplicantBillingServiceTest {
         when(applicantMapper.mapEntityToDTO(failingEntity)).thenReturn(failingDTO);
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
+        when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
         applicantBillingService.sendToBilling(USER_MODIFIED);
         

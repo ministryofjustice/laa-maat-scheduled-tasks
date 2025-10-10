@@ -26,6 +26,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.RepOrderBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateRepOrdersRequest;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.FileUtils;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class RepOrderBillingServiceTest {
@@ -36,6 +37,8 @@ class RepOrderBillingServiceTest {
     private static final String USER_MODIFIED = "TEST";
     private static final int BATCH_SIZE = 2;
 
+    @Mock
+    private ResponseUtils responseUtils;
     @Mock
     private RepOrderBillingRepository repOrderBillingRepository;
     @Mock
@@ -88,6 +91,7 @@ class RepOrderBillingServiceTest {
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyString(), anyList())).thenReturn(1);
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
+        when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
         repOrderBillingService.sendToBilling(USER_MODIFIED);
 
