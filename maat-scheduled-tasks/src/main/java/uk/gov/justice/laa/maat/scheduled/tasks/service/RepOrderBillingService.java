@@ -40,9 +40,9 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
     }
     
     @Override
-    protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
-        repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified, ids);
-        log.info("Resetting CCLF flag for Rep Orders.");
+    protected void resetBillingFlag(String userModified, List<Integer> ids) {
+        int rowsUpdated = repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified, ids);
+        log.debug("Billing Flag reset for {} Rep Orders.", rowsUpdated);
     }
 
     @Override

@@ -26,7 +26,7 @@ public abstract class BillingService <T extends BillingDTO>{
     protected static final Boolean SEND_TO_CCLF_FAILURE_FLAG = true;
 
     protected abstract List<T> getBillingDTOList();
-    protected abstract void resetBillingCCLFFlag(String userModified, List<Integer> ids);
+    protected abstract void resetBillingFlag(String userModified, List<Integer> ids);
     protected abstract BillingDataFeedRecordType getBillingDataFeedRecordType();
     protected abstract ResponseEntity<String> updateBillingRecords(
         List<T> billingDTOList);
@@ -56,7 +56,7 @@ public abstract class BillingService <T extends BillingDTO>{
         log.info("Processing {} batch {} containing {} records", getRequestLabel(), batchNumber, currentBatch.size());
 
         List<Integer> ids = currentBatch.stream().map(BillingDTO::getId).toList();
-        resetBillingCCLFFlag(userModified, ids);
+        resetBillingFlag(userModified, ids);
 
         billingDataFeedLogService.saveBillingDataFeed(getBillingDataFeedRecordType(), currentBatch);
 

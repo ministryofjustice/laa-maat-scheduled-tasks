@@ -40,10 +40,10 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
     }
 
     @Override
-    protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
-        int updatedRows = applicantBillingRepository.resetApplicantBilling(
+    protected void resetBillingFlag(String userModified, List<Integer> ids) {
+        int rowsUpdated = applicantBillingRepository.resetApplicantBilling(
             ids, userModified);
-        log.info("Reset SEND_TO_CCLF for {} applicants", updatedRows);
+        log.debug("Billing Flag reset for {} applicants.", rowsUpdated);
     }
 
     @Override

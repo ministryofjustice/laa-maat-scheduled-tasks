@@ -45,10 +45,10 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     }
     
     @Override
-    protected void resetBillingCCLFFlag(String userModified, List<Integer> ids) {
+    protected void resetBillingFlag(String userModified, List<Integer> ids) {
         int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
             ids);
-        log.debug("CCLF Flag reset for {} applicant histories.", rowsUpdated);
+        log.debug("Billing Flag reset for {} applicant histories.", rowsUpdated);
     }
 
     @Override
