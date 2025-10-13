@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -52,6 +53,44 @@ public class BillingSchedulerTest {
     @Mock
     private BillingDataFeedLogService billingDataFeedLogService;
 
+    @Test
+    void givenNoExtractData_whenExtractBillingDataIsInvoked_thenNoActionsPerformed() {
+        when(applicantBillingService.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
+        when(applicantHistoryBillingService.extractApplicantHistory()).thenReturn(Collections.emptyList());
+        when(repOrderBillingService.getRepOrdersForBilling()).thenReturn(Collections.emptyList());
+
+        scheduler.extractBillingData();
+
+        verify(maatReferenceService).populateMaatReferences();
+        verify(applicantBillingService, never()).sendApplicantsToBilling(anyList(), anyString());
+        verify(applicantHistoryBillingService, never()).sendApplicantHistoryToBilling(anyList(), anyString());
+        verify(repOrderBillingService, never()).sendRepOrdersToBilling(anyList(), anyString());
+        verify(maatReferenceService).deleteMaatReferences();
+    }
+
+    @Test
+    void givenNoExceptions_whenExtractBillingDataIsInvoked_thenExtractIsPerformed() {
+        scheduler.extractBillingData();
+
+        verify(maatReferenceService).populateMaatReferences();
+        verify(applicantBillingService, never()).sendApplicantsToBilling(anyList(), anyString());
+        verify(applicantHistoryBillingService, never()).sendApplicantHistoryToBilling(anyList(), anyString());
+        verify(repOrderBillingService, never()).sendRepOrdersToBilling(anyList(), anyString());
+        verify(maatReferenceService).deleteMaatReferences();
+    }
+
+    @Test
+    void givenExceptionThrown_whenExtractBillingDataIsInvoked_thenMaatReferencesDeleted() {
+        doThrow(new MAATScheduledTasksException("The maat references table is already populated."))
+            .when(maatReferenceService).populateMaatReferences();
+
+        scheduler.extractBillingData();
+
+        verifyNoInteractions(applicantBillingService);
+        verifyNoInteractions(applicantHistoryBillingService);
+        verifyNoInteractions(repOrderBillingService);
+        verify(maatReferenceService).deleteMaatReferences();
+    }
 
     @Test
     void givenDataUnderBatchSize_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformedInSingleBatch() {
@@ -59,13 +98,14 @@ public class BillingSchedulerTest {
         ApplicantHistoryBillingDTO applicantHistory = getApplicantHistoryBillingDTO(TEST_ID);
         RepOrderBillingDTO repOrder = getRepOrderBillingDTO(TEST_ID);
 
-        when(applicantBillingService.findAllApplicantsForBilling()).thenReturn(List.of(applicant, applicant));
+        when(applicantBillingService.findAllApplicantsForBilling()).thenReturn(
+            List.of(applicant, applicant));
         when(applicantHistoryBillingService.extractApplicantHistory()).thenReturn(List.of(applicantHistory, applicantHistory));
         when(repOrderBillingService.getRepOrdersForBilling()).thenReturn(List.of(repOrder, repOrder));
         when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
         when(billingConfiguration.getBatchSize()).thenReturn(5);
 
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
         verify(applicantBillingService, times(1)).sendApplicantsToBilling(List.of(applicant, applicant), USER_MODIFIED);
@@ -86,41 +126,12 @@ public class BillingSchedulerTest {
         when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
         when(billingConfiguration.getBatchSize()).thenReturn(1);
 
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
         verify(applicantBillingService, times(2)).sendApplicantsToBilling(List.of(applicant), USER_MODIFIED);
         verify(applicantHistoryBillingService, times(2)).sendApplicantHistoryToBilling(List.of(applicantHistory), USER_MODIFIED);
         verify(repOrderBillingService, times(2)).sendRepOrdersToBilling(List.of(repOrder), USER_MODIFIED);
-        verify(maatReferenceService).deleteMaatReferences();
-    }
-
-    @Test
-    void givenNoExtractData_whenExtractCCLFBillingDataIsInvoked_thenNoActionsPerformed() {
-        when(applicantBillingService.findAllApplicantsForBilling()).thenReturn(Collections.emptyList());
-        when(applicantHistoryBillingService.extractApplicantHistory()).thenReturn(Collections.emptyList());
-        when(repOrderBillingService.getRepOrdersForBilling()).thenReturn(Collections.emptyList());
-
-        scheduler.extractCCLFBillingData();
-
-        verify(maatReferenceService).populateMaatReferences();
-        verify(applicantBillingService, times(0)).sendApplicantsToBilling(anyList(), anyString());
-        verify(applicantHistoryBillingService, times(0)).sendApplicantHistoryToBilling(anyList(), anyString());
-        verify(repOrderBillingService, times(0)).sendRepOrdersToBilling(anyList(), anyString());
-        verify(maatReferenceService).deleteMaatReferences();
-    }
-
-    @Test
-    void givenExceptionThrown_whenExtractCCLFBillingDataIsInvoked_thenMaatReferencesDeleted() {
-        doThrow(new MAATScheduledTasksException(
-            "The maat references table is already populated.")).when(maatReferenceService)
-            .populateMaatReferences();
-
-        scheduler.extractCCLFBillingData();
-
-        verifyNoInteractions(applicantBillingService);
-        verifyNoInteractions(applicantHistoryBillingService);
-        verifyNoInteractions(repOrderBillingService);
         verify(maatReferenceService).deleteMaatReferences();
     }
 
@@ -133,5 +144,4 @@ public class BillingSchedulerTest {
         verify(billingDataFeedLogService, times(1))
             .deleteLogsBeforeDate(any());
     }
-
 }

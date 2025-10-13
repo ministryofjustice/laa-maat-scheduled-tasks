@@ -35,7 +35,7 @@ public class BillingScheduler {
     private final ApplicantHistoryBillingService applicantHistoryBillingService;
 
     @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
-    public void extractCCLFBillingData() {
+    public void extractBillingData() {
         try {
             log.info("Starting extract for CCLF billing data...");
             maatReferenceService.populateMaatReferences();
