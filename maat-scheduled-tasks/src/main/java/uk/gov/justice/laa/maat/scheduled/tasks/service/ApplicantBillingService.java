@@ -68,7 +68,7 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
     protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
             List<ApplicantBillingEntity> failedApplicants = applicantBillingRepository.findAllById(failedIds);
             for (ApplicantBillingEntity failedApplicant : failedApplicants) {
-                failedApplicant.setSendToCclf(SEND_TO_CCLF_FAILURE_FLAG);
+                failedApplicant.setSendToCclf(true);
                 failedApplicant.setUserModified(userModified);
             }
 

@@ -66,7 +66,7 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
     protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
         List<RepOrderBillingEntity> failedRepOrders = repOrderBillingRepository.findAllById(failedIds);
         for (RepOrderBillingEntity failedRepOrder : failedRepOrders) {
-            failedRepOrder.setSendToCclf(SEND_TO_CCLF_FAILURE_FLAG);
+            failedRepOrder.setSendToCclf(true);
             failedRepOrder.setUserModified(userModified);
         }
 

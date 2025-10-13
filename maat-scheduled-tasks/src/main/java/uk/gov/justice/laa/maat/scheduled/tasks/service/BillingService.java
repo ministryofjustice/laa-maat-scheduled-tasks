@@ -21,7 +21,6 @@ public abstract class BillingService <T extends BillingDTO>{
     protected final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     protected final BillingConfiguration billingConfiguration;
     protected final ResponseUtils responseUtils;
-    protected static final Boolean SEND_TO_CCLF_FAILURE_FLAG = true;
 
     protected abstract List<T> getBillingDTOList();
     protected abstract void resetBillingFlag(String userModified, List<Integer> ids);
