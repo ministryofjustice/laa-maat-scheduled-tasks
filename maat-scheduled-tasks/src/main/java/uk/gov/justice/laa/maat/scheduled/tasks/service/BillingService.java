@@ -1,7 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import static uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils.batchList;
-
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,25 +30,7 @@ public abstract class BillingService <T extends BillingDTO>{
         List<T> billingDTOList);
     protected abstract String getRequestLabel();
     protected abstract void updateBillingRecordFailures(List<Integer> failedIds, String userModified);
-
-    @Transactional
-    public void sendToBilling(String userModified) {
-        List<T> billingDTOList = getBillingDTOList();
-
-        if (billingDTOList.isEmpty()) {
-            return;
-        }
-
-        List<List<T>> billingBatches = batchList(billingDTOList,
-            billingConfiguration.getBatchSize());
-
-        Integer batchNumber = 0;
-        for (List<T> currentBatch : billingBatches) {
-            batchNumber++;
-            processBatch(currentBatch, batchNumber, userModified);
-        }
-    }
-
+    
     @Transactional
     protected void processBatch(List<T> currentBatch, Integer batchNumber, String userModified) {
         log.info("Processing {} batch {} containing {} records", getRequestLabel(), batchNumber, currentBatch.size());

@@ -7,11 +7,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
+import uk.gov.justice.laa.maat.scheduled.tasks.service.BatchProcessingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.MaatReferenceService;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.RepOrderBillingService;
 
 @Slf4j
 @Component
@@ -24,9 +22,7 @@ public class BillingScheduler {
     private final BillingConfiguration billingConfiguration;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final MaatReferenceService maatReferenceService;
-    private final RepOrderBillingService repOrderBillingService;
-    private final ApplicantBillingService applicantBillingService;
-    private final ApplicantHistoryBillingService applicantHistoryBillingService;
+    private final BatchProcessingService batchProcessingService;
 
     @Scheduled(cron = "${billing.cclf_extract.cron_expression}")
     public void extractCCLFBillingData() {
@@ -34,10 +30,9 @@ public class BillingScheduler {
             log.info("Starting extract for CCLF billing data...");
             maatReferenceService.populateMaatReferences();
 
-            applicantBillingService.sendToBilling(billingConfiguration.getUserModified());
-            applicantHistoryBillingService.sendToBilling(
-                billingConfiguration.getUserModified());
-            repOrderBillingService.sendToBilling(billingConfiguration.getUserModified());
+            batchProcessingService.processApplicantBatch(billingConfiguration.getUserModified());
+            batchProcessingService.processApplicantHistoryBatch(billingConfiguration.getUserModified());
+            batchProcessingService.processRepOrderBatch(billingConfiguration.getUserModified());
         } catch (Exception exception) {
             log.error("Error running extract for CCLF billing data: {}", exception.getMessage());
         } finally {
