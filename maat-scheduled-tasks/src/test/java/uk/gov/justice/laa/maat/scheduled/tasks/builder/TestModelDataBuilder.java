@@ -31,7 +31,7 @@ public class TestModelDataBuilder {
             .gender("Male")
             .niNumber("JM933396A")
             .foreignId(null)
-            .dateCreated(LocalDateTime.parse("2021-10-09T15:01:25"))
+            .dateCreated(LocalDateTime.parse("2021-10-09T08:30:00"))
             .userCreated(USER_NAME)
             .dateModified(null)
             .userModified(null)
