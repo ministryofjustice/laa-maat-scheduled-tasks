@@ -54,15 +54,12 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
 
     @Modifying(clearAutomatically = true)
     @Query(value = """
-                        UPDATE
-                            TOGDATA.APPLICANT_HISTORY 
-                        SET 
-                            SEND_TO_CCLF = null, 
-                            DATE_MODIFIED = SYSDATE, 
-                            USER_MODIFIED = :userModified
-                        WHERE 
-                            ID IN :ids
-        """, nativeQuery = true)
+        UPDATE ApplicantHistoryBillingEntity ah
+        SET ah.sendToCclf = NULL,
+            ah.dateModified = CURRENT_TIMESTAMP,
+            ah.userModified = :userModified
+        WHERE ah.id IN :ids
+        """)
     int resetApplicantHistory(@Param("userModified") String userModified,
         @Param("ids") List<Integer> ids);
 }

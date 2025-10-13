@@ -46,13 +46,12 @@ public interface RepOrderBillingRepository extends
 
     @Modifying(clearAutomatically = true)
     @Query(value = """
-        UPDATE  TOGDATA.REP_ORDERS r
-        SET     r.SEND_TO_CCLF = null,
-                r.DATE_MODIFIED = SYSDATE,
-                r.USER_MODIFIED = :userModified
-        WHERE   r.id IN (:ids)
-    """, nativeQuery = true)
-
+        UPDATE RepOrderBillingEntity r
+        SET r.sendToCclf = NULL,
+            r.dateModified = CURRENT_TIMESTAMP,
+            r.userModified = :userModified
+        WHERE r.id IN :ids
+    """)
     int resetBillingFlagForRepOrderIds(@Param("userModified") String userModified,
         @Param("ids") List<Integer> ids);
 }
