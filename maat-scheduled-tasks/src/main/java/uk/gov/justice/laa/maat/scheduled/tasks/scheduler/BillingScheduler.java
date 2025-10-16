@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BatchProcessingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.MaatReferenceService;
@@ -18,8 +17,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.service.MaatReferenceService;
 public class BillingScheduler {
 
     public static final Integer OLDER_THAN_DAYS = 30;
-
-    private final BillingConfiguration billingConfiguration;
+    
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final MaatReferenceService maatReferenceService;
     private final BatchProcessingService batchProcessingService;
@@ -30,9 +28,9 @@ public class BillingScheduler {
             log.info("Starting extract for CCLF billing data...");
             maatReferenceService.populateMaatReferences();
 
-            batchProcessingService.processApplicantBatch(billingConfiguration.getUserModified());
-            batchProcessingService.processApplicantHistoryBatch(billingConfiguration.getUserModified());
-            batchProcessingService.processRepOrderBatch(billingConfiguration.getUserModified());
+            batchProcessingService.processApplicantBatch();
+            batchProcessingService.processApplicantHistoryBatch();
+            batchProcessingService.processRepOrderBatch();
         } catch (Exception exception) {
             log.error("Error running extract for CCLF billing data: {}", exception.getMessage());
         } finally {

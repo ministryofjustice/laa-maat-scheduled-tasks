@@ -1,12 +1,10 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,9 +25,6 @@ public class BillingSchedulerTest {
 
     @InjectMocks
     private BillingScheduler scheduler;
-
-    @Mock
-    private BillingConfiguration billingConfiguration;
     @Mock
     private MaatReferenceService maatReferenceService;
     @Mock
@@ -46,14 +41,12 @@ public class BillingSchedulerTest {
 
     @Test
     void givenNoExceptions_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformed() {
-        when(billingConfiguration.getUserModified()).thenReturn("test");
-
         scheduler.extractCCLFBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
-        verify(batchProcessingService).processApplicantBatch(anyString());
-        verify(batchProcessingService).processApplicantHistoryBatch(anyString());
-        verify(batchProcessingService).processRepOrderBatch(anyString());
+        verify(batchProcessingService).processApplicantBatch();
+        verify(batchProcessingService).processApplicantHistoryBatch();
+        verify(batchProcessingService).processRepOrderBatch();
         verify(maatReferenceService).deleteMaatReferences();
     }
 

@@ -43,7 +43,7 @@ public class BatchProcessingServiceTest {
     void givenNoApplicantDataExists_whenProcessApplicantBatchIsInvoked_thenNoActionsPerformed() {
         when(applicantBillingService.getBillingDTOList()).thenReturn(List.of());
         
-        batchProcessingService.processApplicantBatch(USER_MODIFIED);
+        batchProcessingService.processApplicantBatch();
 
         verify(applicantBillingService, times(0)).processBatch(anyList(), anyInt(), anyString());
     }
@@ -52,7 +52,7 @@ public class BatchProcessingServiceTest {
     void givenNoApplicantHistoryDataExists_whenProcessApplicantHistoryBatchIsInvoked_thenNoActionsPerformed() {
         when(applicantHistoryBillingService.getBillingDTOList()).thenReturn(List.of());
 
-        batchProcessingService.processApplicantHistoryBatch(USER_MODIFIED);
+        batchProcessingService.processApplicantHistoryBatch();
 
         verify(applicantHistoryBillingService, times(0)).processBatch(anyList(), anyInt(), anyString());
     }
@@ -61,7 +61,7 @@ public class BatchProcessingServiceTest {
     void givenNoRepOrderDataExists_whenProcessRepOrderBatchIsInvoked_thenNoActionsPerformed() {
         when(repOrderBillingService.getBillingDTOList()).thenReturn(List.of());
 
-        batchProcessingService.processRepOrderBatch(USER_MODIFIED);
+        batchProcessingService.processRepOrderBatch();
 
         verify(repOrderBillingService, times(0)).processBatch(anyList(), anyInt(), anyString());
     }
@@ -73,8 +73,9 @@ public class BatchProcessingServiceTest {
         
         when(applicantBillingService.getBillingDTOList()).thenReturn(List.of(dto1, dto2));
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
 
-        batchProcessingService.processApplicantBatch(USER_MODIFIED);
+        batchProcessingService.processApplicantBatch();
 
         verify(applicantBillingService, times(2)).processBatch(anyList(), anyInt(), anyString());
     }
@@ -87,8 +88,9 @@ public class BatchProcessingServiceTest {
         when(applicantHistoryBillingService.getBillingDTOList()).thenReturn(
             List.of(dto1, dto2));
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
 
-        batchProcessingService.processApplicantHistoryBatch(USER_MODIFIED);
+        batchProcessingService.processApplicantHistoryBatch();
 
         verify(applicantHistoryBillingService, times(2)).processBatch(anyList(), anyInt(), anyString());
     }
@@ -100,8 +102,9 @@ public class BatchProcessingServiceTest {
 
         when(repOrderBillingService.getBillingDTOList()).thenReturn(List.of(dto1, dto2));
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
 
-        batchProcessingService.processRepOrderBatch(USER_MODIFIED);
+        batchProcessingService.processRepOrderBatch();
 
         verify(repOrderBillingService, times(2)).processBatch(anyList(), anyInt(), anyString());
     }
