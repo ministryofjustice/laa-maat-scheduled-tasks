@@ -89,7 +89,7 @@ jwt:
 scope: maat-scheduled-tasks-prod
 
 cclfApi:
-  baseUrl: https://laa-crown-court-litigator-fees-app.laa-crown-court-litigator-fees-prod.svc.cluster.local/cclf/api/v1
+  baseUrl: http://laa-crown-court-litigator-fees-app.laa-crown-court-litigator-fees-prod.svc.cluster.local/cclf/api/v1
   oauthUrl: https://cclf-production.auth.eu-west-2.amazoncognito.com/oauth2/token
 
 ccrApi:
