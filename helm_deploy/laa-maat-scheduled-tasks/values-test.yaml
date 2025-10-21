@@ -93,7 +93,7 @@ cclfApi:
   oauthUrl: https://cclf-staging.auth.eu-west-2.amazoncognito.com/oauth2/token
 
 ccrApi:
-  baseUrl: https://ccr-staging.apps.live.cloud-platform.service.justice.gov.uk/ccr/api/v1
+  baseUrl: http://laa-crown-court-remuneration-app.laa-crown-court-remuneration-staging.svc.cluster.local/ccr/api/v1
   oauthUrl: https://ccr-staging.auth.eu-west-2.amazoncognito.com/oauth2/token
 
 xhibitBatch:
