@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -35,6 +36,8 @@ class RepOrderBillingServiceTest {
     private BillingDataFeedLogService billingDataFeedLogService;
     @Mock
     private CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+    @Mock
+    private CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
     @InjectMocks
     private RepOrderBillingService repOrderBillingService;
 
@@ -59,8 +62,11 @@ class RepOrderBillingServiceTest {
 
         repOrderBillingService.sendRepOrdersToBilling(List.of(dto), USER_MODIFIED);
 
-        verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(USER_MODIFIED, List.of(TEST_ID));
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.REP_ORDER, List.of(dto));
+        verify(repOrderBillingRepository).resetBillingFlagForRepOrderIds(
+            USER_MODIFIED, List.of(TEST_ID));
+        verify(billingDataFeedLogService).saveBillingDataFeed(
+            BillingDataFeedRecordType.REP_ORDER, List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
+        verify(crownCourtRemunerationApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
     }
 }

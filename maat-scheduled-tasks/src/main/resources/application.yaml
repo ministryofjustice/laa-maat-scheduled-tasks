@@ -101,6 +101,9 @@ services:
   cclf-api:
     base-url: ${CCLF_API_BASE_URL}
     registrationId: cclf
+  ccr-api:
+    base-url: ${CCR_API_BASE_URL}
+    registrationId: ccr
 
 resilience4j:
   retry:

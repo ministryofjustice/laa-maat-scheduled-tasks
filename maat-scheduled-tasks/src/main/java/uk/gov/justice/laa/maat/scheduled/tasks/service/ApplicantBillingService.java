@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -22,6 +23,7 @@ public class ApplicantBillingService {
     private final ApplicantMapper applicantMapper;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+    private final CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
 
     public List<ApplicantBillingDTO> findAllApplicantsForBilling() {
         List<ApplicantBillingEntity> applicants = applicantBillingRepository.findAllApplicantsForBilling();
@@ -41,6 +43,7 @@ public class ApplicantBillingService {
             .defendants(applicants).build();
 
         crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
+        crownCourtRemunerationApiClient.updateApplicants(applicantsRequest);
     }
 
     private void resetApplicantBilling(List<ApplicantBillingDTO> applicants, String userModified) {

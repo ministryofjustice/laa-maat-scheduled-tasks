@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -21,6 +22,7 @@ public class ApplicantHistoryBillingService {
     private final ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+    private final CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
 
     public List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
@@ -43,6 +45,7 @@ public class ApplicantHistoryBillingService {
             .defendantHistories(applicantHistories).build();
 
         crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+        crownCourtRemunerationApiClient.updateApplicantsHistory(applicantHistoriesRequest);
     }
 
     private void resetApplicantHistory(List<ApplicantHistoryBillingDTO> applicantHistories,

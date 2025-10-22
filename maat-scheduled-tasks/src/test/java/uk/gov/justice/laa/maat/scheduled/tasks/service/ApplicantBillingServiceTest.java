@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -34,6 +35,8 @@ class ApplicantBillingServiceTest {
     private BillingDataFeedLogService billingDataFeedLogService;
     @Mock
     private CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+    @Mock
+    private CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
     @InjectMocks
     private ApplicantBillingService applicantBillingService;
 
@@ -65,6 +68,8 @@ class ApplicantBillingServiceTest {
         verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
             List.of(dto));
         verify(crownCourtLitigatorFeesApiClient).updateApplicants(
+            any(UpdateApplicantsRequest.class));
+        verify(crownCourtRemunerationApiClient).updateApplicants(
             any(UpdateApplicantsRequest.class));
     }
 }
