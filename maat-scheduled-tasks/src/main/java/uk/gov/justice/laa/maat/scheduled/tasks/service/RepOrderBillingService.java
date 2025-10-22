@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -21,6 +22,7 @@ public class RepOrderBillingService {
     private final RepOrderBillingRepository repOrderBillingRepository;
     private final BillingDataFeedLogService billingDataFeedLogService;
     private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+    private final CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
 
     public List<RepOrderBillingDTO> getRepOrdersForBilling() {
         List<RepOrderBillingEntity> extractedRepOrders = repOrderBillingRepository.getRepOrdersForBilling();
@@ -42,6 +44,7 @@ public class RepOrderBillingService {
             .repOrders(repOrders).build();
 
         crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
+        crownCourtRemunerationApiClient.updateRepOrders(repOrdersRequest);
     }
 
     private void resetRepOrderBilling(List<RepOrderBillingDTO> repOrders, String userModified) {
