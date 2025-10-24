@@ -71,8 +71,8 @@ xhibit-batch:
   trial_data_processing:
     cron_expression: ${TRIAL_DATA_CRON_EXPRESSION}
 
-  object-key-appeal-prefix: "incoming/appeal/"
-  object-key-trial-prefix: "incoming/trial/"
+  object-key-appeal-prefix: ${OBJECT_KEY_APPEAL_PREFIX}
+  object-key-trial-prefix: ${OBJECT_KEY_TRIAL_PREFIX}
 
   object-key-processed-prefix: "processed"
   object-key-errored-prefix: "errored"
