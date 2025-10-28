@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service;
 
 import java.io.UncheckedIOException;
-import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
-import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
@@ -17,7 +15,6 @@ import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
@@ -43,7 +40,6 @@ public class XhibitS3Service {
     public RecordSheetsPage getRecordSheets(RecordSheetType recordSheetType) {
         RecordSheetsPage page = RecordSheetsPage.empty();
         String prefix = objectKeyHelper.buildPrefix(recordSheetType);
-        log.debug("Prefix = '{}'", prefix);
 
         do {
             page = fetchPage(page.continuationToken(), prefix, page);
@@ -54,31 +50,28 @@ public class XhibitS3Service {
 
     private RecordSheetsPage fetchPage(String continuationToken, String prefix,
             RecordSheetsPage accumulator) {
-        log.debug("Got here 1");
+
         ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder()
                 .bucket(xhibitConfiguration.getS3DataBucketName())
                 .maxKeys(Integer.parseInt(xhibitConfiguration.getFetchSize()))
                 .prefix(prefix);
-      log.debug("Got here 2");
+
         if (continuationToken != null) {
             requestBuilder.continuationToken(continuationToken);
         }
 
         try {
             ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build());
-          log.debug("Got here 3");
+
             if (response.contents().isEmpty()) {
                 return accumulator.next(null, true);
             }
 
             List<RecordSheet> errored = new ArrayList<>();
             List<RecordSheet> retrieved = new ArrayList<>();
-          log.debug("Got here 4");
 
             response.contents().stream().map(S3Object::key).forEach(key -> {
-                log.debug("Got here 5, Key = '{}'", key);
                 String filename = key.substring(prefix.length());
-                log.debug("Got here 6, Filename = '{}'", filename);
                 RecordSheet.RecordSheetBuilder builder = RecordSheet.builder()
                         .filename(filename);
 
@@ -87,26 +80,19 @@ public class XhibitS3Service {
                             .bucket(xhibitConfiguration.getS3DataBucketName())
                             .key(key)
                             .build();
-                    log.debug("Got here 7, S3 Bucket name = '{}'", xhibitConfiguration.getS3DataBucketName());
-                  log.debug("Got here 8, key = '{}'", getObjectRequest.key());
-                  ResponseBytes<GetObjectResponse> objectAsBytes = s3Client.getObjectAsBytes(
-                      getObjectRequest);
-                  log.debug("Got here 9");
-                  String data = objectAsBytes.asUtf8String();
-                  log.debug("Got here 9A, data = '{}'", data);
+
+                    String data = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
                     builder.data(data);
                     retrieved.add(builder.build());
                 } catch (NoSuchKeyException | InvalidObjectStateException ex) {
                     log.error("Failed to retrieve object from S3. key={}", key, ex);
                     errored.add(builder.build());
                 } catch (UncheckedIOException ue) {
-                  log.error("Failed to process object. key={}", key, ue);
-                  if (ue.getCause().getClass().equals(CharacterCodingException.class)) {
+                    log.error("Failed to process object. key={}", key, ue);
                     errored.add(builder.build());
-                  }
                 }
             });
-          log.debug("Got here 10, retrieved = {}, errored = {}", retrieved.size(), errored.size());
+
             return accumulator
                     .withErrored(errored)
                     .withRetrieved(retrieved)
