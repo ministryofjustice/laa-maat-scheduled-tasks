@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service;
 
+import java.io.UncheckedIOException;
+import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -97,6 +99,11 @@ public class XhibitS3Service {
                 } catch (NoSuchKeyException | InvalidObjectStateException ex) {
                     log.error("Failed to retrieve object from S3. key={}", key, ex);
                     errored.add(builder.build());
+                } catch (UncheckedIOException ue) {
+                  log.error("Failed to process object. key={}", key, ue);
+                  if (ue.getCause().getClass().equals(CharacterCodingException.class)) {
+                    errored.add(builder.build());
+                  }
                 }
             });
           log.debug("Got here 10, retrieved = {}, errored = {}", retrieved.size(), errored.size());
