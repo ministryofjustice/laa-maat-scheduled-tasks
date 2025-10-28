@@ -50,26 +50,26 @@ public class XhibitS3Service {
 
     private RecordSheetsPage fetchPage(String continuationToken, String prefix,
             RecordSheetsPage accumulator) {
-
+        log.debug("Got here 1");
         ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder()
                 .bucket(xhibitConfiguration.getS3DataBucketName())
                 .maxKeys(Integer.parseInt(xhibitConfiguration.getFetchSize()))
                 .prefix(prefix);
-
+      log.debug("Got here 2");
         if (continuationToken != null) {
             requestBuilder.continuationToken(continuationToken);
         }
 
         try {
             ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build());
-
+          log.debug("Got here 3");
             if (response.contents().isEmpty()) {
                 return accumulator.next(null, true);
             }
 
             List<RecordSheet> errored = new ArrayList<>();
             List<RecordSheet> retrieved = new ArrayList<>();
-
+          log.debug("Got here 4");
             response.contents().stream().map(S3Object::key).forEach(key -> {
                 log.debug("Key = '{}'", key);
                 String filename = key.substring(prefix.length());
