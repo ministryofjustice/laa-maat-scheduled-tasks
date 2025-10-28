@@ -53,8 +53,8 @@ public interface RepOrderBillingRepository extends
                 r.USER_MODIFIED = :userModified
         WHERE   r.id IN (:ids)
     """, nativeQuery = true)
-    int resetBillingFlagForRepOrderIds(@Param("userModified") String userModified,
-        @Param("ids") List<Integer> ids);
+    int resetBillingFlagForRepOrderIds(
+        @Param("ids") List<Integer> ids, @Param("userModified") String userModified);
 
 
 }
