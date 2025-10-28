@@ -100,6 +100,16 @@ env:
     value: {{ .Values.aws_region }}
   - name: XHIBIT_BATCH_FETCH_SIZE
     value: {{ .Values.xhibitBatch.fetchSize | quote }}
+  - name: OBJECT_KEY_APPEAL_PREFIX
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: OBJECT_KEY_APPEAL_PREFIX
+  - name: OBJECT_KEY_TRIAL_PREFIX
+    valueFrom:
+        secretKeyRef:
+            name: maat-scheduled-tasks-env-variables
+            key: OBJECT_KEY_TRIAL_PREFIX
   - name: AWS_S3_XHIBIT_DATA_BUCKET_NAME
     valueFrom:
         secretKeyRef:
