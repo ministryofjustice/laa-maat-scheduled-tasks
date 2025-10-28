@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
@@ -14,6 +15,7 @@ import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.InvalidObjectStateException;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
@@ -72,9 +74,9 @@ public class XhibitS3Service {
           log.debug("Got here 4");
 
             response.contents().stream().map(S3Object::key).forEach(key -> {
-                log.debug("Key = '{}'", key);
+                log.debug("Got here 5, Key = '{}'", key);
                 String filename = key.substring(prefix.length());
-                log.debug("Filename = '{}'", filename);
+                log.debug("Got here 6, Filename = '{}'", filename);
                 RecordSheet.RecordSheetBuilder builder = RecordSheet.builder()
                         .filename(filename);
 
@@ -83,9 +85,13 @@ public class XhibitS3Service {
                             .bucket(xhibitConfiguration.getS3DataBucketName())
                             .key(key)
                             .build();
-                    log.debug("S3 Bucket name = '{}'", xhibitConfiguration.getS3DataBucketName());
-                    String data = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
-                  log.debug("Got here 5, data = '{}'", data);
+                    log.debug("Got here 7, S3 Bucket name = '{}'", xhibitConfiguration.getS3DataBucketName());
+                  log.debug("Got here 8, key = '{}'", getObjectRequest.key());
+                  ResponseBytes<GetObjectResponse> objectAsBytes = s3Client.getObjectAsBytes(
+                      getObjectRequest);
+                  log.debug("Got here 9");
+                  String data = objectAsBytes.asUtf8String();
+                  log.debug("Got here 9A, data = '{}'", data);
                     builder.data(data);
                     retrieved.add(builder.build());
                 } catch (NoSuchKeyException | InvalidObjectStateException ex) {
@@ -93,7 +99,7 @@ public class XhibitS3Service {
                     errored.add(builder.build());
                 }
             });
-          log.debug("Got here 6, retrieved = {}, errored = {}", retrieved.size(), errored.size());
+          log.debug("Got here 10, retrieved = {}, errored = {}", retrieved.size(), errored.size());
             return accumulator
                     .withErrored(errored)
                     .withRetrieved(retrieved)
