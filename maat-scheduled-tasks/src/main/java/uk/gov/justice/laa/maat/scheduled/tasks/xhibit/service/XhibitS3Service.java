@@ -70,6 +70,7 @@ public class XhibitS3Service {
             List<RecordSheet> errored = new ArrayList<>();
             List<RecordSheet> retrieved = new ArrayList<>();
           log.debug("Got here 4");
+
             response.contents().stream().map(S3Object::key).forEach(key -> {
                 log.debug("Key = '{}'", key);
                 String filename = key.substring(prefix.length());
@@ -84,6 +85,7 @@ public class XhibitS3Service {
                             .build();
                     log.debug("S3 Bucket name = '{}'", xhibitConfiguration.getS3DataBucketName());
                     String data = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
+                  log.debug("Got here 5, data = '{}'", data);
                     builder.data(data);
                     retrieved.add(builder.build());
                 } catch (NoSuchKeyException | InvalidObjectStateException ex) {
@@ -91,7 +93,7 @@ public class XhibitS3Service {
                     errored.add(builder.build());
                 }
             });
-
+          log.debug("Got here 6, retrieved = {}, errored = {}", retrieved.size(), errored.size());
             return accumulator
                     .withErrored(errored)
                     .withRetrieved(retrieved)
