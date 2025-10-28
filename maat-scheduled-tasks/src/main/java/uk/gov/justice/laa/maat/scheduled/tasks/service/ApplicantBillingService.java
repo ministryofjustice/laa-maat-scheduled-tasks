@@ -1,10 +1,12 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -23,10 +25,12 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
     private static final String REQUEST_LABEL = "applicant";
 
     public ApplicantBillingService(BillingDataFeedLogService billingDataFeedLogService,
-        CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
+        CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient, 
+        CrownCourtRemunerationApiClient crownCourtRemunerationApiClient,
         ApplicantBillingRepository applicantBillingRepository, ApplicantMapper applicantMapper, 
         BillingConfiguration billingConfiguration, ResponseUtils responseUtils) {
-        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration, responseUtils);
+        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, crownCourtRemunerationApiClient, 
+            billingConfiguration, responseUtils);
       this.applicantBillingRepository = applicantBillingRepository;
       this.applicantMapper = applicantMapper;
     }
@@ -52,11 +56,16 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
     }
 
     @Override
-    protected ResponseEntity<String> updateBillingRecords(List<ApplicantBillingDTO> applicants) {
+    protected List<ResponseEntity<String>> updateBillingRecords(List<ApplicantBillingDTO> applicants) {
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
             .defendants(applicants).build();
 
-        return crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
+        List<ResponseEntity<String>> responses = new ArrayList<>();
+
+        responses.add(crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest));
+        responses.add(crownCourtRemunerationApiClient.updateApplicants(applicantsRequest));
+        
+        return responses;
     }
 
     @Override

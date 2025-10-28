@@ -89,11 +89,11 @@ jwt:
 scope: maat-scheduled-tasks-uat
 
 cclfApi:
-  baseUrl: https://aa-crown-court-litigator-fees-app.laa-crown-court-litigator-fees-uat.svc.cluster.local/cclf/api/v1
+  baseUrl: http://laa-crown-court-litigator-fees-app.laa-crown-court-litigator-fees-uat.svc.cluster.local/cclf/api/v1
   oauthUrl: https://cclf-uat.auth.eu-west-2.amazoncognito.com/oauth2/token
 
 ccrApi:
-  baseUrl: https://ccr-uat.apps.live.cloud-platform.service.justice.gov.uk/ccr/api/v1
+  baseUrl: http://laa-crown-court-remuneration-app.laa-crown-court-remuneration-uat.svc.cluster.local/ccr/api/v1
   oauthUrl: https://ccr-uat.auth.eu-west-2.amazoncognito.com/oauth2/token
 
 xhibitBatch:

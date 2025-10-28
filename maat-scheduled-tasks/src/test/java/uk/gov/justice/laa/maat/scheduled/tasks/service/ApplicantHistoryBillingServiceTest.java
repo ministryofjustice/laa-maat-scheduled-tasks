@@ -8,7 +8,9 @@ import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getApplicantHistoryBillingEntity;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getApplicantHistoryBillingDTO;
 
+import java.io.IOException;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -31,6 +34,12 @@ class ApplicantHistoryBillingServiceTest {
     private static final int SUCCESSFUL_TEST_ID_1 = 1;
     private static final int FAILING_TEST_ID = 2;
     private static final String USER_MODIFIED = "TEST";
+    private ApplicantHistoryBillingEntity failingEntity;
+    private ApplicantHistoryBillingDTO successDTO;
+    private ApplicantHistoryBillingDTO failingDTO;
+    private String multiStatusResponseBodyJson;
+    ResponseEntity<String> successApiResponse;
+    ResponseEntity<String> multiStatusApiResponse;
 
     @Mock
     private ResponseUtils responseUtils;
@@ -40,19 +49,32 @@ class ApplicantHistoryBillingServiceTest {
     private BillingDataFeedLogService billingDataFeedLogService;
     @Mock
     private CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+    @Mock
+    private CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
     @InjectMocks
     private ApplicantHistoryBillingService applicantHistoryBillingService;
 
-    @Test
-    void givenSomeFailuresFromCCLF_whenSendToBillingIsInvoked_thenFailingEntitiesAreUpdated() throws Exception {
-        ApplicantHistoryBillingEntity failingEntity = getApplicantHistoryBillingEntity(FAILING_TEST_ID);
-        ApplicantHistoryBillingDTO successDTO = getApplicantHistoryBillingDTO(SUCCESSFUL_TEST_ID_1);
-        ApplicantHistoryBillingDTO failingDTO = getApplicantHistoryBillingDTO(FAILING_TEST_ID);
+    @BeforeEach
+    void setUp() throws IOException {
+        failingEntity = getApplicantHistoryBillingEntity(FAILING_TEST_ID);
+        successDTO = getApplicantHistoryBillingDTO(SUCCESSFUL_TEST_ID_1);
+        failingDTO = getApplicantHistoryBillingDTO(FAILING_TEST_ID);
+        multiStatusResponseBodyJson = FileUtils.readResourceToString(
+            "billing/api-client/responses/multi-status.json");
+        successApiResponse = new ResponseEntity<>(null, HttpStatus.OK);
+        multiStatusApiResponse = new ResponseEntity<>(multiStatusResponseBodyJson, HttpStatus.MULTI_STATUS);
+    }
 
-        String responseBodyJson = FileUtils.readResourceToString("billing/api-client/responses/mixed-status.json");
-        
-        ResponseEntity<String> apiResponse = new ResponseEntity<>(responseBodyJson, HttpStatus.MULTI_STATUS);
-        when(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(any())).thenReturn(apiResponse);
+    void verifications() {
+        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(successDTO, failingDTO));
+        verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any(UpdateApplicantHistoriesRequest.class));
+        verify(applicantHistoryBillingRepository).saveAll(List.of(failingEntity));
+    }
+    
+    @Test
+    void givenSomeFailuresFromCCLF_whenProcessBatchIsInvoked_thenFailingEntitiesAreUpdated() {
+        when(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(any())).thenReturn(multiStatusApiResponse);
+        when(crownCourtRemunerationApiClient.updateApplicantsHistory(any())).thenReturn(successApiResponse);
         
         when(applicantHistoryBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
@@ -60,9 +82,21 @@ class ApplicantHistoryBillingServiceTest {
 
         applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1, USER_MODIFIED);
 
-        verify(billingDataFeedLogService).saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY, List.of(successDTO, failingDTO));
-        verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(any(UpdateApplicantHistoriesRequest.class));
-        verify(applicantHistoryBillingRepository).saveAll(List.of(failingEntity));
+        verifications();
+    }
+
+    @Test
+    void givenSomeFailuresFromCCR_whenProcessBatchIsInvoked_thenFailingEntitiesAreUpdated() {
+        when(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(any())).thenReturn(successApiResponse);
+        when(crownCourtRemunerationApiClient.updateApplicantsHistory(any())).thenReturn(multiStatusApiResponse);
+
+        when(applicantHistoryBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
+        when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
+        when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
+
+        applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1, USER_MODIFIED);
+
+        verifications();
     }
 }
 

@@ -1,10 +1,12 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -23,9 +25,11 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
     
     public RepOrderBillingService(BillingDataFeedLogService billingDataFeedLogService,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
+        CrownCourtRemunerationApiClient crownCourtRemunerationApiClient,
         RepOrderBillingRepository repOrderBillingRepository, BillingConfiguration billingConfiguration, 
         ResponseUtils responseUtils) {
-        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration, responseUtils);
+        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, 
+            crownCourtRemunerationApiClient, billingConfiguration, responseUtils);
       this.repOrderBillingRepository = repOrderBillingRepository;
     }
 
@@ -51,10 +55,16 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
     }
 
     @Override
-    protected ResponseEntity<String> updateBillingRecords(List<RepOrderBillingDTO> repOrders) {
+    protected List<ResponseEntity<String>> updateBillingRecords(List<RepOrderBillingDTO> repOrders) {
         UpdateRepOrdersRequest repOrdersRequest = UpdateRepOrdersRequest.builder()
             .repOrders(repOrders).build();
-        return crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest);
+
+        List<ResponseEntity<String>> responses = new ArrayList<>();
+
+        responses.add(crownCourtLitigatorFeesApiClient.updateRepOrders(repOrdersRequest));
+        responses.add(crownCourtRemunerationApiClient.updateRepOrders(repOrdersRequest));
+        
+        return responses;
     }
 
     @Override

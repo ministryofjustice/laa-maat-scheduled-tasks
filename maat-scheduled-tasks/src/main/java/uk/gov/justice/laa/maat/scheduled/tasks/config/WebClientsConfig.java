@@ -24,6 +24,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.filter.Resilience4jRetryFilter;
 import uk.gov.justice.laa.maat.scheduled.tasks.filter.WebClientFilters;
 
@@ -105,20 +106,19 @@ public class WebClientsConfig {
         return httpServiceProxyFactory.createClient(CrownCourtLitigatorFeesApiClient.class);
     }
 
-    /*@Bean(CCR_API_WEB_CLIENT_NAME)
+    @Bean(CCR_API_WEB_CLIENT_NAME)
     WebClient crownCourtRemunerationApiWebClient(WebClient.Builder clientBuilder,
-                                                  ServicesConfiguration servicesConfiguration,
-                                                  ClientRegistrationRepository clientRegistrations,
-                                                  OAuth2AuthorizedClientRepository authorizedClients,
-                                                  RetryRegistry retryRegistry) {
+                                                    ServicesConfiguration servicesConfiguration,
+                                                    OAuth2AuthorizedClientManager authorizedClientManager,
+                                                    RetryRegistry retryRegistry) {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Filter =
-                new ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients);
-        oauth2Filter.setDefaultClientRegistrationId(servicesConfiguration.getCclfApi().getRegistrationId());
+                new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
+        oauth2Filter.setDefaultClientRegistrationId(servicesConfiguration.getCcrApi().getRegistrationId());
 
         Resilience4jRetryFilter retryFilter = new Resilience4jRetryFilter(retryRegistry, CCR_API_WEB_CLIENT_NAME);
 
         return clientBuilder
-                .baseUrl(servicesConfiguration.getCclfApi().getBaseUrl())
+                .baseUrl(servicesConfiguration.getCcrApi().getBaseUrl())
                 .filters(filters -> configureFilters(filters, oauth2Filter, retryFilter))
                 .build();
     }
@@ -129,7 +129,7 @@ public class WebClientsConfig {
         HttpServiceProxyFactory httpServiceProxyFactory =
                 HttpServiceProxyFactory.builderFor(WebClientAdapter.create(webClient)).build();
         return httpServiceProxyFactory.createClient(CrownCourtRemunerationApiClient.class);
-    }*/
+    }
 
     private void configureFilters(List<ExchangeFilterFunction> filters,
                                   ServletOAuth2AuthorizedClientExchangeFilterFunction oauthFilter,

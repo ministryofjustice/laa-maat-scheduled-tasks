@@ -12,12 +12,25 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "services")
 public class ServicesConfiguration {
     @NotNull
-    private CCLFApi cclfApi;
+    private ServicesConfiguration.CclfApi cclfApi;
+    @NotNull
+    private ServicesConfiguration.CcrApi ccrApi;
 
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class CCLFApi {
+    public static class CclfApi {
+        @NotNull
+        private String baseUrl;
+
+        @NotNull
+        private String registrationId;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CcrApi {
         @NotNull
         private String baseUrl;
 

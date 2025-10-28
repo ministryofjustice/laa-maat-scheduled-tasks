@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -19,13 +20,14 @@ import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 public abstract class BillingService <T extends BillingDTO>{
     private final BillingDataFeedLogService billingDataFeedLogService;
     protected final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
+    protected final CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
     protected final BillingConfiguration billingConfiguration;
     protected final ResponseUtils responseUtils;
 
     protected abstract List<T> getBillingDTOList();
     protected abstract void resetBillingFlag(String userModified, List<Integer> ids);
     protected abstract BillingDataFeedRecordType getBillingDataFeedRecordType();
-    protected abstract ResponseEntity<String> updateBillingRecords(
+    protected abstract List<ResponseEntity<String>> updateBillingRecords(
         List<T> billingDTOList);
     protected abstract String getRequestLabel();
     protected abstract void updateBillingRecordFailures(List<Integer> failedIds, String userModified);
@@ -39,19 +41,22 @@ public abstract class BillingService <T extends BillingDTO>{
 
         billingDataFeedLogService.saveBillingDataFeed(getBillingDataFeedRecordType(), currentBatch);
 
-        ResponseEntity<String> response = updateBillingRecords(currentBatch);
+        List<ResponseEntity<String>> responses = updateBillingRecords(currentBatch);
 
-        if (response.getStatusCode().value() == HttpStatus.MULTI_STATUS.value()) {
-            log.warn("Some {} records failed to update in the CCR/CCLF database. These records will be updated to be re-sent next time.",
-                getRequestLabel());
+        // We don't have a separate flag to distinguish between CCR or CCLF, so we will reset the cclf flag regardless of which api has failures
+        for (ResponseEntity<String> response : responses) {
+            if (response.getStatusCode().value() == HttpStatus.MULTI_STATUS.value()) {
+                log.warn("Some {} records failed to update in the CCR/CCLF database. These records will be updated to be re-sent next time.",
+                    getRequestLabel());
 
-            List<Integer> failedIds = responseUtils.getErroredIdsFromResponseBody(response.getBody(), getRequestLabel());
+                List<Integer> failedIds = responseUtils.getErroredIdsFromResponseBody(response.getBody(), getRequestLabel());
 
-            if (!failedIds.isEmpty()) {
-                updateBillingRecordFailures(failedIds, userModified);
+                if (!failedIds.isEmpty()) {
+                    updateBillingRecordFailures(failedIds, userModified);
+                }
+            } else {
+                log.info("Extracted {} data for batch {} has been sent to the billing team.", getRequestLabel(), batchNumber);
             }
-        } else {
-            log.info("Extracted {} data for batch {} has been sent to the billing team.", getRequestLabel(), batchNumber);
         }
     }
 }

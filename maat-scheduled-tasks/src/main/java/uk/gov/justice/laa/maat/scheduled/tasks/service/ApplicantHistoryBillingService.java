@@ -1,11 +1,13 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -23,11 +25,13 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     private static final String REQUEST_LABEL = "applicant history";
     
     public ApplicantHistoryBillingService(BillingDataFeedLogService billingDataFeedLogService,
-        CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient,
+        CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient, 
+        CrownCourtRemunerationApiClient crownCourtRemunerationApiClient,
         ApplicantHistoryBillingRepository applicantHistoryBillingRepository,
         ApplicantHistoryBillingMapper applicantHistoryBillingMapper, 
         BillingConfiguration billingConfiguration, ResponseUtils responseUtils) {
-            super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, billingConfiguration, 
+            super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, crownCourtRemunerationApiClient, 
+                billingConfiguration, 
                 responseUtils);
             this.applicantHistoryBillingRepository = applicantHistoryBillingRepository;
             this.applicantHistoryBillingMapper = applicantHistoryBillingMapper;
@@ -57,11 +61,16 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     }
 
     @Override
-    protected ResponseEntity<String> updateBillingRecords(List<ApplicantHistoryBillingDTO> applicantHistories) {
+    protected List<ResponseEntity<String>> updateBillingRecords(List<ApplicantHistoryBillingDTO> applicantHistories) {
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();
 
-        return crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+        List<ResponseEntity<String>> responses = new ArrayList<>();
+
+        responses.add(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest));
+        responses.add(crownCourtRemunerationApiClient.updateApplicantsHistory(applicantHistoriesRequest));
+        
+        return responses;
     }
 
     @Override
