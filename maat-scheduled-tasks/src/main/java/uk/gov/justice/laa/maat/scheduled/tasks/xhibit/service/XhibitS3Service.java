@@ -70,7 +70,9 @@ public class XhibitS3Service {
             List<RecordSheet> retrieved = new ArrayList<>();
 
             response.contents().stream().map(S3Object::key).forEach(key -> {
+                log.debug("Key = '{}'", key);
                 String filename = key.substring(prefix.length());
+                log.debug("Filename = '{}'", filename);
                 RecordSheet.RecordSheetBuilder builder = RecordSheet.builder()
                         .filename(filename);
 
@@ -79,7 +81,7 @@ public class XhibitS3Service {
                             .bucket(xhibitConfiguration.getS3DataBucketName())
                             .key(key)
                             .build();
-
+                    log.debug("S3 Bucket name = '{}'", xhibitConfiguration.getS3DataBucketName());
                     String data = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
                     builder.data(data);
                     retrieved.add(builder.build());
