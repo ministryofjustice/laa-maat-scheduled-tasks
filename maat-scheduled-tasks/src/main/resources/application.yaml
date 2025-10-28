@@ -122,3 +122,7 @@ resilience4j:
             
 aws:
   region: eu-west-2
+
+logging:
+  level:
+    root: ${LOG_LEVEL}
