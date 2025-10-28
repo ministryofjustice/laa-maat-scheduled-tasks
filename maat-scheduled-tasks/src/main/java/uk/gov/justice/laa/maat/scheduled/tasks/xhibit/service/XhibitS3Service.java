@@ -39,6 +39,7 @@ public class XhibitS3Service {
     public RecordSheetsPage getRecordSheets(RecordSheetType recordSheetType) {
         RecordSheetsPage page = RecordSheetsPage.empty();
         String prefix = objectKeyHelper.buildPrefix(recordSheetType);
+        log.debug("Prefix = '{}'", prefix);
 
         do {
             page = fetchPage(page.continuationToken(), prefix, page);
