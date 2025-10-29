@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service;
 
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -81,7 +82,8 @@ public class XhibitS3Service {
                             .key(key)
                             .build();
 
-                    String data = s3Client.getObjectAsBytes(getObjectRequest).asUtf8String();
+                    String data = s3Client.getObjectAsBytes(getObjectRequest).asString(
+                        StandardCharsets.ISO_8859_1);
                     builder.data(data);
                     retrieved.add(builder.build());
                 } catch (NoSuchKeyException | InvalidObjectStateException ex) {
