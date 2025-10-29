@@ -1,10 +1,11 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
@@ -13,43 +14,73 @@ import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class ApplicantBillingService {
+public class ApplicantBillingService extends BillingService<ApplicantBillingDTO> {
 
     private final ApplicantBillingRepository applicantBillingRepository;
     private final ApplicantMapper applicantMapper;
-    private final BillingDataFeedLogService billingDataFeedLogService;
-    private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
-    private final CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
+    private static final String REQUEST_LABEL = "applicant";
 
-    public List<ApplicantBillingDTO> findAllApplicantsForBilling() {
+    public ApplicantBillingService(BillingDataFeedLogService billingDataFeedLogService,
+        CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient, 
+        CrownCourtRemunerationApiClient crownCourtRemunerationApiClient,
+        ApplicantBillingRepository applicantBillingRepository, ApplicantMapper applicantMapper, 
+        BillingConfiguration billingConfiguration, ResponseUtils responseUtils) {
+        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, crownCourtRemunerationApiClient, 
+            billingConfiguration, responseUtils);
+      this.applicantBillingRepository = applicantBillingRepository;
+      this.applicantMapper = applicantMapper;
+    }
+
+    @Override
+    protected List<ApplicantBillingDTO> getBillingDTOList() {
         List<ApplicantBillingEntity> applicants = applicantBillingRepository.findAllApplicantsForBilling();
-        log.debug("Extracted data for {} applicants.", applicants.size());
+        log.info("Extracted data for {} applicants", applicants.size());
 
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
     }
 
-    @Transactional
-    public void sendApplicantsToBilling(List<ApplicantBillingDTO> applicants, String userModified) {
-        resetApplicantBilling(applicants, userModified);
+    @Override
+    protected void resetBillingFlag(String userModified, List<Integer> ids) {
+        int rowsUpdated = applicantBillingRepository.resetApplicantBilling(
+            ids, userModified);
+        log.debug("Billing Flag reset for {} applicants.", rowsUpdated);
+    }
 
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT,
-            applicants);
+    @Override
+    protected BillingDataFeedRecordType getBillingDataFeedRecordType() {
+        return BillingDataFeedRecordType.APPLICANT;
+    }
 
+    @Override
+    protected List<ResponseEntity<String>> updateBillingRecords(List<ApplicantBillingDTO> applicants) {
         UpdateApplicantsRequest applicantsRequest = UpdateApplicantsRequest.builder()
             .defendants(applicants).build();
 
-        crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest);
-        crownCourtRemunerationApiClient.updateApplicants(applicantsRequest);
+        List<ResponseEntity<String>> responses = new ArrayList<>();
+
+        responses.add(crownCourtLitigatorFeesApiClient.updateApplicants(applicantsRequest));
+        responses.add(crownCourtRemunerationApiClient.updateApplicants(applicantsRequest));
+        
+        return responses;
     }
 
-    private void resetApplicantBilling(List<ApplicantBillingDTO> applicants, String userModified) {
-        List<Integer> ids = applicants.stream().map(ApplicantBillingDTO::getId).toList();
+    @Override
+    protected String getRequestLabel() {
+        return REQUEST_LABEL;
+    }
 
-        int rowsUpdated = applicantBillingRepository.resetApplicantBilling(ids, userModified);
-        log.debug("CCLF Flag reset for {} applicants.", rowsUpdated);
+    @Override
+    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
+            List<ApplicantBillingEntity> failedApplicants = applicantBillingRepository.findAllById(failedIds);
+            for (ApplicantBillingEntity failedApplicant : failedApplicants) {
+                failedApplicant.setSendToCclf(true);
+                failedApplicant.setUserModified(userModified);
+            }
+
+            applicantBillingRepository.saveAll(failedApplicants);
     }
 }

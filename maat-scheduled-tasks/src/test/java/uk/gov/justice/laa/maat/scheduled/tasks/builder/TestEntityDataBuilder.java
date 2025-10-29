@@ -22,7 +22,6 @@ public class TestEntityDataBuilder {
 
     public static ApplicantHistoryBillingEntity getApplicantHistoryBillingEntity(Integer id) {
         return ApplicantHistoryBillingEntity.builder()
-            .id(id)
             .applId(id)
             .asAtDate(LocalDate.parse("2006-10-06"))
             .firstName("test_first")
@@ -32,6 +31,7 @@ public class TestEntityDataBuilder {
             .gender("Male")
             .niNumber("JM933396A")
             .foreignId("T35T")
+            .sendToCclf(true)
             .dateCreated(LocalDateTime.parse("2021-10-09T15:01:25"))
             .userCreated(USER_NAME)
             .dateModified(null)
@@ -49,6 +49,7 @@ public class TestEntityDataBuilder {
                 .gender("male")
                 .niNumber("AB123456C")
                 .foreignId("foreign-ID")
+                .sendToCclf(true)
                 .dateCreated(LocalDateTime.parse("2024-08-29T11:38:12"))
                 .userCreated(USER_NAME)
                 .dateModified(LocalDateTime.parse("2024-04-01T10:45:09"))
@@ -75,7 +76,8 @@ public class TestEntityDataBuilder {
                 .repOrderStatus("CURR")
                 .appealTypeCode(AppealType.ACN.getCode())
                 .crownCourtOutcome(CrownCourtTrialOutcome.CONVICTED.getValue())
-                .dateCreated(LocalDate.of(2025, 6, 20))
+                .sendToCclf(true)
+                .dateCreated(LocalDate.of(2025, 6, 20).atStartOfDay())
                 .userCreated(USER_NAME)
                 .dateModified(LocalDate.of(2025, 6, 21).atStartOfDay())
                 .userModified(USER_NAME)

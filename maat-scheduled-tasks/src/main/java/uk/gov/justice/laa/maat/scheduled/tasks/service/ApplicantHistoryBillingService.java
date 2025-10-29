@@ -1,11 +1,12 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
+import java.util.ArrayList;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
@@ -13,48 +14,78 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class ApplicantHistoryBillingService {
+public class ApplicantHistoryBillingService extends BillingService<ApplicantHistoryBillingDTO> {
 
     private final ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
-    private final BillingDataFeedLogService billingDataFeedLogService;
-    private final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
-    private final CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
-
-    public List<ApplicantHistoryBillingDTO> extractApplicantHistory() {
-        List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
-        log.debug("Extracted data for {} applicant histories.", applicantHistoryEntities.size());
-
-        return applicantHistoryEntities.stream().map(applicantHistoryBillingMapper::mapEntityToDTO)
-            .toList();
+    private static final String REQUEST_LABEL = "applicant history";
+    
+    public ApplicantHistoryBillingService(BillingDataFeedLogService billingDataFeedLogService,
+        CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient, 
+        CrownCourtRemunerationApiClient crownCourtRemunerationApiClient,
+        ApplicantHistoryBillingRepository applicantHistoryBillingRepository,
+        ApplicantHistoryBillingMapper applicantHistoryBillingMapper, 
+        BillingConfiguration billingConfiguration, ResponseUtils responseUtils) {
+            super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, crownCourtRemunerationApiClient, 
+                billingConfiguration, 
+                responseUtils);
+            this.applicantHistoryBillingRepository = applicantHistoryBillingRepository;
+            this.applicantHistoryBillingMapper = applicantHistoryBillingMapper;
     }
 
-    @Transactional
-    public void sendApplicantHistoryToBilling(List<ApplicantHistoryBillingDTO> applicantHistories,
-        String userModified) {
-        resetApplicantHistory(applicantHistories, userModified);
+    @Override
+    protected List<ApplicantHistoryBillingDTO> getBillingDTOList() {
+        List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
+        log.info("Application histories successfully extracted for billing data.");
 
-        billingDataFeedLogService.saveBillingDataFeed(BillingDataFeedRecordType.APPLICANT_HISTORY,
-            applicantHistories);
+        return applicantHistoryEntities
+            .stream()
+            .map(applicantHistoryBillingMapper::mapEntityToDTO)
+            .toList();
+    }
+    
+    @Override
+    protected void resetBillingFlag(String userModified, List<Integer> ids) {
+        int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
+            ids);
+        log.debug("Billing Flag reset for {} applicant histories.", rowsUpdated);
+    }
 
+    @Override
+    protected BillingDataFeedRecordType getBillingDataFeedRecordType() {
+        return BillingDataFeedRecordType.APPLICANT_HISTORY;
+    }
+
+    @Override
+    protected List<ResponseEntity<String>> updateBillingRecords(List<ApplicantHistoryBillingDTO> applicantHistories) {
         UpdateApplicantHistoriesRequest applicantHistoriesRequest = UpdateApplicantHistoriesRequest.builder()
             .defendantHistories(applicantHistories).build();
 
-        crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest);
-        crownCourtRemunerationApiClient.updateApplicantsHistory(applicantHistoriesRequest);
+        List<ResponseEntity<String>> responses = new ArrayList<>();
+
+        responses.add(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(applicantHistoriesRequest));
+        responses.add(crownCourtRemunerationApiClient.updateApplicantsHistory(applicantHistoriesRequest));
+        
+        return responses;
     }
 
-    private void resetApplicantHistory(List<ApplicantHistoryBillingDTO> applicantHistories,
-        String userModified) {
-        List<Integer> ids = applicantHistories.stream().map(ApplicantHistoryBillingDTO::getId)
-            .toList();
+    @Override
+    protected String getRequestLabel() {
+        return REQUEST_LABEL;
+    }
 
-        int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
-            ids);
-        log.debug("CCLF Flag reset for {} applicant histories.", rowsUpdated);
+    @Override
+    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
+        List<ApplicantHistoryBillingEntity> failedApplicantHistory = applicantHistoryBillingRepository.findAllById(failedIds);
+        for (ApplicantHistoryBillingEntity failedHistory : failedApplicantHistory) {
+            failedHistory.setSendToCclf(true);
+            failedHistory.setUserModified(userModified);
+        }
+
+        applicantHistoryBillingRepository.saveAll(failedApplicantHistory);
     }
 }

@@ -56,6 +56,9 @@ public class ApplicantHistoryBillingEntity {
     @Column(name = "FOREIGN_ID")
     private String foreignId;
 
+    @Column(name = "SEND_TO_CCLF")
+    private Boolean sendToCclf;
+
     @CreationTimestamp
     @Column(name = "DATE_CREATED", nullable = false)
     private LocalDateTime dateCreated;
