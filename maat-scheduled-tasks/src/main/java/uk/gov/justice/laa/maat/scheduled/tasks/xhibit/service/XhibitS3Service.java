@@ -88,7 +88,7 @@ public class XhibitS3Service {
                     log.error("Failed to retrieve object from S3. key={}", key, ex);
                     errored.add(builder.build());
                 } catch (UncheckedIOException ue) {
-                    log.error("Failed to process object. key={}", key, ue);
+                    log.error("Failed to process object. key='{}', cause='{}'", key, ue.getMessage());
                     errored.add(builder.build());
                 }
             });
