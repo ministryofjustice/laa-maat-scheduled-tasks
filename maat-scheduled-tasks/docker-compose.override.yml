@@ -18,6 +18,7 @@ services:
       - BILLING_LOG_CLEANUP_CRON_EXPRESSION=0 0 1 ? * MON-FRI
       - SPRING_PROFILES_ACTIVE=local
       - SCOPE_SCHEDULED_TASKS=maat-scheduled-tasks-dev
+      - LOG_LEVEL=DEBUG
     env_file:
       - app.env
 
