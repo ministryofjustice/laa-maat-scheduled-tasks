@@ -31,10 +31,13 @@ public class BillingDataFeedLogEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "billing_log_gen_seq")
     @Column(name = "id")
     private Integer id;
+
     @Column(name = "record_type")
     private String recordType;
+
     @Column(name = "date_created")
     private LocalDateTime dateCreated;
+
     @Column(name = "payload")
     @Lob
     private String payload;
