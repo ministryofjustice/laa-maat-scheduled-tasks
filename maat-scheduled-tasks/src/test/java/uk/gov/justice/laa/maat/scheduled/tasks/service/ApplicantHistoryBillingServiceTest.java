@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -46,6 +47,8 @@ class ApplicantHistoryBillingServiceTest {
     @Mock
     private ApplicantHistoryBillingRepository applicantHistoryBillingRepository;
     @Mock
+    private BillingConfiguration billingConfiguration;
+    @Mock
     private BillingDataFeedLogService billingDataFeedLogService;
     @Mock
     private CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
@@ -63,6 +66,8 @@ class ApplicantHistoryBillingServiceTest {
             "billing/api-client/responses/multi-status.json");
         successApiResponse = new ResponseEntity<>(null, HttpStatus.OK);
         multiStatusApiResponse = new ResponseEntity<>(multiStatusResponseBodyJson, HttpStatus.MULTI_STATUS);
+
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
     }
 
     void verifications() {
@@ -80,7 +85,7 @@ class ApplicantHistoryBillingServiceTest {
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
-        applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1, USER_MODIFIED);
+        applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1);
 
         verifications();
     }
@@ -94,9 +99,8 @@ class ApplicantHistoryBillingServiceTest {
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
-        applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1, USER_MODIFIED);
+        applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1);
 
         verifications();
     }
 }
-

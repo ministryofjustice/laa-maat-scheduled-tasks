@@ -44,8 +44,9 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
     }
     
     @Override
-    protected void resetBillingFlag(String userModified, List<Integer> ids) {
-        int rowsUpdated = repOrderBillingRepository.resetBillingFlagForRepOrderIds(userModified, ids);
+    protected void resetBillingFlag(List<Integer> ids) {
+        int rowsUpdated = repOrderBillingRepository.resetBillingFlagForRepOrderIds(
+            billingConfiguration.getUserModified(), ids);
         log.debug("Billing Flag reset for {} Rep Orders.", rowsUpdated);
     }
 
@@ -73,11 +74,11 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
     }
 
     @Override
-    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
+    protected void updateBillingRecordFailures(List<Integer> failedIds) {
         List<RepOrderBillingEntity> failedRepOrders = repOrderBillingRepository.findAllById(failedIds);
         for (RepOrderBillingEntity failedRepOrder : failedRepOrders) {
             failedRepOrder.setSendToCclf(true);
-            failedRepOrder.setUserModified(userModified);
+            failedRepOrder.setUserModified(billingConfiguration.getUserModified());
         }
 
         repOrderBillingRepository.saveAll(failedRepOrders);
