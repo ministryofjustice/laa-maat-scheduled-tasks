@@ -50,13 +50,13 @@ public abstract class XhibitDataServiceBase<T extends XhibitEntity> {
         var toProcess = recordSheets.retrieved();
         int total = toProcess.size();
         if (total == 0) {
-            log.info("Nothing to process after filtering fetch errors for {}", type);
+            log.info("Nothing to process after filtering out fetch errors for {}", type);
             return;
         }
 
         // Process the Record Sheets from S3 in to MAAT
-        StopWatch sw = new StopWatch();
-        sw.start();
+        StopWatch processingStopwatch = new StopWatch();
+        processingStopwatch.start();
         List<String> processed = new ArrayList<>();
         List<String> errored   = new ArrayList<>();
 
@@ -97,9 +97,9 @@ public abstract class XhibitDataServiceBase<T extends XhibitEntity> {
             log.error("Failed marking processed {} for {}", processed.size(), type, e);
         }
 
-        sw.stop();
-        log.info("Completed {}: ok={}, err={}, elapsed={} s",
-                type, processed.size(), errored.size(), String.format("%.2f", sw.getTotalTimeSeconds()));
+        processingStopwatch.stop();
+        log.info("Completed {}: ok={}, err={}, elapsed={} s", type, processed.size(), errored.size(),
+                String.format("%.2f", processingStopwatch.getTotalTimeSeconds()));
     }
 
     protected abstract T fromDto(RecordSheet dto);
