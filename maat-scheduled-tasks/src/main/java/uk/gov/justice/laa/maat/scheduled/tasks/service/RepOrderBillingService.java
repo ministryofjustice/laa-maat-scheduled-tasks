@@ -46,7 +46,7 @@ public class RepOrderBillingService extends BillingService<RepOrderBillingDTO> {
     @Override
     protected void resetBillingFlag(List<Integer> ids) {
         int rowsUpdated = repOrderBillingRepository.resetBillingFlagForRepOrderIds(
-            billingConfiguration.getUserModified(), ids);
+            ids, billingConfiguration.getUserModified());
         log.debug("Billing Flag reset for {} Rep Orders.", rowsUpdated);
     }
 

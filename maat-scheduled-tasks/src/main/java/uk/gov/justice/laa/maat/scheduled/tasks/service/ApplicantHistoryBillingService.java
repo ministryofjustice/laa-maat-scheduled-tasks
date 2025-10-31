@@ -51,7 +51,7 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     @Override
     protected void resetBillingFlag(List<Integer> ids) {
         int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(
-            billingConfiguration.getUserModified(), ids);
+            ids, billingConfiguration.getUserModified());
         log.debug("Billing Flag reset for {} applicant histories.", rowsUpdated);
     }
 

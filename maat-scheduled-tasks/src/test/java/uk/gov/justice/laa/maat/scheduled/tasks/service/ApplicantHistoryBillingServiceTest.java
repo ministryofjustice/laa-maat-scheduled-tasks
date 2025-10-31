@@ -82,7 +82,7 @@ class ApplicantHistoryBillingServiceTest {
         when(crownCourtRemunerationApiClient.updateApplicantsHistory(any())).thenReturn(successApiResponse);
         
         when(applicantHistoryBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
-        when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
+        when(applicantHistoryBillingRepository.resetApplicantHistory(anyList(), anyString())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
         applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1);
@@ -96,7 +96,7 @@ class ApplicantHistoryBillingServiceTest {
         when(crownCourtRemunerationApiClient.updateApplicantsHistory(any())).thenReturn(multiStatusApiResponse);
 
         when(applicantHistoryBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
-        when(applicantHistoryBillingRepository.resetApplicantHistory(anyString(), anyList())).thenReturn(1);
+        when(applicantHistoryBillingRepository.resetApplicantHistory(anyList(), anyString())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
         applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1);

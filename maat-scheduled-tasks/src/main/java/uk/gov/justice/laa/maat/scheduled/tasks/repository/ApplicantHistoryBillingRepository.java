@@ -60,6 +60,6 @@ public interface ApplicantHistoryBillingRepository extends JpaRepository<Applica
             ah.userModified = :userModified
         WHERE ah.id IN :ids
         """)
-    int resetApplicantHistory(@Param("userModified") String userModified,
-        @Param("ids") List<Integer> ids);
+    int resetApplicantHistory(@Param("ids") List<Integer> ids,
+        @Param("userModified") String userModified);
 }
