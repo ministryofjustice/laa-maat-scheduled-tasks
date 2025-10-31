@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -81,6 +82,7 @@ class RepOrderBillingServiceTest {
         when(crownCourtRemunerationApiClient.updateRepOrders(any())).thenReturn(successApiResponse);
         
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyList(), anyString())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
         repOrderBillingService.processBatch(List.of(successDTO, failingDTO), 1);
@@ -94,6 +96,7 @@ class RepOrderBillingServiceTest {
         when(crownCourtRemunerationApiClient.updateRepOrders(any())).thenReturn(multiStatusApiResponse);
 
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyList(), anyString())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
         repOrderBillingService.processBatch(List.of(successDTO, failingDTO), 1);
