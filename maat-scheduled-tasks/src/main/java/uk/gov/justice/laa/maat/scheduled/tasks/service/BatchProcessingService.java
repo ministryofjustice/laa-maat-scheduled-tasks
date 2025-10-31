@@ -3,13 +3,12 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 import static uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils.batchList;
 
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.function.TriConsumer;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
 
 @Slf4j
 @Service
@@ -21,39 +20,26 @@ public class BatchProcessingService {
     protected final BillingConfiguration billingConfiguration;
 
     public void processApplicantBatch() {
-        processBatch(
-            applicantBillingService::getBillingDTOList,
-            applicantBillingService::processBatch
-        );
+        processBatch(applicantBillingService);
     }
 
-
     public void processApplicantHistoryBatch() {
-        processBatch(
-            applicantHistoryBillingService::getBillingDTOList,
-            applicantHistoryBillingService::processBatch
-        );
+        processBatch(applicantHistoryBillingService);
     }
 
     public void processRepOrderBatch() {
-        processBatch(
-            repOrderBillingService::getBillingDTOList,
-            repOrderBillingService::processBatch
-        );
+        processBatch(repOrderBillingService);
     }
 
-    private <T> void processBatch(
-        Supplier<List<T>> listSupplier,
-        TriConsumer<List<T>, Integer, String> batchProcessor) {
+    private <T extends BillingDTO> void processBatch(BillingService<T> billingService) {
+        List<T> billingsDtos = billingService.getBillingDTOList();
 
-        List<T> dtoList = listSupplier.get();
-        if (dtoList.isEmpty()) {
+        if (billingsDtos.isEmpty()) {
             return;
         }
 
-        List<List<T>> batches = batchList(dtoList, billingConfiguration.getBatchSize());
+        List<List<T>> batches = batchList(billingsDtos, billingConfiguration.getBatchSize());
         IntStream.range(0, batches.size())
-            .forEach(i -> batchProcessor.accept(batches.get(i), i + 1,
-                billingConfiguration.getUserModified()));
+            .forEach(i -> billingService.processBatch(batches.get(i), i + 1));
     }
 }

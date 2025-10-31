@@ -44,9 +44,9 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
     }
 
     @Override
-    protected void resetBillingFlag(String userModified, List<Integer> ids) {
+    protected void resetBillingFlag(List<Integer> ids) {
         int rowsUpdated = applicantBillingRepository.resetApplicantBilling(
-            ids, userModified);
+            ids, billingConfiguration.getUserModified());
         log.debug("Billing Flag reset for {} applicants.", rowsUpdated);
     }
 
@@ -74,11 +74,11 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
     }
 
     @Override
-    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
+    protected void updateBillingRecordFailures(List<Integer> failedIds) {
             List<ApplicantBillingEntity> failedApplicants = applicantBillingRepository.findAllById(failedIds);
             for (ApplicantBillingEntity failedApplicant : failedApplicants) {
                 failedApplicant.setSendToCclf(true);
-                failedApplicant.setUserModified(userModified);
+                failedApplicant.setUserModified(billingConfiguration.getUserModified());
             }
 
             applicantBillingRepository.saveAll(failedApplicants);

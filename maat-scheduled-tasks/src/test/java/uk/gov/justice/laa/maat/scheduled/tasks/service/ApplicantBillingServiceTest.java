@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -43,6 +44,8 @@ class ApplicantBillingServiceTest {
     @Mock
     private ApplicantBillingRepository applicantBillingRepository;
     @Mock
+    private BillingConfiguration billingConfiguration;
+    @Mock
     private BillingDataFeedLogService billingDataFeedLogService;
     @Mock
     private CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
@@ -60,6 +63,8 @@ class ApplicantBillingServiceTest {
             "billing/api-client/responses/multi-status.json");
         successApiResponse = new ResponseEntity<>(null, HttpStatus.OK);
         multiStatusApiResponse = new ResponseEntity<>(multiStatusResponseBodyJson, HttpStatus.MULTI_STATUS);
+
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
     }
     
     void verifications() {
@@ -78,7 +83,7 @@ class ApplicantBillingServiceTest {
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
         
-        applicantBillingService.processBatch(List.of(successDTO, failingDTO), 1, USER_MODIFIED);
+        applicantBillingService.processBatch(List.of(successDTO, failingDTO), 1);
         
         verifications();
     }
@@ -92,7 +97,7 @@ class ApplicantBillingServiceTest {
         when(applicantBillingRepository.resetApplicantBilling(anyList(), anyString())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
-        applicantBillingService.processBatch(List.of(successDTO, failingDTO), 1, USER_MODIFIED);
+        applicantBillingService.processBatch(List.of(successDTO, failingDTO), 1);
 
         verifications();
     }

@@ -25,19 +25,19 @@ public abstract class BillingService <T extends BillingDTO>{
     protected final ResponseUtils responseUtils;
 
     protected abstract List<T> getBillingDTOList();
-    protected abstract void resetBillingFlag(String userModified, List<Integer> ids);
+    protected abstract void resetBillingFlag(List<Integer> ids);
     protected abstract BillingDataFeedRecordType getBillingDataFeedRecordType();
     protected abstract List<ResponseEntity<String>> updateBillingRecords(
         List<T> billingDTOList);
     protected abstract String getRequestLabel();
-    protected abstract void updateBillingRecordFailures(List<Integer> failedIds, String userModified);
+    protected abstract void updateBillingRecordFailures(List<Integer> failedIds);
     
     @Transactional
-    protected void processBatch(List<T> currentBatch, Integer batchNumber, String userModified) {
+    protected void processBatch(List<T> currentBatch, Integer batchNumber) {
         log.info("Processing {} batch {} containing {} records", getRequestLabel(), batchNumber, currentBatch.size());
 
         List<Integer> ids = currentBatch.stream().map(BillingDTO::getId).toList();
-        resetBillingFlag(userModified, ids);
+        resetBillingFlag(ids);
 
         billingDataFeedLogService.saveBillingDataFeed(getBillingDataFeedRecordType(), currentBatch);
 
@@ -52,7 +52,7 @@ public abstract class BillingService <T extends BillingDTO>{
                 List<Integer> failedIds = responseUtils.getErroredIdsFromResponseBody(response.getBody(), getRequestLabel());
 
                 if (!failedIds.isEmpty()) {
-                    updateBillingRecordFailures(failedIds, userModified);
+                    updateBillingRecordFailures(failedIds);
                 }
             } else {
                 log.info("Extracted {} data for batch {} has been sent to the billing team.", getRequestLabel(), batchNumber);

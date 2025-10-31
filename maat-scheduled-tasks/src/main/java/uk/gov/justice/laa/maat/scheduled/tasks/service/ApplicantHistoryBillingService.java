@@ -49,9 +49,9 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     }
     
     @Override
-    protected void resetBillingFlag(String userModified, List<Integer> ids) {
-        int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(userModified,
-            ids);
+    protected void resetBillingFlag(List<Integer> ids) {
+        int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(
+            billingConfiguration.getUserModified(), ids);
         log.debug("Billing Flag reset for {} applicant histories.", rowsUpdated);
     }
 
@@ -79,11 +79,11 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     }
 
     @Override
-    protected void updateBillingRecordFailures(List<Integer> failedIds, String userModified) {
+    protected void updateBillingRecordFailures(List<Integer> failedIds) {
         List<ApplicantHistoryBillingEntity> failedApplicantHistory = applicantHistoryBillingRepository.findAllById(failedIds);
         for (ApplicantHistoryBillingEntity failedHistory : failedApplicantHistory) {
             failedHistory.setSendToCclf(true);
-            failedHistory.setUserModified(userModified);
+            failedHistory.setUserModified(billingConfiguration.getUserModified());
         }
 
         applicantHistoryBillingRepository.saveAll(failedApplicantHistory);
