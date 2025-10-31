@@ -42,6 +42,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service.AppealDataService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.StoredProcedureService;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service.TrialDataService;
 import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.helper.ObjectKeyHelper;
+import uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service.XhibitItemService;
 
 @SpringBootTest
 @Testcontainers
@@ -71,6 +72,9 @@ class XhibitDataServiceIntegrationTest {
 
     @Autowired
     private ObjectKeyHelper objectKeyHelper;
+
+    @Autowired
+    private XhibitItemService xhibitItemService;
 
     @MockitoBean
     private StoredProcedureService storedProcedureService;
