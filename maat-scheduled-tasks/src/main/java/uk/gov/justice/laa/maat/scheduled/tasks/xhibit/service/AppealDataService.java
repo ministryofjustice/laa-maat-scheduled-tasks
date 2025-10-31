@@ -14,8 +14,9 @@ public class AppealDataService extends XhibitDataServiceBase<XhibitAppealDataEnt
     public AppealDataService(
             XhibitS3Service xhibitS3Service,
             XhibitAppealDataRepository repository,
-            AppealDataProcedureService procedureService) {
-        super(xhibitS3Service, repository, procedureService);
+            AppealDataProcedureService procedureService,
+            XhibitItemService xhibitItemService) {
+        super(xhibitS3Service, repository, procedureService, xhibitItemService);
     }
 
     @Override
