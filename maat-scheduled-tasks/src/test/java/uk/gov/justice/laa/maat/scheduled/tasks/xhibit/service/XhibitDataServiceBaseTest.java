@@ -36,6 +36,8 @@ class XhibitDataServiceBaseTest {
     private XhibitProcedureService<TestEntity> procedureService;
     @Mock
     private RecordSheetsPage recordSheetsPage;
+    @Mock
+    private XhibitItemService xhibitItemService;
 
     @InjectMocks
     private TestDataServiceBase testDataService;
@@ -74,20 +76,11 @@ class XhibitDataServiceBaseTest {
 
         when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(
                 recordSheetsPage);
-
-        when(repository.findAllById(anyList())).thenReturn(List.of(
-                TestEntity.builder().id(1).filename(recordSheet1.filename())
-                        .data(recordSheet1.data()).build(),
-                TestEntity.builder().id(2).filename(recordSheet2.filename())
-                        .data(recordSheet2.data()).build()
-        ));
-        when(procedureService.call(any(TestEntity.class))).thenReturn(ProcedureResult.SUCCESS);
+        when(xhibitItemService.process(any(), any(), any())).thenReturn(true);
 
         testDataService.populateAndProcessData();
 
-        verify(repository).saveAllAndFlush(any());
         verify(xhibitS3Service).getRecordSheets(RecordSheetType.APPEAL);
-        verify(procedureService, times(2)).call(any(TestEntity.class));
         verify(xhibitS3Service).markProcessed(
                 List.of(recordSheet1.filename(), recordSheet2.filename()),
                 RecordSheetType.APPEAL);
@@ -106,7 +99,6 @@ class XhibitDataServiceBaseTest {
 
         testDataService.populateAndProcessData();
 
-        verify(repository, times(1)).saveAllAndFlush(Collections.emptyList());
         verify(xhibitS3Service, times(1)).getRecordSheets(RecordSheetType.APPEAL);
         verify(xhibitS3Service, never()).markProcessed(any(), any());
         verify(xhibitS3Service, times(1)).markErrored(any(), any());
@@ -120,19 +112,11 @@ class XhibitDataServiceBaseTest {
         when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(page)
                 .thenReturn(page);
 
-        when(repository.findAllById(anyList())).thenReturn(List.of(
-                TestEntity.builder().id(1).filename(recordSheet1.filename())
-                        .data(recordSheet1.data()).build(),
-                TestEntity.builder().id(2).filename(recordSheet2.filename())
-                        .data(recordSheet2.data()).build()
-        ));
-        when(procedureService.call(any(TestEntity.class))).thenReturn(ProcedureResult.SUCCESS);
+        when(xhibitItemService.process(any(), any(), any())).thenReturn(true);
 
         testDataService.populateAndProcessData();
 
-        verify(repository).saveAllAndFlush(any());
         verify(xhibitS3Service).getRecordSheets(RecordSheetType.APPEAL);
-        verify(procedureService, times(2)).call(any(TestEntity.class));
         verify(xhibitS3Service).markProcessed(
                 List.of(recordSheet1.filename(), recordSheet2.filename()),
                 RecordSheetType.APPEAL);
@@ -148,19 +132,10 @@ class XhibitDataServiceBaseTest {
 
         when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(
                 recordSheetsPage);
-        when(repository.findAllById(anyList())).thenReturn(List.of(
-                TestEntity.builder().id(1).filename(recordSheet1.filename())
-                        .data(recordSheet1.data()).build(),
-                TestEntity.builder().id(2).filename(recordSheet2.filename())
-                        .data(recordSheet2.data()).build()
-        ));
-
-        when(procedureService.call(any(TestEntity.class))).thenReturn(ProcedureResult.SUCCESS)
-                .thenReturn(ProcedureResult.FAILURE);
+        when(xhibitItemService.process(any(), any(), any())).thenReturn(true).thenReturn(false);
 
         testDataService.populateAndProcessData();
 
-        verify(procedureService, times(2)).call(any(TestEntity.class));
         verify(xhibitS3Service, times(1)).markProcessed(
                 List.of(recordSheet1.filename()), RecordSheetType.APPEAL);
         verify(xhibitS3Service, times(1)).markErrored(
@@ -175,11 +150,7 @@ class XhibitDataServiceBaseTest {
         when(recordSheetsPage.errored()).thenReturn(Collections.emptyList());
         when(xhibitS3Service.getRecordSheets(RecordSheetType.APPEAL)).thenReturn(
                 recordSheetsPage);
-        when(repository.findAllById(anyList())).thenReturn(List.of(
-                TestEntity.builder().id(1).filename(recordSheet1.filename())
-                        .data(recordSheet1.data()).build()
-        ));
-        when(procedureService.call(any(TestEntity.class))).thenReturn(ProcedureResult.FAILURE);
+        when(xhibitItemService.process(any(), any(), any())).thenReturn(false);
 
         testDataService.populateAndProcessData();
 
@@ -192,8 +163,9 @@ class XhibitDataServiceBaseTest {
 
         public TestDataServiceBase(XhibitS3Service xhibitS3Service,
                 JpaRepository<TestEntity, Integer> repository,
-                XhibitProcedureService<TestEntity> procedureService) {
-            super(xhibitS3Service, repository, procedureService);
+                XhibitProcedureService<TestEntity> procedureService,
+                                   XhibitItemService xhibitItemService) {
+            super(xhibitS3Service, repository, procedureService, xhibitItemService);
         }
 
         @Override
