@@ -32,6 +32,9 @@ class AppealDataServiceTest {
     @Mock
     private AppealDataProcedureService appealDataProcedureService;
 
+    @Mock
+    private XhibitItemService xhibitItemService;
+
     @InjectMocks
     private AppealDataService appealDataService;
 
@@ -49,15 +52,12 @@ class AppealDataServiceTest {
                 .thenReturn(response);
 
         XhibitAppealDataEntity entity = XhibitAppealDataEntity.fromDto(mockRecordSheet);
-        when(appealDataRepository.findAllById(anyList())).thenReturn(List.of(entity));
-        when(appealDataProcedureService.call(entity)).thenReturn(ProcedureResult.SUCCESS);
+        when(xhibitItemService.process(entity, appealDataRepository, appealDataProcedureService)).thenReturn(true);
 
         appealDataService.populateAndProcessData();
 
-        verify(appealDataProcedureService).call(entity);
-        verify(appealDataRepository).findAllById(anyList());
-        verify(appealDataRepository).saveAllAndFlush(anyList());
         verify(xhibitS3Service).getRecordSheets(RecordSheetType.APPEAL);
+        verify(xhibitItemService).process(entity, appealDataRepository, appealDataProcedureService);
         verify(xhibitS3Service).markProcessed(List.of("file1.txt"), RecordSheetType.APPEAL);
 
         verify(xhibitS3Service, never()).markErrored(anyList(), any());

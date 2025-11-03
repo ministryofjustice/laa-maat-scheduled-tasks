@@ -32,6 +32,9 @@ class TrialDataServiceTest {
     @Mock
     private TrialDataProcedureService trialDataProcedureService;
 
+    @Mock
+    private XhibitItemService xhibitItemService;
+
     @InjectMocks
     private TrialDataService trialDataService;
 
@@ -49,15 +52,12 @@ class TrialDataServiceTest {
                 .thenReturn(response);
 
         XhibitTrialDataEntity entity = XhibitTrialDataEntity.fromDto(mockRecordSheet);
-        when(trialDataRepository.findAllById(anyList())).thenReturn(List.of(entity));
-        when(trialDataProcedureService.call(entity)).thenReturn(ProcedureResult.SUCCESS);
+        when(xhibitItemService.process(entity, trialDataRepository, trialDataProcedureService)).thenReturn(true);
 
         trialDataService.populateAndProcessData();
 
-        verify(trialDataProcedureService).call(entity);
-        verify(trialDataRepository).findAllById(anyList());
-        verify(trialDataRepository).saveAllAndFlush(anyList());
         verify(xhibitS3Service).getRecordSheets(RecordSheetType.TRIAL);
+        verify(xhibitItemService).process(entity, trialDataRepository, trialDataProcedureService);
         verify(xhibitS3Service).markProcessed(List.of("file1.txt"), RecordSheetType.TRIAL);
 
         verify(xhibitS3Service, never()).markErrored(anyList(), any());

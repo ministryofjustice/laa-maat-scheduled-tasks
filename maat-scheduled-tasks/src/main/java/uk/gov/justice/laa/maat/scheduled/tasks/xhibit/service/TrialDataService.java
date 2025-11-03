@@ -14,8 +14,9 @@ public class TrialDataService extends XhibitDataServiceBase<XhibitTrialDataEntit
     public TrialDataService(
             XhibitS3Service xhibitS3Service,
             XhibitTrialDataRepository repository,
-            TrialDataProcedureService procedureService) {
-        super(xhibitS3Service, repository, procedureService);
+            TrialDataProcedureService procedureService,
+            XhibitItemService xhibitItemService) {
+        super(xhibitS3Service, repository, procedureService, xhibitItemService);
     }
 
     @Override
