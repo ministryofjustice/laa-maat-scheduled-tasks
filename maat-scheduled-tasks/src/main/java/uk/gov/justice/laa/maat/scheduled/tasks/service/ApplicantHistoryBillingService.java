@@ -1,7 +1,9 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -10,8 +12,10 @@ import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantHistoryBillingMapper;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
@@ -24,21 +28,23 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
     private final ApplicantHistoryBillingMapper applicantHistoryBillingMapper;
     private static final String REQUEST_LABEL = "applicant history";
     
-    public ApplicantHistoryBillingService(BillingDataFeedLogService billingDataFeedLogService,
+    public ApplicantHistoryBillingService(
+        BillingDataFeedLogService billingDataFeedLogService,
+        BillingDataFeedLogMapper billingDataFeedLogMapper,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient, 
         CrownCourtRemunerationApiClient crownCourtRemunerationApiClient,
         ApplicantHistoryBillingRepository applicantHistoryBillingRepository,
         ApplicantHistoryBillingMapper applicantHistoryBillingMapper, 
         BillingConfiguration billingConfiguration, ResponseUtils responseUtils) {
-            super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, crownCourtRemunerationApiClient, 
-                billingConfiguration, 
-                responseUtils);
+            super(billingDataFeedLogService, billingDataFeedLogMapper,
+                crownCourtLitigatorFeesApiClient, crownCourtRemunerationApiClient,
+                billingConfiguration, responseUtils);
             this.applicantHistoryBillingRepository = applicantHistoryBillingRepository;
             this.applicantHistoryBillingMapper = applicantHistoryBillingMapper;
     }
 
     @Override
-    protected List<ApplicantHistoryBillingDTO> getBillingDTOList() {
+    protected List<ApplicantHistoryBillingDTO> getNewBillingRecords() {
         List<ApplicantHistoryBillingEntity> applicantHistoryEntities = applicantHistoryBillingRepository.extractApplicantHistoryForBilling();
         log.info("Application histories successfully extracted for billing data.");
 
@@ -47,7 +53,18 @@ public class ApplicantHistoryBillingService extends BillingService<ApplicantHist
             .map(applicantHistoryBillingMapper::mapEntityToDTO)
             .toList();
     }
-    
+
+    @Override
+    protected List<ApplicantHistoryBillingDTO> getPreviouslySentBillingRecords() {
+        List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT_HISTORY);
+
+        return billingLogEntities.stream()
+            .map(billingDataFeedLogMapper::mapEntityToApplicationHistoryBillingDtos)
+            .flatMap(Collection::stream)
+            .filter(Objects::nonNull)
+            .toList();
+    }
+
     @Override
     protected void resetBillingFlag(List<Integer> ids) {
         int rowsUpdated = applicantHistoryBillingRepository.resetApplicantHistory(

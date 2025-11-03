@@ -3,6 +3,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getApplicantHistoryBillingEntity;
@@ -26,6 +27,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEnt
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantHistoryBillingRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantHistoriesRequest;
+import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.FileUtils;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
@@ -66,8 +68,6 @@ class ApplicantHistoryBillingServiceTest {
             "billing/api-client/responses/multi-status.json");
         successApiResponse = new ResponseEntity<>(null, HttpStatus.OK);
         multiStatusApiResponse = new ResponseEntity<>(multiStatusResponseBodyJson, HttpStatus.MULTI_STATUS);
-
-        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
     }
 
     void verifications() {
@@ -102,5 +102,17 @@ class ApplicantHistoryBillingServiceTest {
         applicantHistoryBillingService.processBatch(List.of(successDTO, failingDTO), 1);
 
         verifications();
+    }
+
+    @Test
+    void givenDataAvailable_whenResendBatchIsInvoked_thenBillingRecordsAreResent() {
+        applicantHistoryBillingService.resendBatch(List.of(successDTO), 1);
+
+        verify(applicantHistoryBillingRepository, never()).resetApplicantHistory(any(), any());
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(any(), any());
+        verify(crownCourtLitigatorFeesApiClient).updateApplicantsHistory(
+            any(UpdateApplicantHistoriesRequest.class));
+        verify(crownCourtRemunerationApiClient).updateApplicantsHistory(
+            any(UpdateApplicantHistoriesRequest.class));
     }
 }

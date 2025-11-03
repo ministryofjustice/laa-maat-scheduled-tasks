@@ -11,20 +11,24 @@ import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApi
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public abstract class BillingService <T extends BillingDTO>{
-    private final BillingDataFeedLogService billingDataFeedLogService;
+    protected final BillingDataFeedLogService billingDataFeedLogService;
+    protected final BillingDataFeedLogMapper billingDataFeedLogMapper;
     protected final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     protected final CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
     protected final BillingConfiguration billingConfiguration;
     protected final ResponseUtils responseUtils;
 
-    protected abstract List<T> getBillingDTOList();
+    protected abstract List<T> getNewBillingRecords();
+    protected abstract List<T> getPreviouslySentBillingRecords();
     protected abstract void resetBillingFlag(List<Integer> ids);
     protected abstract BillingDataFeedRecordType getBillingDataFeedRecordType();
     protected abstract List<ResponseEntity<String>> updateBillingRecords(
@@ -33,8 +37,9 @@ public abstract class BillingService <T extends BillingDTO>{
     protected abstract void updateBillingRecordFailures(List<Integer> failedIds);
     
     @Transactional
-    protected void processBatch(List<T> currentBatch, Integer batchNumber) {
-        log.info("Processing {} batch {} containing {} records", getRequestLabel(), batchNumber, currentBatch.size());
+    protected void processBatch(List<T> currentBatch, int batchNumber) {
+        log.info("Processing {} batch {} containing {} records",
+            getRequestLabel(), batchNumber, currentBatch.size());
 
         List<Integer> ids = currentBatch.stream().map(BillingDTO::getId).toList();
         resetBillingFlag(ids);
@@ -58,5 +63,13 @@ public abstract class BillingService <T extends BillingDTO>{
                 log.info("Extracted {} data for batch {} has been sent to the billing team.", getRequestLabel(), batchNumber);
             }
         }
+    }
+
+    protected void resendBatch(List<T> currentBatch, int batchNumber) {
+        log.info("Resending {} batch {} containing {} records",
+            getRequestLabel(), batchNumber, currentBatch.size());
+
+        // We are processing records already sent here, so no need to update any failures.
+        updateBillingRecords(currentBatch);
     }
 }

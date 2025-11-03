@@ -31,15 +31,33 @@ public class BatchProcessingService {
         processBatch(repOrderBillingService);
     }
 
-    private <T extends BillingDTO> void processBatch(BillingService<T> billingService) {
-        List<T> billingsDtos = billingService.getBillingDTOList();
+    public void resendBillingRecords() {
+        resendBatch(applicantBillingService);
+        resendBatch(applicantHistoryBillingService);
+        resendBatch(repOrderBillingService);
+    }
 
-        if (billingsDtos.isEmpty()) {
+    private <T extends BillingDTO> void processBatch(BillingService<T> billingService) {
+        List<T> billingRecords = billingService.getNewBillingRecords();
+
+        if (billingRecords.isEmpty()) {
             return;
         }
 
-        List<List<T>> batches = batchList(billingsDtos, billingConfiguration.getBatchSize());
+        List<List<T>> batches = batchList(billingRecords, billingConfiguration.getBatchSize());
         IntStream.range(0, batches.size())
             .forEach(i -> billingService.processBatch(batches.get(i), i + 1));
+    }
+
+    private <T extends BillingDTO> void resendBatch(BillingService<T> billingService) {
+        List<T> billingRecords = billingService.getPreviouslySentBillingRecords();
+
+        if (billingRecords.isEmpty()) {
+            return;
+        }
+
+        List<List<T>> batches = batchList(billingRecords, billingConfiguration.getBatchSize());
+        IntStream.range(0, batches.size())
+            .forEach(i -> billingService.resendBatch(batches.get(i), i + 1));
     }
 }

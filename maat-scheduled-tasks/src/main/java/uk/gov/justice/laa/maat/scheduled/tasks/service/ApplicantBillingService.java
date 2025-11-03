@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -9,8 +11,10 @@ import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
 import uk.gov.justice.laa.maat.scheduled.tasks.mapper.ApplicantMapper;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.repository.ApplicantBillingRepository;
 import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.request.UpdateApplicantsRequest;
@@ -24,23 +28,36 @@ public class ApplicantBillingService extends BillingService<ApplicantBillingDTO>
     private final ApplicantMapper applicantMapper;
     private static final String REQUEST_LABEL = "applicant";
 
-    public ApplicantBillingService(BillingDataFeedLogService billingDataFeedLogService,
+    public ApplicantBillingService(
+        BillingDataFeedLogService billingDataFeedLogService,
+        BillingDataFeedLogMapper billingDataFeedLogMapper,
         CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient, 
         CrownCourtRemunerationApiClient crownCourtRemunerationApiClient,
         ApplicantBillingRepository applicantBillingRepository, ApplicantMapper applicantMapper, 
         BillingConfiguration billingConfiguration, ResponseUtils responseUtils) {
-        super(billingDataFeedLogService, crownCourtLitigatorFeesApiClient, crownCourtRemunerationApiClient, 
-            billingConfiguration, responseUtils);
+        super(billingDataFeedLogService, billingDataFeedLogMapper, crownCourtLitigatorFeesApiClient,
+            crownCourtRemunerationApiClient, billingConfiguration, responseUtils);
       this.applicantBillingRepository = applicantBillingRepository;
       this.applicantMapper = applicantMapper;
     }
 
     @Override
-    protected List<ApplicantBillingDTO> getBillingDTOList() {
+    protected List<ApplicantBillingDTO> getNewBillingRecords() {
         List<ApplicantBillingEntity> applicants = applicantBillingRepository.findAllApplicantsForBilling();
         log.info("Extracted data for {} applicants", applicants.size());
 
         return applicants.stream().map(applicantMapper::mapEntityToDTO).toList();
+    }
+
+    @Override
+    protected List<ApplicantBillingDTO> getPreviouslySentBillingRecords() {
+        List<BillingDataFeedLogEntity> billingLogEntities = billingDataFeedLogService.getBillingDataFeedLogs(BillingDataFeedRecordType.APPLICANT);
+
+        return billingLogEntities.stream()
+            .map(billingDataFeedLogMapper::mapEntityToApplicantBillingDtos)
+            .flatMap(Collection::stream)
+            .filter(Objects::nonNull)
+            .toList();
     }
 
     @Override

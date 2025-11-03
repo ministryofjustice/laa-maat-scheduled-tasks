@@ -3,6 +3,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedRepOrderForBilling;
@@ -66,8 +67,6 @@ class RepOrderBillingServiceTest {
             "billing/api-client/responses/multi-status.json");
         successApiResponse = new ResponseEntity<>(null, HttpStatus.OK);
         multiStatusApiResponse = new ResponseEntity<>(multiStatusResponseBodyJson, HttpStatus.MULTI_STATUS);
-
-        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
     }
 
     void verifications() {
@@ -102,5 +101,15 @@ class RepOrderBillingServiceTest {
         repOrderBillingService.processBatch(List.of(successDTO, failingDTO), 1);
 
         verifications();
+    }
+
+    @Test
+    void givenDataAvailable_whenResendApplicantsToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
+        repOrderBillingService.resendBatch(List.of(successDTO), 1);
+
+        verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(any(), any());
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(any(), any());
+        verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
+        verify(crownCourtRemunerationApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
     }
 }
