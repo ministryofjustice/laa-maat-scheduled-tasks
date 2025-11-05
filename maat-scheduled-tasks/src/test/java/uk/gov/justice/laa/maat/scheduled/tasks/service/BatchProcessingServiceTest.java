@@ -2,7 +2,6 @@ package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,7 +24,6 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 public class BatchProcessingServiceTest {
     private static final int SUCCESSFUL_TEST_ID_1 = 1;
     private static final int SUCCESSFUL_TEST_ID_2 = 3;
-    private static final String USER_MODIFIED = "TEST";
     private static final int BATCH_SIZE = 1;
     
     @Mock
@@ -41,29 +39,29 @@ public class BatchProcessingServiceTest {
 
     @Test
     void givenNoApplicantDataExists_whenProcessApplicantBatchIsInvoked_thenNoActionsPerformed() {
-        when(applicantBillingService.getBillingDTOList()).thenReturn(List.of());
+        when(applicantBillingService.getNewBillingRecords()).thenReturn(List.of());
         
         batchProcessingService.processApplicantBatch();
 
-        verify(applicantBillingService, times(0)).processBatch(anyList(), anyInt(), anyString());
+        verify(applicantBillingService, times(0)).processBatch(anyList(), anyInt());
     }
 
     @Test
     void givenNoApplicantHistoryDataExists_whenProcessApplicantHistoryBatchIsInvoked_thenNoActionsPerformed() {
-        when(applicantHistoryBillingService.getBillingDTOList()).thenReturn(List.of());
+        when(applicantHistoryBillingService.getNewBillingRecords()).thenReturn(List.of());
 
         batchProcessingService.processApplicantHistoryBatch();
 
-        verify(applicantHistoryBillingService, times(0)).processBatch(anyList(), anyInt(), anyString());
+        verify(applicantHistoryBillingService, times(0)).processBatch(anyList(), anyInt());
     }
 
     @Test
     void givenNoRepOrderDataExists_whenProcessRepOrderBatchIsInvoked_thenNoActionsPerformed() {
-        when(repOrderBillingService.getBillingDTOList()).thenReturn(List.of());
+        when(repOrderBillingService.getNewBillingRecords()).thenReturn(List.of());
 
         batchProcessingService.processRepOrderBatch();
 
-        verify(repOrderBillingService, times(0)).processBatch(anyList(), anyInt(), anyString());
+        verify(repOrderBillingService, times(0)).processBatch(anyList(), anyInt());
     }
     
     @Test
@@ -71,13 +69,12 @@ public class BatchProcessingServiceTest {
         ApplicantBillingDTO dto1 = getApplicantDTO(SUCCESSFUL_TEST_ID_1);
         ApplicantBillingDTO dto2 = getApplicantDTO(SUCCESSFUL_TEST_ID_2);
         
-        when(applicantBillingService.getBillingDTOList()).thenReturn(List.of(dto1, dto2));
+        when(applicantBillingService.getNewBillingRecords()).thenReturn(List.of(dto1, dto2));
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
-        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
 
         batchProcessingService.processApplicantBatch();
 
-        verify(applicantBillingService, times(2)).processBatch(anyList(), anyInt(), anyString());
+        verify(applicantBillingService, times(2)).processBatch(anyList(), anyInt());
     }
     
     @Test
@@ -85,14 +82,13 @@ public class BatchProcessingServiceTest {
         ApplicantHistoryBillingDTO dto1 = getApplicantHistoryBillingDTO(SUCCESSFUL_TEST_ID_1);
         ApplicantHistoryBillingDTO dto2 = getApplicantHistoryBillingDTO(SUCCESSFUL_TEST_ID_2);
 
-        when(applicantHistoryBillingService.getBillingDTOList()).thenReturn(
+        when(applicantHistoryBillingService.getNewBillingRecords()).thenReturn(
             List.of(dto1, dto2));
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
-        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
 
         batchProcessingService.processApplicantHistoryBatch();
 
-        verify(applicantHistoryBillingService, times(2)).processBatch(anyList(), anyInt(), anyString());
+        verify(applicantHistoryBillingService, times(2)).processBatch(anyList(), anyInt());
     }
 
     @Test
@@ -100,12 +96,35 @@ public class BatchProcessingServiceTest {
         RepOrderBillingDTO dto1 = getRepOrderBillingDTO(SUCCESSFUL_TEST_ID_1);
         RepOrderBillingDTO dto2 = getRepOrderBillingDTO(SUCCESSFUL_TEST_ID_2);
 
-        when(repOrderBillingService.getBillingDTOList()).thenReturn(List.of(dto1, dto2));
+        when(repOrderBillingService.getNewBillingRecords()).thenReturn(List.of(dto1, dto2));
         when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
-        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
 
         batchProcessingService.processRepOrderBatch();
 
-        verify(repOrderBillingService, times(2)).processBatch(anyList(), anyInt(), anyString());
+        verify(repOrderBillingService, times(2)).processBatch(anyList(), anyInt());
+    }
+
+    @Test
+    void givenBillingDataExists_whenResendBillingRecordsIsInvoked_thenBillingRecordsAreProcessed() {
+        List<ApplicantBillingDTO> applicants = List.of(getApplicantDTO(SUCCESSFUL_TEST_ID_1));
+        List<ApplicantHistoryBillingDTO> applicantHistories =
+            List.of(getApplicantHistoryBillingDTO(SUCCESSFUL_TEST_ID_1));
+        List<RepOrderBillingDTO> repOrders = List.of(getRepOrderBillingDTO(SUCCESSFUL_TEST_ID_1));
+
+        when(applicantBillingService.getPreviouslySentBillingRecords())
+            .thenReturn(applicants);
+        when(applicantHistoryBillingService.getPreviouslySentBillingRecords())
+            .thenReturn(applicantHistories);
+        when(repOrderBillingService.getPreviouslySentBillingRecords()).thenReturn(repOrders);
+        when(billingConfiguration.getBatchSize()).thenReturn(BATCH_SIZE);
+
+        batchProcessingService.resendBillingRecords();
+
+        verify(applicantBillingService, times(1))
+            .resendBatch(applicants, 1);
+        verify(applicantHistoryBillingService, times(1))
+            .resendBatch(applicantHistories, 1);
+        verify(repOrderBillingService, times(1))
+            .resendBatch(repOrders, 1);
     }
 }

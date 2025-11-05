@@ -1,12 +1,13 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestEntityDataBuilder.getPopulatedRepOrderForBilling;
 import static uk.gov.justice.laa.maat.scheduled.tasks.builder.TestModelDataBuilder.getRepOrderBillingDTO;
-
 
 import java.io.IOException;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
+import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.RepOrderBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
@@ -45,6 +47,8 @@ class RepOrderBillingServiceTest {
     private ResponseUtils responseUtils;
     @Mock
     private RepOrderBillingRepository repOrderBillingRepository;
+    @Mock
+    private BillingConfiguration billingConfiguration;
     @Mock
     private BillingDataFeedLogService billingDataFeedLogService;
     @Mock
@@ -77,9 +81,10 @@ class RepOrderBillingServiceTest {
         when(crownCourtRemunerationApiClient.updateRepOrders(any())).thenReturn(successApiResponse);
         
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyList(), anyString())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
-        repOrderBillingService.processBatch(List.of(successDTO, failingDTO), 1, USER_MODIFIED);
+        repOrderBillingService.processBatch(List.of(successDTO, failingDTO), 1);
         
         verifications();
     }
@@ -90,10 +95,21 @@ class RepOrderBillingServiceTest {
         when(crownCourtRemunerationApiClient.updateRepOrders(any())).thenReturn(multiStatusApiResponse);
 
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
+        when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyList(), anyString())).thenReturn(1);
         when(responseUtils.getErroredIdsFromResponseBody(anyString(), anyString())).thenReturn(List.of(2));
 
-        repOrderBillingService.processBatch(List.of(successDTO, failingDTO), 1, USER_MODIFIED);
+        repOrderBillingService.processBatch(List.of(successDTO, failingDTO), 1);
 
         verifications();
+    }
+
+    @Test
+    void givenDataAvailable_whenResendApplicantsToBillingIsInvoked_thenDatabaseUpdatedAndBillingCalled() {
+        repOrderBillingService.resendBatch(List.of(successDTO), 1);
+
+        verify(repOrderBillingRepository, never()).resetBillingFlagForRepOrderIds(any(), any());
+        verify(billingDataFeedLogService, never()).saveBillingDataFeed(any(), any());
+        verify(crownCourtLitigatorFeesApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
+        verify(crownCourtRemunerationApiClient).updateRepOrders(any(UpdateRepOrdersRequest.class));
     }
 }

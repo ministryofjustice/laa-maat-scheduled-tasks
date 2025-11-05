@@ -1,9 +1,14 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.builder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.crime.enums.AppealType;
 import uk.gov.justice.laa.crime.enums.EvidenceFeeLevel;
 import uk.gov.justice.laa.crime.enums.MagCourtOutcome;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.ApplicantHistoryBillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.RepOrderBillingDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.ApplicantHistoryBillingEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
@@ -91,5 +96,41 @@ public class TestEntityDataBuilder {
             .recordType(BillingDataFeedRecordType.APPLICANT.getValue())
             .dateCreated((dateCreated != null) ? dateCreated : LocalDateTime.parse("2021-10-09T15:01:25"))
             .payload("{}").build();
+    }
+
+    public static BillingDataFeedLogEntity getPopulatedBillingFeedLogEntity(
+        int id, ApplicantBillingDTO applicantBillingDTO, ObjectMapper objectMapper)
+        throws JsonProcessingException {
+        String payload = objectMapper.writeValueAsString(applicantBillingDTO);
+
+        return BillingDataFeedLogEntity.builder()
+            .id(id)
+            .recordType(BillingDataFeedRecordType.APPLICANT.getValue())
+            .payload(payload)
+            .build();
+    }
+
+    public static BillingDataFeedLogEntity getPopulatedBillingFeedLogEntity(
+        int id, ApplicantHistoryBillingDTO applicantHistoryBillingDTO, ObjectMapper objectMapper)
+        throws JsonProcessingException {
+        String payload = objectMapper.writeValueAsString(applicantHistoryBillingDTO);
+
+        return BillingDataFeedLogEntity.builder()
+            .id(id)
+            .recordType(BillingDataFeedRecordType.APPLICANT_HISTORY.getValue())
+            .payload(payload)
+            .build();
+    }
+
+    public static BillingDataFeedLogEntity getPopulatedBillingFeedLogEntity(
+        int id, RepOrderBillingDTO repOrderBillingDTO, ObjectMapper objectMapper)
+        throws JsonProcessingException {
+        String payload = objectMapper.writeValueAsString(repOrderBillingDTO);
+
+        return BillingDataFeedLogEntity.builder()
+            .id(id)
+            .recordType(BillingDataFeedRecordType.REP_ORDER.getValue())
+            .payload(payload)
+            .build();
     }
 }

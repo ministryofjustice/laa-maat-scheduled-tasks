@@ -209,7 +209,7 @@ public class BillingSchedulerIntegrationTest {
     }
     
     @Test
-    void givenSomeFailuresFromCCLF_whenExtractCCLFBillingDataIsInvoked_thenSendToCclfFlagIsSetToTrueForFailedRecords() throws Exception {
+    void givenSomeFailuresFromCCLF_whenExtractCCLFBillingDataIsInvoked_thenSendToFlagIsSetToTrueForFailedRecords() throws Exception {
         stubForOAuth();
         cclfStubForFailingDefendants();
         ccrStubForSuccessfulDefendants();
@@ -220,13 +220,13 @@ public class BillingSchedulerIntegrationTest {
 
         setupEntities();
         
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
         assertions();
     }
 
     @Test
-    void givenSomeFailuresFromCCR_whenExtractCCLFBillingDataIsInvoked_thenSendToCclfFlagIsSetToTrueForFailedRecords() throws Exception {
+    void givenSomeFailuresFromCCR_whenExtractCCLFBillingDataIsInvoked_thenSendToFlagIsSetToTrueForFailedRecords() throws Exception {
         stubForOAuth();
         ccrStubForFailingDefendants();
         cclfStubForSuccessfulDefendants();
@@ -237,7 +237,7 @@ public class BillingSchedulerIntegrationTest {
 
         setupEntities();
 
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
         assertions();
     }

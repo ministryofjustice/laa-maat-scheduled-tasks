@@ -11,33 +11,38 @@ import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtLitigatorFeesApi
 import uk.gov.justice.laa.maat.scheduled.tasks.client.CrownCourtRemunerationApiClient;
 import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.BillingDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.entity.BillingDataFeedLogEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.BillingDataFeedRecordType;
+import uk.gov.justice.laa.maat.scheduled.tasks.mapper.BillingDataFeedLogMapper;
 import uk.gov.justice.laa.maat.scheduled.tasks.utils.ResponseUtils;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public abstract class BillingService <T extends BillingDTO>{
-    private final BillingDataFeedLogService billingDataFeedLogService;
+    protected final BillingDataFeedLogService billingDataFeedLogService;
+    protected final BillingDataFeedLogMapper billingDataFeedLogMapper;
     protected final CrownCourtLitigatorFeesApiClient crownCourtLitigatorFeesApiClient;
     protected final CrownCourtRemunerationApiClient crownCourtRemunerationApiClient;
     protected final BillingConfiguration billingConfiguration;
     protected final ResponseUtils responseUtils;
 
-    protected abstract List<T> getBillingDTOList();
-    protected abstract void resetBillingFlag(String userModified, List<Integer> ids);
+    protected abstract List<T> getNewBillingRecords();
+    protected abstract List<T> getPreviouslySentBillingRecords();
+    protected abstract void resetBillingFlag(List<Integer> ids);
     protected abstract BillingDataFeedRecordType getBillingDataFeedRecordType();
     protected abstract List<ResponseEntity<String>> updateBillingRecords(
         List<T> billingDTOList);
     protected abstract String getRequestLabel();
-    protected abstract void updateBillingRecordFailures(List<Integer> failedIds, String userModified);
+    protected abstract void updateBillingRecordFailures(List<Integer> failedIds);
     
     @Transactional
-    protected void processBatch(List<T> currentBatch, Integer batchNumber, String userModified) {
-        log.info("Processing {} batch {} containing {} records", getRequestLabel(), batchNumber, currentBatch.size());
+    protected void processBatch(List<T> currentBatch, int batchNumber) {
+        log.info("Processing {} batch {} containing {} records",
+            getRequestLabel(), batchNumber, currentBatch.size());
 
         List<Integer> ids = currentBatch.stream().map(BillingDTO::getId).toList();
-        resetBillingFlag(userModified, ids);
+        resetBillingFlag(ids);
 
         billingDataFeedLogService.saveBillingDataFeed(getBillingDataFeedRecordType(), currentBatch);
 
@@ -52,11 +57,19 @@ public abstract class BillingService <T extends BillingDTO>{
                 List<Integer> failedIds = responseUtils.getErroredIdsFromResponseBody(response.getBody(), getRequestLabel());
 
                 if (!failedIds.isEmpty()) {
-                    updateBillingRecordFailures(failedIds, userModified);
+                    updateBillingRecordFailures(failedIds);
                 }
             } else {
                 log.info("Extracted {} data for batch {} has been sent to the billing team.", getRequestLabel(), batchNumber);
             }
         }
+    }
+
+    protected void resendBatch(List<T> currentBatch, int batchNumber) {
+        log.info("Resending {} batch {} containing {} records",
+            getRequestLabel(), batchNumber, currentBatch.size());
+
+        // We are processing records already sent here, so no need to update any failures.
+        updateBillingRecords(currentBatch);
     }
 }

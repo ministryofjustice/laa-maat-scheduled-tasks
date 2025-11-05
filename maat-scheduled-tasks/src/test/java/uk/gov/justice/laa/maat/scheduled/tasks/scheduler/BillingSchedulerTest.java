@@ -11,14 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BatchProcessingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.MaatReferenceService;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.RepOrderBillingService;
 
 @ExtendWith(MockitoExtension.class)
 public class BillingSchedulerTest {
@@ -28,39 +24,29 @@ public class BillingSchedulerTest {
     @Mock
     private MaatReferenceService maatReferenceService;
     @Mock
-    private ApplicantBillingService applicantBillingService;
-    @Mock
-    private ApplicantHistoryBillingService applicantHistoryBillingService;
-    @Mock
-    private RepOrderBillingService repOrderBillingService;
-    @Mock
     private BatchProcessingService batchProcessingService;
     @Mock
     private BillingDataFeedLogService billingDataFeedLogService;
 
-
     @Test
-    void givenNoExceptions_whenExtractCCLFBillingDataIsInvoked_thenExtractIsPerformed() {
-        scheduler.extractCCLFBillingData();
+    void givenNoExceptions_whenExtractBillingDataIsInvoked_thenExtractIsPerformed() {
+        scheduler.extractBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
-        verify(batchProcessingService).processApplicantBatch();
-        verify(batchProcessingService).processApplicantHistoryBatch();
-        verify(batchProcessingService).processRepOrderBatch();
+        verify(batchProcessingService, times(1)).processApplicantBatch();
+        verify(batchProcessingService, times(1)).processApplicantHistoryBatch();
+        verify(batchProcessingService, times(1)).processRepOrderBatch();
         verify(maatReferenceService).deleteMaatReferences();
     }
 
     @Test
-    void givenExceptionThrown_whenExtractCCLFBillingDataIsInvoked_thenMaatReferencesDeleted() {
-        doThrow(new MAATScheduledTasksException(
-            "The maat references table is already populated.")).when(maatReferenceService)
-            .populateMaatReferences();
+    void givenExceptionThrown_whenExtractBillingDataIsInvoked_thenMaatReferencesDeleted() {
+        doThrow(new MAATScheduledTasksException("The maat references table is already populated."))
+            .when(maatReferenceService).populateMaatReferences();
 
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
-        verifyNoInteractions(applicantBillingService);
-        verifyNoInteractions(applicantHistoryBillingService);
-        verifyNoInteractions(repOrderBillingService);
+        verifyNoInteractions(batchProcessingService);
         verify(maatReferenceService).deleteMaatReferences();
     }
 
@@ -73,5 +59,4 @@ public class BillingSchedulerTest {
         verify(billingDataFeedLogService, times(1))
             .deleteLogsBeforeDate(any());
     }
-
 }
