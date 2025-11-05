@@ -1,29 +1,20 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.scheduler;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.maat.scheduled.tasks.config.BillingConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.exception.MAATScheduledTasksException;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantBillingService;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.ApplicantHistoryBillingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BatchProcessingService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.BillingDataFeedLogService;
 import uk.gov.justice.laa.maat.scheduled.tasks.service.MaatReferenceService;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.RepOrderBillingService;
 
 @ExtendWith(MockitoExtension.class)
 public class BillingSchedulerTest {
@@ -39,7 +30,7 @@ public class BillingSchedulerTest {
 
     @Test
     void givenNoExceptions_whenExtractBillingDataIsInvoked_thenExtractIsPerformed() {
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
         verify(maatReferenceService).populateMaatReferences();
         verify(batchProcessingService, times(1)).processApplicantBatch();
@@ -53,7 +44,7 @@ public class BillingSchedulerTest {
         doThrow(new MAATScheduledTasksException("The maat references table is already populated."))
             .when(maatReferenceService).populateMaatReferences();
 
-        scheduler.extractCCLFBillingData();
+        scheduler.extractBillingData();
 
         verifyNoInteractions(batchProcessingService);
         verify(maatReferenceService).deleteMaatReferences();

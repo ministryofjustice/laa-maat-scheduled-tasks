@@ -21,7 +21,7 @@ public class BillingController {
 
     @GetMapping
     public ResponseEntity<Void> getBillingData() {
-        billingScheduler.extractCCLFBillingData();
+        billingScheduler.extractBillingData();
 
         return ResponseEntity.ok().build();
     }
