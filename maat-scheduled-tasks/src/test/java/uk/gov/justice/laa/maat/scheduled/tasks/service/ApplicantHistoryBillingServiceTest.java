@@ -80,6 +80,7 @@ class ApplicantHistoryBillingServiceTest {
     void givenSomeFailuresFromCCLF_whenProcessBatchIsInvoked_thenFailingEntitiesAreUpdated() {
         when(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(any())).thenReturn(multiStatusApiResponse);
         when(crownCourtRemunerationApiClient.updateApplicantsHistory(any())).thenReturn(successApiResponse);
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
         
         when(applicantHistoryBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyList(), anyString())).thenReturn(1);
@@ -94,6 +95,7 @@ class ApplicantHistoryBillingServiceTest {
     void givenSomeFailuresFromCCR_whenProcessBatchIsInvoked_thenFailingEntitiesAreUpdated() {
         when(crownCourtLitigatorFeesApiClient.updateApplicantsHistory(any())).thenReturn(successApiResponse);
         when(crownCourtRemunerationApiClient.updateApplicantsHistory(any())).thenReturn(multiStatusApiResponse);
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
 
         when(applicantHistoryBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(applicantHistoryBillingRepository.resetApplicantHistory(anyList(), anyString())).thenReturn(1);

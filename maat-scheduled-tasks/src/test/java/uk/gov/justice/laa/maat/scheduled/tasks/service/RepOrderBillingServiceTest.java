@@ -79,6 +79,7 @@ class RepOrderBillingServiceTest {
     void givenSomeFailuresFromCCLF_whenProcessBatchIsInvoked_thenFailingEntitiesAreUpdated() {
         when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(multiStatusApiResponse);
         when(crownCourtRemunerationApiClient.updateRepOrders(any())).thenReturn(successApiResponse);
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
         
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyList(), anyString())).thenReturn(1);
@@ -93,6 +94,7 @@ class RepOrderBillingServiceTest {
     void givenSomeFailuresFromCCR_whenProcessBatchIsInvoked_thenFailingEntitiesAreUpdated() {
         when(crownCourtLitigatorFeesApiClient.updateRepOrders(any())).thenReturn(successApiResponse);
         when(crownCourtRemunerationApiClient.updateRepOrders(any())).thenReturn(multiStatusApiResponse);
+        when(billingConfiguration.getUserModified()).thenReturn(USER_MODIFIED);
 
         when(repOrderBillingRepository.findAllById(any())).thenReturn(List.of(failingEntity));
         when(repOrderBillingRepository.resetBillingFlagForRepOrderIds(anyList(), anyString())).thenReturn(1);
