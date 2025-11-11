@@ -183,4 +183,91 @@ class XhibitDataServiceIntegrationTest {
         assertThat(recordSheets).isEmpty();
     }
 
+    @Test
+    void givenSeveralTrialRecordSheetsInRandomChronologicalOrder_whenProcessTrialDataIsInvoked_thenTrialDataIsProcessedInCorrectOrder() {
+        String content = "Sample Trial content";
+
+        String[] filenames = {
+                "XHIBIT_TRLRS_000013297453_20250521164303.xml",
+                "XHIBIT_TRLRS_000077297453_20250420164303.xml",
+                "XHIBIT_TRLRS_000013123453_20250403164303.xml",
+                "XHIBIT_TRLRS_000013297477_20250521100503.xml",
+                "XHIBIT_TRLRS_000013297488_20250522164303.xml",
+                "XHIBIT_TRLRS_000013297424_20250521174302.xml"
+        };
+
+        for (String filename : filenames) {
+            s3Client.putObject(
+                    PutObjectRequest.builder().bucket(xhibitConfiguration.getS3DataBucketName())
+                            .key(objectKeyHelper.buildKey(RecordSheetType.TRIAL, filename)).build(),
+                    RequestBody.fromString(content));
+        }
+
+        when(storedProcedureService.callStoredProcedure(eq(
+                StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE), any()))
+                .thenReturn(new StoredProcedureResponse(Collections.emptyList()));
+
+        trialDataService.populateAndProcessData();
+
+        List<XhibitTrialDataEntity> recordSheets = trialDataRepository.findAll();
+        assertThat(recordSheets)
+                .hasSize(6);
+
+        assertThat(recordSheets.get(0).getFilename()).isEqualTo("XHIBIT_TRLRS_000013123453_20250403164303.xml");
+        assertThat(recordSheets.get(1).getFilename()).isEqualTo("XHIBIT_TRLRS_000077297453_20250420164303.xml");
+        assertThat(recordSheets.get(2).getFilename()).isEqualTo("XHIBIT_TRLRS_000013297477_20250521100503.xml");
+        assertThat(recordSheets.get(3).getFilename()).isEqualTo("XHIBIT_TRLRS_000013297453_20250521164303.xml");
+        assertThat(recordSheets.get(4).getFilename()).isEqualTo("XHIBIT_TRLRS_000013297424_20250521174302.xml");
+        assertThat(recordSheets.get(5).getFilename()).isEqualTo("XHIBIT_TRLRS_000013297488_20250522164303.xml");
+    }
+
+    @Test
+    void givenSeveralInvalidlyNamedTrialRecordSheetsInRandomChronologicalOrder_whenProcessTrialDataIsInvoked_thenTrialDataIsProcessedInCorrectOrder() {
+        String content = "Sample Trial content";
+
+        String[] filenames = {
+                "XHIBIT_TRLRS_000013297453_20250521164303.xml",
+                "",
+                "XHIBIT_TRLRS_000013123453_20250403164303.xml",
+                "XHIB2110.xml",
+                "blah",
+                "XHIBIT_TRLRS_000013297424_20250521174302.xml"
+        };
+
+        for (String filename : filenames) {
+            s3Client.putObject(
+                    PutObjectRequest.builder().bucket(xhibitConfiguration.getS3DataBucketName())
+                            .key(objectKeyHelper.buildKey(RecordSheetType.TRIAL, filename)).build(),
+                    RequestBody.fromString(content));
+        }
+
+        when(storedProcedureService.callStoredProcedure(eq(
+                StoredProcedure.TRIAL_DATA_TO_MAAT_PROCEDURE), any()))
+                .thenReturn(new StoredProcedureResponse(Collections.emptyList()));
+
+        trialDataService.populateAndProcessData();
+
+        List<XhibitTrialDataEntity> recordSheets = trialDataRepository.findAll();
+        assertThat(recordSheets)
+                .hasSize(6);
+
+        assertThat(recordSheets.get(0).getFilename()).isEqualTo("XHIBIT_TRLRS_000013123453_20250403164303.xml");
+        assertThat(recordSheets.get(1).getFilename()).isEqualTo("XHIBIT_TRLRS_000013297453_20250521164303.xml");
+        assertThat(recordSheets.get(2).getFilename()).isEqualTo("XHIBIT_TRLRS_000013297424_20250521174302.xml");
+        assertThat(recordSheets.get(3).getFilename()).isEqualTo(null);
+        assertThat(recordSheets.get(4).getFilename()).isEqualTo("XHIB2110.xml");
+        assertThat(recordSheets.get(5).getFilename()).isEqualTo("blah");
+    }
+
+    @Test
+    void givenNoTrialRecordSheets_whenProcessTrialDataIsInvoked_thenTrialDataIsProcessedCorrectly() {
+        // no trial record sheets in S3
+
+        trialDataService.populateAndProcessData();
+
+        List<XhibitTrialDataEntity> recordSheets = trialDataRepository.findAll();
+        assertThat(recordSheets)
+                .hasSize(0);
+    }
+
 }
