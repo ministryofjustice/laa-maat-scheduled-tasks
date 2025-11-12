@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.xhibit.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,9 +47,17 @@ public abstract class XhibitDataServiceBase<T extends XhibitEntity> {
             log.info("Marked {} {} record sheets as errored (failed to fetch from S3)", fetchErr.size(), type);
         }
 
-        // If no Record Sheets to Process after removing errors then immediately return
-        var toProcess = recordSheets.retrieved();
+        // Sort the successfully retrieved Record Sheets by timestamp in filename
+        var toProcess = recordSheets.retrieved().stream()
+                .sorted(
+                        Comparator
+                                .comparingLong((RecordSheet rs) -> extractTimestampAsLong(rs.filename()))
+                                .thenComparing(RecordSheet::filename) // stable tie-break for same timestamps
+                )
+                .toList();
         int total = toProcess.size();
+
+        // If nothing to process after S3 fetch errors, exit
         if (total == 0) {
             log.info("Nothing to process after filtering out fetch errors for {}", type);
             return;
@@ -65,6 +74,7 @@ public abstract class XhibitDataServiceBase<T extends XhibitEntity> {
         int i = 0;
         for (RecordSheet rs : toProcess) {
             i++;
+            log.info("({}/{}) processing '{}'", i, toProcess.size(), rs.filename());
             try {
                 boolean ok = xhibitItemService.process(fromDto(rs), repository, procedureService);
                 if (ok) processed.add(rs.filename()); else errored.add(rs.filename());
@@ -100,6 +110,27 @@ public abstract class XhibitDataServiceBase<T extends XhibitEntity> {
         processingStopwatch.stop();
         log.info("Completed {}: ok={}, err={}, elapsed={} s", type, processed.size(), errored.size(),
                 String.format("%.2f", processingStopwatch.getTotalTimeSeconds()));
+    }
+
+    /**
+     * Extracts timestamp from filename as long for sorting.
+     * @param filename
+     * @return
+     */
+    private static long extractTimestampAsLong(String filename) {
+        // expects ..._<14 digits>.xml
+        int us = filename.lastIndexOf('_');
+        int dot = filename.lastIndexOf('.');
+        if (us < 0 || dot <= us + 1) {
+            // Put non-conforming names at the end
+            return Long.MAX_VALUE;
+        }
+        String ts = filename.substring(us + 1, dot);
+        try {
+            return Long.parseLong(ts); // e.g. 20250521150403
+        } catch (NumberFormatException nfe) {
+            return Long.MAX_VALUE; // also send to the end
+        }
     }
 
     protected abstract T fromDto(RecordSheet dto);
