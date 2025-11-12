@@ -222,6 +222,44 @@ class XhibitDataServiceIntegrationTest {
     }
 
     @Test
+    void givenSeveralAppealRecordSheetsInRandomChronologicalOrder_whenProcessTrialDataIsInvoked_thenTrialDataIsProcessedInCorrectOrder() {
+        String content = "Sample Trial content";
+
+        String[] filenames = {
+                "XHIBIT_APLRS_007783297066_20250521150403.xml",
+                "XHIBIT_APLRS_002013296692_20250521115927.xml",
+                "XHIBIT_APLRS_003013296605_20250521110135.xml",
+                "XHIBIT_APLRS_005513296328_20250520172136.xml",
+                "XHIBIT_APLRS_005777296328_20250522172135.xml",
+                "XHIBIT_APLRS_005222296328_20250520172135.xml"
+        };
+
+        for (String filename : filenames) {
+            s3Client.putObject(
+                    PutObjectRequest.builder().bucket(xhibitConfiguration.getS3DataBucketName())
+                            .key(objectKeyHelper.buildKey(RecordSheetType.APPEAL, filename)).build(),
+                    RequestBody.fromString(content));
+        }
+
+        when(storedProcedureService.callStoredProcedure(eq(
+                StoredProcedure.APPEAL_DATA_TO_MAAT_PROCEDURE), any()))
+                .thenReturn(new StoredProcedureResponse(Collections.emptyList()));
+
+        appealDataService.populateAndProcessData();
+
+        List<XhibitAppealDataEntity> recordSheets = appealDataRepository.findAll();
+        assertThat(recordSheets)
+                .hasSize(6);
+
+        assertThat(recordSheets.get(0).getFilename()).isEqualTo("XHIBIT_APLRS_005222296328_20250520172135.xml");
+        assertThat(recordSheets.get(1).getFilename()).isEqualTo("XHIBIT_APLRS_005513296328_20250520172136.xml");
+        assertThat(recordSheets.get(2).getFilename()).isEqualTo("XHIBIT_APLRS_003013296605_20250521110135.xml");
+        assertThat(recordSheets.get(3).getFilename()).isEqualTo("XHIBIT_APLRS_002013296692_20250521115927.xml");
+        assertThat(recordSheets.get(4).getFilename()).isEqualTo("XHIBIT_APLRS_007783297066_20250521150403.xml");
+        assertThat(recordSheets.get(5).getFilename()).isEqualTo("XHIBIT_APLRS_005777296328_20250522172135.xml");
+    }
+
+    @Test
     void givenSeveralInvalidlyNamedTrialRecordSheetsInRandomChronologicalOrder_whenProcessTrialDataIsInvoked_thenTrialDataIsProcessedInCorrectOrder() {
         String content = "Sample Trial content";
 
