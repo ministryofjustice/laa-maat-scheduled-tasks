@@ -1,5 +1,8 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -12,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostsEntity;
 
 import java.util.List;
@@ -117,14 +121,18 @@ class FinalDefenceCostServiceImplTest {
               ]
               """;
 
-          when(finalDefenceCostConfiguration.getBatchSize()).thenReturn(String.valueOf(Integer.parseInt("3")));
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
+        List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(fdcDataJson, new TypeReference<>() {});
 
-          int count = service.processFinalDefenceCosts(fdcDataJson);
+        when(finalDefenceCostConfiguration.getBatchSize()).thenReturn(String.valueOf(Integer.parseInt("3")));
 
-          assertThat(count).isEqualTo(7);
+        int count = service.processFinalDefenceCosts(finalDefenceCosts);
 
-          verify(finalDefenceCostsRepository, times(3)).saveAllAndFlush(captor.capture());
+        assertThat(count).isEqualTo(7);
 
-          assertThat(3).isEqualTo(captor.getAllValues().size());
+        verify(finalDefenceCostsRepository, times(3)).saveAll(captor.capture());
+
+        assertThat(3).isEqualTo(captor.getAllValues().size());
       }
 }

@@ -1,0 +1,46 @@
+package uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import java.math.BigDecimal;
+import lombok.Data;
+
+@Data
+public class FinalDefenceCostDto {
+
+  @NotNull(message = "MAAT reference MUST not be null.")
+  @Min(value = 1, message = "MAAT reference cannot be less than 1.")
+  private Integer maatReference;
+
+  @NotEmpty(message = "Case number MUST not be empty.")
+  @NotNull(message = "Case number MUST not be null.")
+  private String caseNo;
+
+  @NotEmpty(message = "Supplier account code MUST be supplied.")
+  @NotNull(message = "Supplier account code MUST not be null.")
+  private String suppAccountCode;
+
+  @NotEmpty(message = "Court code MUST be supplied.")
+  @NotNull(message = "Court code MUST not be null.")
+  private String courtCode;
+
+  @NotNull(message = "Judicial apportionment MUST not be null.")
+  @Min(value = 1, message = "Judicial apportionment cannot be less than 1.")
+  private int judicialApportionment;
+
+  @NotNull(message = "Final defence cost MUST not be null.")
+  @Min(value = 1, message = "Final defence cost cannot be less than 1.")
+  private BigDecimal finalDefenceCost;
+
+  @NotEmpty(message = "Item type MUST be supplied.")
+  @NotNull(message = "Item type MUST not be null.")
+  @Pattern(regexp = "^(LGSF|AGFS)$", message = "Item type MUST be 'LGFS' or 'AGFS'")
+  private String itemType;
+
+  @NotEmpty(message = "Paid as claim indication MUST be supplied.")
+  @NotNull(message = "Paid as claim indication MUST be supplied.")
+  @Pattern(regexp = "^[YN]$", message = "Item type MUST be 'Y' or 'N'")
+  private String paidAsClaimed;
+}

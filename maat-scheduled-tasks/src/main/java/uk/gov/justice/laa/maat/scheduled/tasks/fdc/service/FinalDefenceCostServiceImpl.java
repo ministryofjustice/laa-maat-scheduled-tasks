@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostsEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.exception.FinalDefenceCostServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
@@ -32,80 +33,54 @@ public class FinalDefenceCostServiceImpl implements  FinalDefenceCostService {
   private final ObjectsValidator<FinalDefenceCostsEntity> postValidator;
 
   @Transactional
-  public int processFinalDefenceCosts(String payload) {
+  public int processFinalDefenceCosts(List<FinalDefenceCostDto> dtos) {
     log.info("Loading FDC Final Defence Costs");
 
     int batchSize = Integer.parseInt(finalDefenceCostConfiguration.getBatchSize());
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-    objectMapper.enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES);
-    List<FinalDefenceCostsEntity> finalDefenceCosts = null;
+    List<FinalDefenceCostsEntity> finalDefenceCosts = mapDtosToEntrities(dtos);
 
-    try {
-      finalDefenceCosts = objectMapper.readValue(payload, new TypeReference<>() {});
-    } catch (JsonProcessingException e) {
-      throw new FinalDefenceCostServiceException(String.format("FDC data load failed with exception: %s", e.getMessage()));
-    }
+    int startIndex = 0;
+    int endIndex = batchSize;
 
-    List<FinalDefenceCostsEntity> listToSave =  new ArrayList<>();
-    List<FinalDefenceCostsEntity> invalidFdcEntities =  new ArrayList<>();
-    int valid = 0;
-    int inValid = 0;
+    List<FinalDefenceCostsEntity> listToSave = finalDefenceCosts.subList(startIndex, endIndex);
 
-    for (FinalDefenceCostsEntity entity : finalDefenceCosts) {
-      if (isValidEntity(entity)) {
-        listToSave.add(entity);
-        valid++;
-      } else  {
-        invalidFdcEntities.add(entity);
-        inValid++;
+    while (!listToSave.isEmpty()) {
+
+      finalDefenceCostsRepository.saveAll(listToSave);
+
+      startIndex = endIndex;
+      endIndex = startIndex + batchSize;
+      if (endIndex > finalDefenceCosts.size()) {
+        endIndex = finalDefenceCosts.size();
       }
-
-      if (listToSave.size() == batchSize) {
-        finalDefenceCostsRepository.saveAllAndFlush(listToSave);
-        listToSave = new ArrayList<>();
-      }
+      listToSave = finalDefenceCosts.subList(startIndex, endIndex);
     }
 
-    if (!listToSave.isEmpty()) {
-      finalDefenceCostsRepository.saveAllAndFlush(listToSave);
-    }
+    int count = finalDefenceCosts.size();
+    log.info("{} FDC records processed successfully.", count);
 
-    log.info("{} FDC records processed successfully.", valid);
-    log.info("The following {} FDC records failed validation: {}", inValid, invalidFdcEntities);
-
-    return finalDefenceCosts.size();
+    return count;
   }
 
-  private boolean isValidEntity(FinalDefenceCostsEntity entity) {
-    var violations = postValidator.validate(entity);
+  private List<FinalDefenceCostsEntity> mapDtosToEntrities(List<FinalDefenceCostDto> dtos) {
 
-    if (!violations.isEmpty()) {
+    List<FinalDefenceCostsEntity>  entities = new ArrayList<>();
 
-      String errors = String.join("\n", violations);
-      log.error(errors);
-      return false;
+    for (FinalDefenceCostDto dto : dtos) {
+      FinalDefenceCostsEntity entity = FinalDefenceCostsEntity.builder()
+          .maatReference(dto.getMaatReference())
+          .caseNo(dto.getCaseNo())
+          .suppAccountCode(dto.getSuppAccountCode())
+          .courtCode(dto.getCourtCode())
+          .judicialApportionment(dto.getJudicialApportionment())
+          .finalDefenceCost(dto.getFinalDefenceCost())
+          .itemType(dto.getItemType())
+          .paidAsClaimed(dto.getPaidAsClaimed())
+          .build();
+      entities.add(entity);
     }
 
-    return true;
+    return entities;
   }
-
-  private static Integer getInt(String[] cols, Map<String, Integer> idx, String key) {
-        String v = getStr(cols, idx, key);
-        return (v == null) ? null : Integer.valueOf(v);
-    }
-
-    private static String getStr(String[] cols, Map<String, Integer> idx, String key) {
-        Integer i = idx.get(key.toUpperCase());
-        if (i == null || i >= cols.length) return null;
-        String v = cols[i].trim();
-        return v.isEmpty() ? null : v;
-    }
-
-
-    private static BigDecimal getDecimal(String[] cols, Map<String, Integer> idx) {
-        String v = getStr(cols, idx, "final_defence_cost");
-        return (v == null) ? null : new BigDecimal(v);
-    }
 }
