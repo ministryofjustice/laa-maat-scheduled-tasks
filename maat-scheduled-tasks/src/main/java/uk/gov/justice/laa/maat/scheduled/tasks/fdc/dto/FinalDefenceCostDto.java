@@ -36,7 +36,7 @@ public class FinalDefenceCostDto {
 
   @NotEmpty(message = "Item type MUST be supplied.")
   @NotNull(message = "Item type MUST not be null.")
-  @Pattern(regexp = "^(LGSF|AGFS)$", message = "Item type MUST be 'LGFS' or 'AGFS'")
+  @Pattern(regexp = "^(LGFS|AGFS)$", message = "Item type MUST be 'LGFS' or 'AGFS'")
   private String itemType;
 
   @NotEmpty(message = "Paid as claim indication MUST be supplied.")

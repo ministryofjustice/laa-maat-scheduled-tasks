@@ -1,8 +1,13 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -10,32 +15,15 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostsEntity;
-
-import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.ObjectsValidator;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FinalDefenceCostServiceImplTest {
 
     @Mock
     private FinalDefenceCostsRepository finalDefenceCostsRepository;
-
-    @Mock
-    private FinalDefenceCostConfiguration finalDefenceCostConfiguration;
-
-    @Mock
-    private ObjectsValidator<FinalDefenceCostsEntity> postValidator;
 
     @Captor
     private ArgumentCaptor<List<FinalDefenceCostsEntity>> captor;
@@ -125,9 +113,7 @@ class FinalDefenceCostServiceImplTest {
         objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
         List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(fdcDataJson, new TypeReference<>() {});
 
-        when(finalDefenceCostConfiguration.getBatchSize()).thenReturn(String.valueOf(Integer.parseInt("3")));
-
-        int count = service.processFinalDefenceCosts(finalDefenceCosts);
+        int count = service.processFinalDefenceCosts(finalDefenceCosts, 3);
 
         assertThat(count).isEqualTo(7);
 

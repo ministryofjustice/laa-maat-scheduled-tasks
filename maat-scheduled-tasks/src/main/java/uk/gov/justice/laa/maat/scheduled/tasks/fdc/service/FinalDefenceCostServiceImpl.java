@@ -1,53 +1,40 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import jakarta.transaction.Transactional;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostsEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.exception.FinalDefenceCostServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.ObjectsValidator;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FinalDefenceCostServiceImpl implements  FinalDefenceCostService {
+public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
 
   private final FinalDefenceCostsRepository finalDefenceCostsRepository;
 
-  private final FinalDefenceCostConfiguration finalDefenceCostConfiguration;
-
-  private final ObjectsValidator<FinalDefenceCostsEntity> postValidator;
-
-  @Transactional
-  public int processFinalDefenceCosts(List<FinalDefenceCostDto> dtos) {
-    log.info("Loading FDC Final Defence Costs");
-
-    int batchSize = Integer.parseInt(finalDefenceCostConfiguration.getBatchSize());
+  public int processFinalDefenceCosts(List<FinalDefenceCostDto> dtos, int batchSize) {
+    log.info("Loading Final Defence Costs data into HUB");
 
     List<FinalDefenceCostsEntity> finalDefenceCosts = mapDtosToEntrities(dtos);
 
+    int count = 0;
     int startIndex = 0;
     int endIndex = batchSize;
+
+    if (endIndex > finalDefenceCosts.size()) {
+      endIndex = finalDefenceCosts.size();
+    }
 
     List<FinalDefenceCostsEntity> listToSave = finalDefenceCosts.subList(startIndex, endIndex);
 
     while (!listToSave.isEmpty()) {
 
       finalDefenceCostsRepository.saveAll(listToSave);
+      count += listToSave.size();
 
       startIndex = endIndex;
       endIndex = startIndex + batchSize;
@@ -57,7 +44,6 @@ public class FinalDefenceCostServiceImpl implements  FinalDefenceCostService {
       listToSave = finalDefenceCosts.subList(startIndex, endIndex);
     }
 
-    int count = finalDefenceCosts.size();
     log.info("{} FDC records processed successfully.", count);
 
     return count;
