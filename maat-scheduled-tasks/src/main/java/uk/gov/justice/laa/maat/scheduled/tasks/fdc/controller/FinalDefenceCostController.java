@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,16 +27,17 @@ import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostServi
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/internal/v1/fdc")
-public class FinalDefenceCostsController {
+public class FinalDefenceCostController {
 
     private final FinalDefenceCostService finalDefenceCostService;
 
     @PostMapping("load-fdc")
-    @Operation(description = "Load and process FDC data into HUB and MAAT")
+    @Operation(description = "Load and process FDC data into HUB")
     @ApiResponse(responseCode = "200", description = "Request processed successfully.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     @ApiResponse(responseCode = "400", description = "Invalid or missing request data.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
-    public ResponseEntity<LoadFDCResponse> loadFdc(@Valid @RequestBody List<FinalDefenceCostDto> payload) {
+    public ResponseEntity<LoadFDCResponse> loadFdc(@Valid @RequestBody
+      @NotEmpty List<FinalDefenceCostDto> payload) {
 
       int recordsInserted = finalDefenceCostService.processFinalDefenceCosts(payload, 1000);
       if (recordsInserted > 0) {

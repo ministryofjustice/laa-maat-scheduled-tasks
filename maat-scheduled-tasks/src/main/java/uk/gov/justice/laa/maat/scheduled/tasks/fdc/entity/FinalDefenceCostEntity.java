@@ -21,7 +21,7 @@ import lombok.ToString;
 @ToString
 @Entity
 @Table(name = "final_defence_costs", schema = "HUB")
-public class FinalDefenceCostsEntity {
+public class FinalDefenceCostEntity {
     @Id
     @SequenceGenerator(name = "fdc_gen_seq", sequenceName = "S_GENERAL_SEQUENCE", allocationSize = 1, schema = "TOGDATA")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fdc_gen_seq")
