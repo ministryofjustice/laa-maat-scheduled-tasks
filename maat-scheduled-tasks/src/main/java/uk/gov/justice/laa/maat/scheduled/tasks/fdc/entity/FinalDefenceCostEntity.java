@@ -28,7 +28,7 @@ public class FinalDefenceCostEntity {
     @Column(name = "HDAT_ID")
     private Integer hdatId;
 
-    @Column(name = "MAAT_REFERENCE")
+    @Column(name = "ID")
     private Integer maatReference;
 
     @Column(name = "CASE_NO", length = 40)

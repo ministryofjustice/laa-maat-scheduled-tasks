@@ -1,17 +1,18 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
-import java.util.ArrayList;
+import jakarta.validation.ConstraintViolation;
 import java.util.List;
 import java.util.Objects;
-
-import jakarta.persistence.EntityManager;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.FdcReadyRequestDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.FDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.FdcItemValidator;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
@@ -25,36 +26,41 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
 
   private final FinalDefenceCostsRepository finalDefenceCostsRepository;
   private final FinalDefenceCostsReadyRepository finalDefenceCostsReadyRepository;
-  private final EntityManager entityManager;
   private final FinalDefenceCostConfiguration fdcConfiguration;
+  private final FdcItemValidator fdcItemValidator;
 
   @Transactional
-  public int processFinalDefenceCosts(List<FinalDefenceCostDto> dtos, int batchSize) {
+  public int processFinalDefenceCosts(List<FinalDefenceCostDto> dtos) {
     log.info("Loading Final Defence Costs data into HUB");
 
-    List<FinalDefenceCostEntity> finalDefenceCosts = mapDtosToEntrities(dtos);
+    List<FinalDefenceCostDto> invalidDtos = dtos.stream()
+        .filter(dto -> !fdcItemValidator.validate(dto).isEmpty())
+        .toList();
 
-    int count = 0;
-    int startIndex = 0;
-    int endIndex = batchSize;
+    log.warn("Invalid FDC records: {}: ", invalidDtos);
 
-    if (endIndex > finalDefenceCosts.size()) {
-      endIndex = finalDefenceCosts.size();
-    }
+    dtos.removeAll(invalidDtos);
 
-    List<FinalDefenceCostEntity> listToSave = finalDefenceCosts.subList(startIndex, endIndex);
+    int batchSize = fdcConfiguration.getFetchSize();
+    List<FinalDefenceCostEntity> fdcEntities = dtos.stream()
+        .map(dto -> {
+          FinalDefenceCostEntity entity = FinalDefenceCostEntity.builder()
+          .maatReference(dto.getMaatReference())
+          .caseNo(dto.getCaseNo())
+          .suppAccountCode(dto.getSuppAccountCode())
+          .courtCode(dto.getCourtCode())
+          .judicialApportionment(dto.getJudicialApportionment())
+          .finalDefenceCost(dto.getFinalDefenceCost())
+          .itemType(dto.getItemType())
+          .paidAsClaimed(dto.getPaidAsClaimed())
+          .build();
+          return entity;
+        }).toList();
 
-    while (!listToSave.isEmpty()) {
-
-      finalDefenceCostsRepository.saveAll(listToSave);
-      count += listToSave.size();
-
-      startIndex = endIndex;
-      endIndex = startIndex + batchSize;
-      if (endIndex > finalDefenceCosts.size()) {
-        endIndex = finalDefenceCosts.size();
-      }
-      listToSave = finalDefenceCosts.subList(startIndex, endIndex);
+    int count = fdcEntities.size();
+    for (int i = 0; i < count; i += batchSize) {
+      int end = Math.min(i + batchSize, count);
+      finalDefenceCostsRepository.saveAll(fdcEntities.subList(i, end));
     }
 
     log.info("{} FDC records processed successfully.", count);
@@ -103,24 +109,23 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
     }
   }
 
-  private List<FinalDefenceCostEntity> mapDtosToEntrities(List<FinalDefenceCostDto> dtos) {
-
-    List<FinalDefenceCostEntity>  entities = new ArrayList<>();
-
-    for (FinalDefenceCostDto dto : dtos) {
-      FinalDefenceCostEntity entity = FinalDefenceCostEntity.builder()
-          .maatReference(dto.getMaatReference())
-          .caseNo(dto.getCaseNo())
-          .suppAccountCode(dto.getSuppAccountCode())
-          .courtCode(dto.getCourtCode())
-          .judicialApportionment(dto.getJudicialApportionment())
-          .finalDefenceCost(dto.getFinalDefenceCost())
-          .itemType(dto.getItemType())
-          .paidAsClaimed(dto.getPaidAsClaimed())
-          .build();
-      entities.add(entity);
-    }
-
-    return entities;
-  }
+//  private List<FinalDefenceCostEntity> mapDtosToEntrities(List<FinalDefenceCostDto> dtos) {
+//
+//    List<FinalDefenceCostEntity>  entities = dtos.stream()
+//        .map(dto -> {
+//          FinalDefenceCostEntity entity = FinalDefenceCostEntity.builder()
+//          .maatReference(dto.getMaatReference())
+//          .caseNo(dto.getCaseNo())
+//          .suppAccountCode(dto.getSuppAccountCode())
+//          .courtCode(dto.getCourtCode())
+//          .judicialApportionment(dto.getJudicialApportionment())
+//          .finalDefenceCost(dto.getFinalDefenceCost())
+//          .itemType(dto.getItemType())
+//          .paidAsClaimed(dto.getPaidAsClaimed())
+//          .build();
+//      return entity;
+//    }).toList();
+//
+//    return entities;
+//  }
 }

@@ -7,7 +7,6 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,10 +23,8 @@ import uk.gov.justice.laa.maat.scheduled.tasks.dto.FdcReadyRequestDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.response.LoadFDCResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostService;
-import uk.gov.justice.laa.maat.scheduled.tasks.service.FDCDataLoadService;
 
 @Slf4j
-@Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/internal/v1/fdc")
@@ -40,17 +37,24 @@ public class FinalDefenceCostController {
     @ApiResponse(responseCode = "200", description = "Request processed successfully.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     @ApiResponse(responseCode = "400", description = "Invalid or missing request data.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
-    public ResponseEntity<LoadFDCResponse> loadFdc(@Valid @RequestBody
-      @NotEmpty List<FinalDefenceCostDto> payload) {
+    public ResponseEntity<LoadFDCResponse> loadFdc(@RequestBody List<FinalDefenceCostDto> payload) {
 
-      int recordsInserted = finalDefenceCostService.processFinalDefenceCosts(payload, 1000);
-      if (recordsInserted > 0) {
-        return ResponseEntity.ok(
-            new LoadFDCResponse(true, recordsInserted, "Loaded dataset successfully.")
-        );
-      } else {
+      if (payload == null || payload.isEmpty()) {
+        return createResponse(HttpStatus.BAD_REQUEST, false, 0, "Request body cannot be empty");
+      }
+
+      try {
+        int recordsInserted = finalDefenceCostService.processFinalDefenceCosts(payload);
+        if (recordsInserted == payload.size()) {
+          return createResponse(HttpStatus.OK, true, recordsInserted, "Loaded dataset successfully.");
+        } else {
+          return createResponse(HttpStatus.OK, true, recordsInserted, "Not all dataset loaded dataset successfully.");
+        }
+      } catch (Exception e) {
+        log.error("Failed to save FDC items", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-            new LoadFDCResponse(false, 0, "No data loaded.")
+            new LoadFDCResponse(false, 0,
+                String.format("Failed to load FDC data: %s", e.getMessage()))
         );
       }
     }
@@ -79,12 +83,17 @@ public class FinalDefenceCostController {
         }
     }
 
-
-    @ExceptionHandler(value = ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<LoadFDCResponse> handleConstraintViolationException(ConstraintViolationException ex) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-          new LoadFDCResponse(false, 0, "Invalid or missing request data.")
+    private ResponseEntity<LoadFDCResponse> createResponse(HttpStatus status, boolean success, int records, String message) {
+      return ResponseEntity.status(status).body(
+          new LoadFDCResponse(success, records, message)
       );
     }
+
+//    @ExceptionHandler(value = ConstraintViolationException.class)
+//    @ResponseStatus(HttpStatus.BAD_REQUEST)
+//    public ResponseEntity<LoadFDCResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+//      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+//          new LoadFDCResponse(false, 0, "Invalid or missing request data.")
+//      );
+//    }
 }
