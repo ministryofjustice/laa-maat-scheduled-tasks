@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +20,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.justice.laa.maat.scheduled.tasks.dto.FdcReadyRequestDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.response.LoadFDCResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostService;
+import uk.gov.justice.laa.maat.scheduled.tasks.service.FDCDataLoadService;
 
+@Slf4j
 @Validated
 @RequiredArgsConstructor
 @RestController
@@ -50,6 +54,31 @@ public class FinalDefenceCostController {
         );
       }
     }
+
+    @PostMapping("load-fdc-ready")
+    public ResponseEntity<LoadFDCResponse> loadFdcReadyItems(
+            @RequestBody List<FdcReadyRequestDTO> requests ) {
+        if (requests == null || requests.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new LoadFDCResponse(false, 0, "Request body cannot be empty")
+            );
+        }
+
+        try {
+            int recordsInserted = finalDefenceCostService.processFdcReadyItems(requests);
+            return ResponseEntity.ok(
+                    new LoadFDCResponse(true, recordsInserted,
+                            String.format("Successfully saved %d FDC Ready items", recordsInserted))
+            );
+        } catch (Exception e) {
+            log.error("Failed to save FDC Ready items", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new LoadFDCResponse(false, 0,
+                            String.format("Failed to save FDC Ready items: %s", e.getMessage()))
+            );
+        }
+    }
+
 
     @ExceptionHandler(value = ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

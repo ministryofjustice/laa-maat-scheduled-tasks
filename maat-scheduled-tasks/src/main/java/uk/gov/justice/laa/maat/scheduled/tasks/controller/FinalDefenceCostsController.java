@@ -48,7 +48,7 @@ public class FinalDefenceCostsController {
     }
   }
 
-  @PostMapping("load-fdc-ready")
+  @PostMapping("load-fdc-ready-1")
   public ResponseEntity<LoadFDCResponse> loadFdcReady(
       @RequestParam String fileName
   ) {

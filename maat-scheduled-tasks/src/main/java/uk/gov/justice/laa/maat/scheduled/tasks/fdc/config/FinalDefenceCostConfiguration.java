@@ -9,5 +9,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class FinalDefenceCostConfiguration {
 
     @NotNull
-    private final String batchSize;
+    private final int fetchSize;
 }

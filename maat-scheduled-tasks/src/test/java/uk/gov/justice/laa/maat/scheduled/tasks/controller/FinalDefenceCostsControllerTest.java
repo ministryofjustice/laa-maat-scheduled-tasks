@@ -95,7 +95,7 @@ class FinalDefenceCostsControllerTest {
   @Test
   @DisplayName("load-fdc-ready: returns 400 for invalid filename")
   void loadFdcReady_invalidFilename_returnsBadRequest() throws Exception {
-    mockMvc.perform(post(BASE + "/load-fdc-ready")
+    mockMvc.perform(post(BASE + "/load-fdc-ready-1")
             .param("fileName", "random.txt"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.success").value(false))
@@ -111,7 +111,7 @@ class FinalDefenceCostsControllerTest {
     when(fdcDataLoadService.loadFdcReady(eq("CCR_ready.csv"), eq(FDCType.AGFS), eq(1000)))
         .thenReturn(7);
 
-    mockMvc.perform(post(BASE + "/load-fdc-ready")
+    mockMvc.perform(post(BASE + "/load-fdc-ready-1")
             .param("fileName", "CCR_ready.csv"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
@@ -127,7 +127,7 @@ class FinalDefenceCostsControllerTest {
     when(fdcDataLoadService.loadFdcReady(eq("CCLF_ready.csv"), eq(FDCType.LGFS), eq(1000)))
         .thenReturn(0);
 
-    mockMvc.perform(post(BASE + "/load-fdc-ready")
+    mockMvc.perform(post(BASE + "/load-fdc-ready-1")
             .param("fileName", "CCLF_ready.csv"))
         .andExpect(status().isInternalServerError())
         .andExpect(jsonPath("$.success").value(false))

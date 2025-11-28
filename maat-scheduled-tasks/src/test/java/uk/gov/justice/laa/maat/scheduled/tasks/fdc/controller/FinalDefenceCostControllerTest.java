@@ -1,30 +1,34 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.controller;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.justice.laa.crime.util.RequestBuilderUtils.buildRequestGivenContent;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostService;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
+
+import java.util.List;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.justice.laa.crime.util.RequestBuilderUtils.buildRequestGivenContent;
 
 @WebMvcTest(FinalDefenceCostController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -115,6 +119,65 @@ class FinalDefenceCostControllerTest {
           .andExpect(jsonPath("$.message", containsString("Invalid or missing request data.")));
 
       verifyNoInteractions(finalDefenceCostService);
+    }
+
+
+    @DisplayName("load-fdc-ready: returns 400 when request body is empty")
+    @Test
+    void loadFdcReadyReturns400WhenBodyEmpty() throws Exception {
+        mockMvc.perform(post(BASE + "/load-fdc-ready")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[]"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.records_inserted").value(0))
+                .andExpect(jsonPath("$.message").value("Request body cannot be empty"));
+    }
+
+    @DisplayName("load-fdc-ready: returns 200 with success payload when service inserts items")
+    @Test
+    void loadFdcReadyReturns200WithSuccessPayload() throws Exception {
+        when(finalDefenceCostService.processFdcReadyItems(any())).thenReturn(2);
+
+        String body = """
+        [
+          {"maatReference":123,"fdcReady":"Y","itemType":"AGFS"},
+          {"maatReference":456,"fdcReady":"N","itemType":"AGFS"}
+        ]
+        """;
+
+        mockMvc.perform(post(BASE + "/load-fdc-ready")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.records_inserted").value(2))
+                .andExpect(jsonPath("$.message").value("Successfully saved 2 FDC Ready items"));
+
+        verify(finalDefenceCostService).processFdcReadyItems(any());
+    }
+
+    @DisplayName("load-fdc-ready: returns 500 when service throws exception")
+    @Test
+    void loadFdcReadyReturns500OnServiceException() throws Exception {
+        when(finalDefenceCostService.processFdcReadyItems(any()))
+                .thenThrow(new RuntimeException("DB down"));
+
+        String body = """
+        [
+          {"maatReference":789,"fdcReady":"Y","itemType":"LGFS"}
+        ]
+        """;
+
+        mockMvc.perform(post(BASE + "/load-fdc-ready")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.records_inserted").value(0))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("Failed to save FDC Ready items: DB down")));
+
+        verify(finalDefenceCostService).processFdcReadyItems(any());
     }
 
     private List<FinalDefenceCostDto> createTestFDCDtos(String payloadJson)
