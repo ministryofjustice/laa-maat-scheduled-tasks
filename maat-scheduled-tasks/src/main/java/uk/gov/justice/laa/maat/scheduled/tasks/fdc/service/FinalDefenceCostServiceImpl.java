@@ -2,6 +2,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsReadyRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
 
 @Slf4j
@@ -22,6 +24,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsR
 public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
 
   private final FinalDefenceCostsRepository finalDefenceCostsRepository;
+  private final FinalDefenceCostsReadyRepository finalDefenceCostsReadyRepository;
   private final EntityManager entityManager;
   private final FinalDefenceCostConfiguration fdcConfiguration;
 
@@ -62,36 +65,29 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
   @Transactional
   public int processFdcReadyItems(List<FdcReadyRequestDTO> requests) {
     log.info("Saving {} FDC Ready items", requests.size());
-    int count = 0;
-    int inBatch = 0;
     int batchSize = fdcConfiguration.getFetchSize();
-    for (FdcReadyRequestDTO request : requests) {
-      FDCReadyEntity entity = new FDCReadyEntity();
-      entity.setMaatId(request.getMaatReference());
-      entity.setFdcReady(request.getFdcReady());
 
-      FDCType itemType = parseFdcType(request.getItemType());
-      if (itemType == null) {
-        log.warn("Invalid item_type: {} for maat_reference: {}",
-                request.getItemType(), request.getMaatReference());
-        continue;
-      }
-      entity.setItemType(itemType);
+    List<FDCReadyEntity> validEntities = requests.stream()
+            .map(request -> {
+              FDCType itemType = parseFdcType(request.getItemType());
+              if (itemType == null) {
+                log.warn("Invalid item_type: {} for maat_reference: {}",
+                        request.getItemType(), request.getMaatReference());
+                return null;
+              }
+              FDCReadyEntity entity = new FDCReadyEntity();
+              entity.setMaatId(request.getMaatReference());
+              entity.setFdcReady(request.getFdcReady());
+              entity.setItemType(itemType);
+              return entity;
+            })
+            .filter(Objects::nonNull)
+            .toList();
 
-      entityManager.persist(entity);
-      inBatch++;
-      count++;
-
-      if (inBatch >= batchSize) {
-        entityManager.flush();
-        entityManager.clear();
-        inBatch = 0;
-      }
-    }
-
-    if (inBatch > 0) {
-      entityManager.flush();
-      entityManager.clear();
+    int count = validEntities.size();
+    for (int i = 0; i < count; i += batchSize) {
+      int end = Math.min(i + batchSize, count);
+      finalDefenceCostsReadyRepository.saveAll(validEntities.subList(i, end));
     }
 
     log.info("Successfully saved {} FDC Ready items", count);
