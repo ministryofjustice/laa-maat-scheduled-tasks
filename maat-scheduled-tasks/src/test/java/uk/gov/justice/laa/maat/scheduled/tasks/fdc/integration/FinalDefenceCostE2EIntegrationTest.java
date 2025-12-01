@@ -26,7 +26,7 @@ public class FinalDefenceCostE2EIntegrationTest {
   ObjectMapper objectMapper;
 
   @Test
-  void testEndToEnd_withJwtAuth() throws Exception {
+  void testEndToEnd_whenAllValidData_withJwtAuth() throws Exception {
 
     // ---- POST /api/persons (with OAuth2 JWT) ----
     String payload = FdcTestDataProvider.getValidFdcData();
@@ -46,5 +46,51 @@ public class FinalDefenceCostE2EIntegrationTest {
     assertThat(created.success()).isEqualTo(true);
     assertThat(created.recordsInserted()).isEqualTo(3);
     assertThat(created.message()).isEqualTo("Loaded dataset successfully.");
+  }
+
+  @Test
+  void testEndToEnd_whenAllInvalidData_withJwtAuth() throws Exception {
+
+    // ---- POST /api/persons (with OAuth2 JWT) ----
+    String payload = FdcTestDataProvider.getInvalidFdcData();
+
+    String postResponse = mockMvc.perform(
+            post("/api/internal/v1/fdc/load-fdc")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(payload)
+                .with(SecurityMockMvcRequestPostProcessors.jwt()
+                    .jwt(jwt -> jwt.claim("scope", "maat-scheduled-tasks-dev/standard")))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+
+    LoadFDCResponse created = objectMapper.readValue(postResponse, LoadFDCResponse.class);
+    assertThat(created.success()).isEqualTo(true);
+    assertThat(created.recordsInserted()).isEqualTo(0);
+    assertThat(created.message()).isEqualTo("Not all dataset loaded successfully.");
+  }
+
+  @Test
+  void testEndToEnd_whenSomeInvalidData_withJwtAuth() throws Exception {
+
+    // ---- POST /api/persons (with OAuth2 JWT) ----
+    String payload = FdcTestDataProvider.getInvalidFdcDataWithMissingFields();
+
+    String postResponse = mockMvc.perform(
+            post("/api/internal/v1/fdc/load-fdc")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(payload)
+                .with(SecurityMockMvcRequestPostProcessors.jwt()
+                    .jwt(jwt -> jwt.claim("scope", "maat-scheduled-tasks-dev/standard")))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+
+    LoadFDCResponse created = objectMapper.readValue(postResponse, LoadFDCResponse.class);
+    assertThat(created.success()).isEqualTo(true);
+    assertThat(created.recordsInserted()).isEqualTo(1);
+    assertThat(created.message()).isEqualTo("Not all dataset loaded successfully.");
   }
 }

@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -30,16 +31,17 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
   public int processFinalDefenceCosts(List<FinalDefenceCostDto> dtos) {
     log.info("Loading Final Defence Costs data into HUB");
 
-    List<FinalDefenceCostDto> invalidDtos = dtos.stream()
+    List<FinalDefenceCostDto> payloadDtos = new ArrayList<>(dtos);
+        List<FinalDefenceCostDto> invalidDtos = payloadDtos.stream()
         .filter(dto -> !fdcItemValidator.validate(dto))
         .toList();
 
     log.warn("Invalid FDC records: {}: ", invalidDtos);
 
-    dtos.removeAll(invalidDtos);
+    payloadDtos.removeAll(invalidDtos);
 
     int batchSize = fdcConfiguration.getFetchSize();
-    List<FinalDefenceCostEntity> fdcEntities = dtos.stream()
+    List<FinalDefenceCostEntity> fdcEntities = payloadDtos.stream()
         .map(dto -> FinalDefenceCostEntity.builder()
         .maatReference(dto.getMaatReference())
         .caseNo(dto.getCaseNo())
