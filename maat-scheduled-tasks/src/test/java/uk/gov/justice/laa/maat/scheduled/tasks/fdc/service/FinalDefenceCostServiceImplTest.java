@@ -57,15 +57,24 @@ class FinalDefenceCostServiceImplTest {
     @Mock
     private EntityManager entityManager;
 
-    @Test
-    @DisplayName("Load valid FDC items, return count, and verify saveAll called for batches")
-    void parsesAndPersistsWithBatching() throws Exception {
+    @Nested
+    class SaveFdcDataItems {
+
+      @BeforeEach
+      void setUp() {
+        when(fdcConfiguration.getFetchSize()).thenReturn(1);
+      }
+
+      @Test
+      @DisplayName("Load valid FDC items, return count, and verify saveAll called for batches")
+      void parsesAndPersistsWithBatching() throws Exception {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-        List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(FdcTestDataProvider.getValidFdcData(), new TypeReference<>() {});
+        List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(
+            FdcTestDataProvider.getValidFdcData(), new TypeReference<>() {
+            });
 
-        when(fdcConfiguration.getFetchSize()).thenReturn(1);
         when(fdcItemValidator.validate(finalDefenceCosts.getFirst())).thenReturn(true);
         when(fdcItemValidator.validate(finalDefenceCosts.get(1))).thenReturn(true);
         when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(true);
@@ -76,49 +85,52 @@ class FinalDefenceCostServiceImplTest {
         verify(finalDefenceCostsRepository, times(3)).saveAll(captor.capture());
 
         assertThat(3).isEqualTo(captor.getAllValues().size());
+      }
+
+      @Test
+      @DisplayName("Load no FDC items when non valid, return zero count loaded, and verify saveAll called for batches")
+      void loadValidItemsAndLogInvalid() throws Exception {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
+        List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(
+            FdcTestDataProvider.getInvalidFdcData(), new TypeReference<>() {
+            });
+
+        when(fdcItemValidator.validate(finalDefenceCosts.getFirst())).thenReturn(false);
+        when(fdcItemValidator.validate(finalDefenceCosts.get(1))).thenReturn(false);
+        when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(false);
+        int count = service.processFinalDefenceCosts(finalDefenceCosts);
+
+        assertThat(count).isEqualTo(0);
+
+        verify(finalDefenceCostsRepository, times(0)).saveAll(captor.capture());
+
+        assertThat(0).isEqualTo(captor.getAllValues().size());
+      }
+
+      @Test
+      @DisplayName("Load part invalid FDC items, return count loaded, and verify saveAll called for batches")
+      void loadValidItemsAndLogInvalid_whenSomeValidData() throws Exception {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
+        List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(
+            FdcTestDataProvider.getInvalidFdcData(), new TypeReference<>() {
+            });
+
+        when(fdcItemValidator.validate(finalDefenceCosts.getFirst())).thenReturn(false);
+        when(fdcItemValidator.validate(finalDefenceCosts.get(1))).thenReturn(false);
+        when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(true);
+        int count = service.processFinalDefenceCosts(finalDefenceCosts);
+
+        assertThat(count).isEqualTo(1);
+
+        verify(finalDefenceCostsRepository, times(1)).saveAll(captor.capture());
+
+        assertThat(1).isEqualTo(captor.getAllValues().size());
+      }
     }
-
-    @Test
-    @DisplayName("Load no FDC items when non valid, return zero count loaded, and verify saveAll called for batches")
-    void loadValidItemsAndLogInvalid() throws Exception {
-
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-      List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(FdcTestDataProvider.getInvalidFdcData(), new TypeReference<>() {});
-
-      when(fdcConfiguration.getFetchSize()).thenReturn(1);
-      when(fdcItemValidator.validate(finalDefenceCosts.getFirst())).thenReturn(false);
-      when(fdcItemValidator.validate(finalDefenceCosts.get(1))).thenReturn(false);
-      when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(false);
-      int count = service.processFinalDefenceCosts(finalDefenceCosts);
-
-      assertThat(count).isEqualTo(0);
-
-      verify(finalDefenceCostsRepository, times(0)).saveAll(captor.capture());
-
-      assertThat(0).isEqualTo(captor.getAllValues().size());
-    }
-
-  @Test
-  @DisplayName("Load part invalid FDC items, return count loaded, and verify saveAll called for batches")
-  void loadValidItemsAndLogInvalid_whenSomeValidData() throws Exception {
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-    List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(FdcTestDataProvider.getInvalidFdcData(), new TypeReference<>() {});
-
-    when(fdcConfiguration.getFetchSize()).thenReturn(1);
-    when(fdcItemValidator.validate(finalDefenceCosts.getFirst())).thenReturn(false);
-    when(fdcItemValidator.validate(finalDefenceCosts.get(1))).thenReturn(false);
-    when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(true);
-    int count = service.processFinalDefenceCosts(finalDefenceCosts);
-
-    assertThat(count).isEqualTo(1);
-
-    verify(finalDefenceCostsRepository, times(1)).saveAll(captor.capture());
-
-    assertThat(1).isEqualTo(captor.getAllValues().size());
-  }
 
     @Nested
     class SaveFdcReadyItems {
