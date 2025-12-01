@@ -24,7 +24,7 @@ import lombok.ToString;
 public class FinalDefenceCostEntity {
 
     @Id
-    @SequenceGenerator(name = "fdc_gen_seq", sequenceName = "FDC_READY_SEQUENCE", allocationSize = 1, schema = "HUB")
+    @SequenceGenerator(name = "fdc_gen_seq", sequenceName = "FINAL_DEFENCE_COSTS_SEQUENCE", allocationSize = 1, schema = "HUB")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fdc_gen_seq")
     @Column(name = "HDAT_ID")
     private Integer hdatId;
