@@ -10,7 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.FDCReadyEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.entity.FinalDefenceCostsEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 

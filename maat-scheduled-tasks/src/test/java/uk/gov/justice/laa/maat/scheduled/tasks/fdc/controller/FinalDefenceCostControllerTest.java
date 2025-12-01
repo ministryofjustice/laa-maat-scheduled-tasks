@@ -64,7 +64,7 @@ class FinalDefenceCostControllerTest {
           buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load-fdc", false))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.success").value(true))
-          .andExpect(jsonPath("$.records_inserted").value(3))
+          .andExpect(jsonPath("$.recordsInserted").value(3))
           .andExpect(jsonPath("$.message", containsString("Loaded dataset successfully.")));
 
       verify(finalDefenceCostService, times(1)).processFinalDefenceCosts(payload);
@@ -84,7 +84,7 @@ class FinalDefenceCostControllerTest {
               buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load-fdc", false))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.success").value(true))
-          .andExpect(jsonPath("$.records_inserted").value(1))
+          .andExpect(jsonPath("$.recordsInserted").value(1))
           .andExpect(jsonPath("$.message", containsString("Not all dataset loaded successfully.")));
 
       verify(finalDefenceCostService).processFinalDefenceCosts(payload);
@@ -103,7 +103,7 @@ class FinalDefenceCostControllerTest {
             .content(body))
         .andExpect(status().isInternalServerError())
         .andExpect(jsonPath("$.success").value(false))
-        .andExpect(jsonPath("$.records_inserted").value(0))
+        .andExpect(jsonPath("$.recordsInserted").value(0))
         .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("Failed to load FDC data: Internal Server Error")));
 
     verify(finalDefenceCostService).processFinalDefenceCosts(any());
@@ -123,7 +123,7 @@ class FinalDefenceCostControllerTest {
               buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load-fdc", false))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.success").value(true))
-          .andExpect(jsonPath("$.records_inserted").value(1))
+          .andExpect(jsonPath("$.recordsInserted").value(1))
           .andExpect(jsonPath("$.message", containsString("Not all dataset loaded successfully.")));
 
       verify(finalDefenceCostService).processFinalDefenceCosts(payload);
@@ -143,29 +143,29 @@ class FinalDefenceCostControllerTest {
               buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load-fdc", false))
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.success").value(false))
-          .andExpect(jsonPath("$.records_inserted").value(0))
+          .andExpect(jsonPath("$.recordsInserted").value(0))
           .andExpect(jsonPath("$.message", containsString("Request body cannot be empty")));
 
       verifyNoInteractions(finalDefenceCostService);
     }
 
 
-    @DisplayName("load-fdc-ready: returns 400 when request body is empty")
+    @DisplayName("save-fdc-ready: returns 400 when request body is empty")
     @Test
-    void loadFdcReadyReturns400WhenBodyEmpty() throws Exception {
-        mockMvc.perform(post(BASE + "/load-fdc-ready")
+    void saveFdcReadyReturns400WhenBodyEmpty() throws Exception {
+        mockMvc.perform(post(BASE + "/save-fdc-ready")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("[]"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.records_inserted").value(0))
+                .andExpect(jsonPath("$.recordsInserted").value(0))
                 .andExpect(jsonPath("$.message").value("Request body cannot be empty"));
     }
 
-    @DisplayName("load-fdc-ready: returns 200 with success payload when service inserts items")
+    @DisplayName("save-fdc-ready: returns 200 with success payload when service inserts items")
     @Test
-    void loadFdcReadyReturns200WithSuccessPayload() throws Exception {
-        when(finalDefenceCostService.processFdcReadyItems(any())).thenReturn(2);
+    void saveFdcReadyReturns200WithSuccessPayload() throws Exception {
+        when(finalDefenceCostService.saveFdcReadyItems(any())).thenReturn(2);
 
         String body = """
         [
@@ -174,21 +174,21 @@ class FinalDefenceCostControllerTest {
         ]
         """;
 
-        mockMvc.perform(post(BASE + "/load-fdc-ready")
+        mockMvc.perform(post(BASE + "/save-fdc-ready")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.records_inserted").value(2))
+                .andExpect(jsonPath("$.recordsInserted").value(2))
                 .andExpect(jsonPath("$.message").value("Successfully saved 2 FDC Ready items"));
 
-        verify(finalDefenceCostService).processFdcReadyItems(any());
+        verify(finalDefenceCostService).saveFdcReadyItems(any());
     }
 
-    @DisplayName("load-fdc-ready: returns 500 when service throws exception")
+    @DisplayName("save-fdc-ready: returns 500 when service throws exception")
     @Test
-    void loadFdcReadyReturns500OnServiceException() throws Exception {
-        when(finalDefenceCostService.processFdcReadyItems(any()))
+    void saveFdcReadyReturns500OnServiceException() throws Exception {
+        when(finalDefenceCostService.saveFdcReadyItems(any()))
                 .thenThrow(new RuntimeException("DB down"));
 
         String body = """
@@ -197,15 +197,15 @@ class FinalDefenceCostControllerTest {
         ]
         """;
 
-        mockMvc.perform(post(BASE + "/load-fdc-ready")
+        mockMvc.perform(post(BASE + "/save-fdc-ready")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.records_inserted").value(0))
+                .andExpect(jsonPath("$.recordsInserted").value(0))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("Failed to save FDC Ready items: DB down")));
 
-        verify(finalDefenceCostService).processFdcReadyItems(any());
+        verify(finalDefenceCostService).saveFdcReadyItems(any());
     }
 
     private List<FinalDefenceCostDto> createTestFDCDtos(String payloadJson)

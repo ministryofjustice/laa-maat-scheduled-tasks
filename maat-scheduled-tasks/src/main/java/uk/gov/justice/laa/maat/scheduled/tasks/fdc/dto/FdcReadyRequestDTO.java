@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.dto;
+package uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
@@ -24,7 +24,7 @@ public class FdcReadyRequestDTO {
     private String fdcReady;
 
     @NotBlank(message = "item_type is mandatory")
-    @Pattern(regexp = "LGFS|AGFS", message = "item_type must be LGFS or AGFS")
+    @Pattern(regexp = "(?i)LGFS|AGFS", message = "item_type must be LGFS or AGFS")
     @JsonProperty("item_type")
     private String itemType;
 }

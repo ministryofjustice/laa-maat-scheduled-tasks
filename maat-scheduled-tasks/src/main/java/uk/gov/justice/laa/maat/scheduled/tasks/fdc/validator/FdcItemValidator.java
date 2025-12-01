@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.fdc;
+package uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator;
 
 import jakarta.validation.Validator;
 import lombok.AllArgsConstructor;

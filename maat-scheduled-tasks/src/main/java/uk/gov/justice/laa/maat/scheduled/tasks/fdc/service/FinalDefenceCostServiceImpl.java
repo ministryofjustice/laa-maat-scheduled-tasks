@@ -7,15 +7,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.FdcReadyRequestDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.FDCReadyEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.FdcItemValidator;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsReadyRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
+import uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils;
 
 @Slf4j
 @Service
@@ -65,11 +66,21 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
   }
 
   @Transactional
-  public int processFdcReadyItems(List<FdcReadyRequestDTO> requests) {
-    log.info("Saving {} FDC Ready items", requests.size());
+  public int saveFdcReadyItems(List<FdcReadyRequestDTO> requestDTOs) {
+    log.info("Saving {} FDC Ready items", requestDTOs.size());
+
+    List<FdcReadyRequestDTO> validRequestDTOs = new ArrayList<>(requestDTOs);
+    List<FdcReadyRequestDTO> invalidRequestDTOs = requestDTOs.stream()
+            .filter(dto -> !fdcItemValidator.validate(dto))
+            .toList();
+
+    log.warn("Invalid Fdc Ready records: {}: ", invalidRequestDTOs);
+
+    validRequestDTOs.removeAll(invalidRequestDTOs);
+
     int batchSize = fdcConfiguration.getFetchSize();
 
-    List<FDCReadyEntity> validEntities = requests.stream()
+    List<FDCReadyEntity> validEntities = validRequestDTOs.stream()
             .map(request -> {
               FDCType itemType = parseFdcType(request.getItemType());
               if (itemType == null) {
@@ -86,14 +97,16 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
             .filter(Objects::nonNull)
             .toList();
 
-    int count = validEntities.size();
-    for (int i = 0; i < count; i += batchSize) {
-      int end = Math.min(i + batchSize, count);
-      finalDefenceCostsReadyRepository.saveAll(validEntities.subList(i, end));
+    int savedCount = 0;
+    List<List<FDCReadyEntity>> batchesEntities = ListUtils.batchList(validEntities, batchSize);
+    for (List<FDCReadyEntity> batch : batchesEntities) {
+      List<FDCReadyEntity> saved = finalDefenceCostsReadyRepository.saveAll(batch);
+      savedCount += saved.size();
     }
 
-    log.info("Successfully saved {} FDC Ready items", count);
-    return count;
+
+    log.info("Successfully saved {} FDC Ready items", savedCount);
+    return savedCount;
   }
 
   private FDCType parseFdcType(String itemType) {
@@ -104,24 +117,4 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
       return null;
     }
   }
-
-//  private List<FinalDefenceCostEntity> mapDtosToEntrities(List<FinalDefenceCostDto> dtos) {
-//
-//    List<FinalDefenceCostEntity>  entities = dtos.stream()
-//        .map(dto -> {
-//          FinalDefenceCostEntity entity = FinalDefenceCostEntity.builder()
-//          .maatReference(dto.getMaatReference())
-//          .caseNo(dto.getCaseNo())
-//          .suppAccountCode(dto.getSuppAccountCode())
-//          .courtCode(dto.getCourtCode())
-//          .judicialApportionment(dto.getJudicialApportionment())
-//          .finalDefenceCost(dto.getFinalDefenceCost())
-//          .itemType(dto.getItemType())
-//          .paidAsClaimed(dto.getPaidAsClaimed())
-//          .build();
-//      return entity;
-//    }).toList();
-//
-//    return entities;
-//  }
 }

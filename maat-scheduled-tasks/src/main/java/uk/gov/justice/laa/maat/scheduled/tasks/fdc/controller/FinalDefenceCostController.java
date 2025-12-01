@@ -3,7 +3,6 @@ package uk.gov.justice.laa.maat.scheduled.tasks.fdc.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,10 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.justice.laa.maat.scheduled.tasks.dto.FdcReadyRequestDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.response.LoadFDCResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostService;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -53,29 +54,30 @@ public class FinalDefenceCostController {
       }
     }
 
-    @PostMapping("load-fdc-ready")
-    public ResponseEntity<LoadFDCResponse> loadFdcReadyItems(
-            @RequestBody List<FdcReadyRequestDTO> requests ) {
+    @Operation(description = "Save FDC Ready items")
+    @PostMapping("save-fdc-ready")
+    public ResponseEntity<LoadFDCResponse> saveFdcReadyItems(
+             @RequestBody List<FdcReadyRequestDTO> requests ) {
         if (requests == null || requests.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    new LoadFDCResponse(false, 0, "Request body cannot be empty")
-            );
+            return createResponse(HttpStatus.BAD_REQUEST, false, 0, "Request body cannot be empty");
         }
 
         try {
-            int recordsInserted = finalDefenceCostService.processFdcReadyItems(requests);
-            return ResponseEntity.ok(
-                    new LoadFDCResponse(true, recordsInserted,
-                            String.format("Successfully saved %d FDC Ready items", recordsInserted))
-            );
+            int recordsInserted = finalDefenceCostService.saveFdcReadyItems(requests);
+            if (recordsInserted == requests.size()) {
+                return createResponse(HttpStatus.OK, true, recordsInserted,
+                        String.format("Successfully saved %d FDC Ready items", recordsInserted));
+            } else {
+                return createResponse(HttpStatus.OK, true, recordsInserted,
+                        "Not all FDC Ready items saved successfully.");
+            }
         } catch (Exception e) {
             log.error("Failed to save FDC Ready items", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new LoadFDCResponse(false, 0,
-                            String.format("Failed to save FDC Ready items: %s", e.getMessage()))
-            );
+            return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, false, 0,
+                    String.format("Failed to save FDC Ready items: %s", e.getMessage()));
         }
     }
+
 
     private ResponseEntity<LoadFDCResponse> createResponse(HttpStatus status, boolean success, int records, String message) {
       return ResponseEntity.status(status).body(
