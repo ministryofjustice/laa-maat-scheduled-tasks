@@ -31,7 +31,7 @@ public class FinalDefenceCostE2EIntegrationTest {
 
   @Test
   @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
-  void testEndToEnd_whenAllValidData_withJwtAuth() throws Exception {
+  void testFdcLoad_whenAllValidData_returns200() throws Exception {
 
     String payload = FdcTestDataProvider.getValidFdcData();
 
@@ -47,7 +47,7 @@ public class FinalDefenceCostE2EIntegrationTest {
 
   @Test
   @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
-  void testEndToEnd_whenAllInvalidData_withJwtAuth() throws Exception {
+  void testFdcLoad_whenAllInvalidData_returns200() throws Exception {
 
     String payload = FdcTestDataProvider.getInvalidFdcData();
 
@@ -66,7 +66,7 @@ public class FinalDefenceCostE2EIntegrationTest {
 
   @Test
   @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
-  void testEndToEnd_whenSomeInvalidData_withJwtAuth() throws Exception {
+  void testFdcLoad_whenSomeInvalidData_returns200() throws Exception {
 
     String payload = FdcTestDataProvider.getInvalidFdcDataWithMissingFields();
 
@@ -78,6 +78,22 @@ public class FinalDefenceCostE2EIntegrationTest {
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.recordsInserted").value(1))
         .andExpect(jsonPath("$.message").value("Not all dataset loaded successfully."));
+  }
+
+  @Test
+  @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
+  void testFdcLoad_whenEmpty_returns400() throws Exception {
+
+    String payload = "[]";
+
+    mockMvc.perform(
+            post(BASE + "/load-fdc")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(payload))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.recordsInserted").value(0))
+        .andExpect(jsonPath("$.message").value("Request body cannot be empty"));
   }
 
   @Test
