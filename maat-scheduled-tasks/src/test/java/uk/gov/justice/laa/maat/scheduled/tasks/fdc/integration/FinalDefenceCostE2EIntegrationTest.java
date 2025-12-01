@@ -1,18 +1,20 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.integration;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.response.LoadFDCResponse;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
 
 @SpringBootTest
@@ -25,72 +27,106 @@ public class FinalDefenceCostE2EIntegrationTest {
   @Autowired
   ObjectMapper objectMapper;
 
+  private static final String BASE = "/api/internal/v1/fdc";
+
   @Test
+  @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
   void testEndToEnd_whenAllValidData_withJwtAuth() throws Exception {
 
-    // ---- POST /api/persons (with OAuth2 JWT) ----
     String payload = FdcTestDataProvider.getValidFdcData();
 
-    String postResponse = mockMvc.perform(
-            post("/api/internal/v1/fdc/load-fdc")
+    mockMvc.perform(
+            post(BASE + "/load-fdc")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(payload)
-                .with(SecurityMockMvcRequestPostProcessors.jwt()
-                    .jwt(jwt -> jwt.claim("scope", "maat-scheduled-tasks-dev/standard")))
-                .contentType(MediaType.APPLICATION_JSON)
-        )
+                .content(payload))
         .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString();
-
-    LoadFDCResponse created = objectMapper.readValue(postResponse, LoadFDCResponse.class);
-    assertThat(created.success()).isEqualTo(true);
-    assertThat(created.recordsInserted()).isEqualTo(3);
-    assertThat(created.message()).isEqualTo("Loaded dataset successfully.");
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.recordsInserted").value(3))
+        .andExpect(jsonPath("$.message").value("Loaded dataset successfully."));
   }
 
   @Test
+  @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
   void testEndToEnd_whenAllInvalidData_withJwtAuth() throws Exception {
 
-    // ---- POST /api/persons (with OAuth2 JWT) ----
     String payload = FdcTestDataProvider.getInvalidFdcData();
 
-    String postResponse = mockMvc.perform(
-            post("/api/internal/v1/fdc/load-fdc")
+    mockMvc.perform(
+            post(BASE + "/load-fdc")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(payload)
                 .with(SecurityMockMvcRequestPostProcessors.jwt()
                     .jwt(jwt -> jwt.claim("scope", "maat-scheduled-tasks-dev/standard")))
-                .contentType(MediaType.APPLICATION_JSON)
-        )
+                .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString();
-
-    LoadFDCResponse created = objectMapper.readValue(postResponse, LoadFDCResponse.class);
-    assertThat(created.success()).isEqualTo(true);
-    assertThat(created.recordsInserted()).isEqualTo(0);
-    assertThat(created.message()).isEqualTo("Not all dataset loaded successfully.");
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.recordsInserted").value(0))
+        .andExpect(jsonPath("$.message").value("Not all dataset loaded successfully."));
   }
 
   @Test
+  @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
   void testEndToEnd_whenSomeInvalidData_withJwtAuth() throws Exception {
 
-    // ---- POST /api/persons (with OAuth2 JWT) ----
     String payload = FdcTestDataProvider.getInvalidFdcDataWithMissingFields();
 
-    String postResponse = mockMvc.perform(
-            post("/api/internal/v1/fdc/load-fdc")
+    mockMvc.perform(
+            post(BASE + "/load-fdc")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(payload)
-                .with(SecurityMockMvcRequestPostProcessors.jwt()
-                    .jwt(jwt -> jwt.claim("scope", "maat-scheduled-tasks-dev/standard")))
-                .contentType(MediaType.APPLICATION_JSON)
-        )
+                .content(payload))
         .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString();
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.recordsInserted").value(1))
+        .andExpect(jsonPath("$.message").value("Not all dataset loaded successfully."));
+  }
 
-    LoadFDCResponse created = objectMapper.readValue(postResponse, LoadFDCResponse.class);
-    assertThat(created.success()).isEqualTo(true);
-    assertThat(created.recordsInserted()).isEqualTo(1);
-    assertThat(created.message()).isEqualTo("Not all dataset loaded successfully.");
+  @Test
+  @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
+  void saveFdcReadyReturns400WhenBodyEmpty() throws Exception {
+    mockMvc.perform(post(BASE+"/save-fdc-ready")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("[]"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.recordsInserted").value(0))
+        .andExpect(jsonPath("$.message").value("Request body cannot be empty"));
+  }
+
+  @Test
+  @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
+  void saveFdcReadyReturns200WithSuccessPayload() throws Exception {
+
+    List<FdcReadyRequestDTO> requests = List.of(
+        new FdcReadyRequestDTO(123, "Y", "AGFS"),
+        new FdcReadyRequestDTO(456, "N", "AGFS")
+    );
+    String body = objectMapper.writeValueAsString(requests);
+
+    mockMvc.perform(post(BASE + "/save-fdc-ready")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.recordsInserted").value(2))
+        .andExpect(jsonPath("$.message").value("Successfully saved 2 FDC Ready items"));
+
+  }
+
+  @Test
+  @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
+  void saveFdcReadyReturnsZeroForInvalidRequestDto() throws Exception {
+    List<FdcReadyRequestDTO> requests = List.of(
+        new FdcReadyRequestDTO(123, "Y", "AGFS"),
+        new FdcReadyRequestDTO(456, "Y1", "IN-VALID")
+    );
+    String body = objectMapper.writeValueAsString(requests);
+
+    mockMvc.perform(post(BASE + "/save-fdc-ready")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true))
+        .andExpect(jsonPath("$.recordsInserted").value(1))
+        .andExpect(jsonPath("$.message").value("Not all FDC Ready items saved successfully."));
   }
 }
