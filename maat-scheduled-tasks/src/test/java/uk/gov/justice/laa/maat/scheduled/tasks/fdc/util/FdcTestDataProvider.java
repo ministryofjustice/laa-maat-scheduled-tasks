@@ -105,7 +105,7 @@ public class FdcTestDataProvider {
               "judicial_apportionment": 13,
               "final_defence_cost": 7365.98,
               "item_type": "LGFS",
-              "paid_as_claimed": "G"
+              "paid_as_claimed": "N"
             }
           ]
           """;

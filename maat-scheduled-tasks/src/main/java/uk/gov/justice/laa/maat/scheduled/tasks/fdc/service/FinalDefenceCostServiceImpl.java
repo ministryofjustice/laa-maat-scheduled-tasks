@@ -1,12 +1,9 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
-import jakarta.validation.ConstraintViolation;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.FdcReadyRequestDTO;
@@ -34,7 +31,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
     log.info("Loading Final Defence Costs data into HUB");
 
     List<FinalDefenceCostDto> invalidDtos = dtos.stream()
-        .filter(dto -> !fdcItemValidator.validate(dto).isEmpty())
+        .filter(dto -> !fdcItemValidator.validate(dto))
         .toList();
 
     log.warn("Invalid FDC records: {}: ", invalidDtos);
@@ -43,19 +40,16 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
 
     int batchSize = fdcConfiguration.getFetchSize();
     List<FinalDefenceCostEntity> fdcEntities = dtos.stream()
-        .map(dto -> {
-          FinalDefenceCostEntity entity = FinalDefenceCostEntity.builder()
-          .maatReference(dto.getMaatReference())
-          .caseNo(dto.getCaseNo())
-          .suppAccountCode(dto.getSuppAccountCode())
-          .courtCode(dto.getCourtCode())
-          .judicialApportionment(dto.getJudicialApportionment())
-          .finalDefenceCost(dto.getFinalDefenceCost())
-          .itemType(dto.getItemType())
-          .paidAsClaimed(dto.getPaidAsClaimed())
-          .build();
-          return entity;
-        }).toList();
+        .map(dto -> FinalDefenceCostEntity.builder()
+        .maatReference(dto.getMaatReference())
+        .caseNo(dto.getCaseNo())
+        .suppAccountCode(dto.getSuppAccountCode())
+        .courtCode(dto.getCourtCode())
+        .judicialApportionment(dto.getJudicialApportionment())
+        .finalDefenceCost(dto.getFinalDefenceCost())
+        .itemType(dto.getItemType())
+        .paidAsClaimed(dto.getPaidAsClaimed())
+        .build()).toList();
 
     int count = fdcEntities.size();
     for (int i = 0; i < count; i += batchSize) {

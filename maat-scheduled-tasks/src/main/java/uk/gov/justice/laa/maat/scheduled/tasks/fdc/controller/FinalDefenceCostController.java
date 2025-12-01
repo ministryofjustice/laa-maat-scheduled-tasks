@@ -3,21 +3,15 @@ package uk.gov.justice.laa.maat.scheduled.tasks.fdc.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.maat.scheduled.tasks.dto.FdcReadyRequestDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
@@ -48,7 +42,7 @@ public class FinalDefenceCostController {
         if (recordsInserted == payload.size()) {
           return createResponse(HttpStatus.OK, true, recordsInserted, "Loaded dataset successfully.");
         } else {
-          return createResponse(HttpStatus.OK, true, recordsInserted, "Not all dataset loaded dataset successfully.");
+          return createResponse(HttpStatus.OK, true, recordsInserted, "Not all dataset loaded successfully.");
         }
       } catch (Exception e) {
         log.error("Failed to save FDC items", e);
@@ -88,12 +82,4 @@ public class FinalDefenceCostController {
           new LoadFDCResponse(success, records, message)
       );
     }
-
-//    @ExceptionHandler(value = ConstraintViolationException.class)
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    public ResponseEntity<LoadFDCResponse> handleConstraintViolationException(ConstraintViolationException ex) {
-//      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-//          new LoadFDCResponse(false, 0, "Invalid or missing request data.")
-//      );
-//    }
 }

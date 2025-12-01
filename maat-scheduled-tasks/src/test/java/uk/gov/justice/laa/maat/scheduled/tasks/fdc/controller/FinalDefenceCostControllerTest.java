@@ -85,14 +85,14 @@ class FinalDefenceCostControllerTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.success").value(true))
           .andExpect(jsonPath("$.records_inserted").value(1))
-          .andExpect(jsonPath("$.message", containsString("Not all dataset loaded dataset successfully.")));
+          .andExpect(jsonPath("$.message", containsString("Not all dataset loaded successfully.")));
 
       verify(finalDefenceCostService).processFinalDefenceCosts(payload);
     }
 
   @DisplayName("load-fdc: returns 500 when service throws exception")
   @Test
-  void loadFdcReturns500OnServiceException() throws Exception {
+  void testLoadFdc_returns500ServiceException() throws Exception {
     when(finalDefenceCostService.processFinalDefenceCosts(any()))
         .thenThrow(new RuntimeException("Internal Server Error"));
 
@@ -124,13 +124,13 @@ class FinalDefenceCostControllerTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.success").value(true))
           .andExpect(jsonPath("$.records_inserted").value(1))
-          .andExpect(jsonPath("$.message", containsString("Not all dataset loaded dataset successfully.")));
+          .andExpect(jsonPath("$.message", containsString("Not all dataset loaded successfully.")));
 
       verify(finalDefenceCostService).processFinalDefenceCosts(payload);
     }
 
     @Test
-    @DisplayName("load-fdc: returns 400 for failed load.")
+    @DisplayName("load-fdc: returns 400 when payload is empty.")
     void testLoadFdc_Data_whenPayloadEmpty_thenReturnBadRequest() throws Exception {
 
       String fdcDataJson = "[]";
