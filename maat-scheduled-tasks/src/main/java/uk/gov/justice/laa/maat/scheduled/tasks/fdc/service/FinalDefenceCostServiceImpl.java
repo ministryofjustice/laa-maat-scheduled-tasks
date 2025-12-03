@@ -12,7 +12,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsReadyRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
@@ -29,11 +29,11 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
   private final FdcItemValidator fdcItemValidator;
 
   @Transactional
-  public int processFinalDefenceCosts(List<FinalDefenceCostDto> dtos) {
+  public int processFinalDefenceCosts(List<FinalDefenceCostDTO> dtos) {
     log.info("Loading Final Defence Costs data into HUB");
 
-    List<FinalDefenceCostDto> payloadDtos = new ArrayList<>(dtos);
-        List<FinalDefenceCostDto> invalidDtos = payloadDtos.stream()
+    List<FinalDefenceCostDTO> payloadDtos = new ArrayList<>(dtos);
+        List<FinalDefenceCostDTO> invalidDtos = payloadDtos.stream()
         .filter(dto -> !fdcItemValidator.validate(dto))
         .toList();
 
@@ -58,6 +58,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
     for (int i = 0; i < count; i += batchSize) {
       int end = Math.min(i + batchSize, count);
       finalDefenceCostsRepository.saveAll(fdcEntities.subList(i, end));
+      finalDefenceCostsRepository.flush();
     }
 
     log.info("{} FDC records processed successfully.", count);
@@ -101,6 +102,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
     List<List<FDCReadyEntity>> batchesEntities = ListUtils.batchList(validEntities, batchSize);
     for (List<FDCReadyEntity> batch : batchesEntities) {
       List<FDCReadyEntity> saved = finalDefenceCostsReadyRepository.saveAll(batch);
+      finalDefenceCostsReadyRepository.flush();
       savedCount += saved.size();
     }
 

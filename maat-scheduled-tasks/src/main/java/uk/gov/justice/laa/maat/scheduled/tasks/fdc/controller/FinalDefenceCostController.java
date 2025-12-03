@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.response.LoadFDCResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostService;
 
@@ -32,7 +32,7 @@ public class FinalDefenceCostController {
     @ApiResponse(responseCode = "200", description = "Request processed successfully.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     @ApiResponse(responseCode = "400", description = "Invalid or missing request data.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
-    public ResponseEntity<LoadFDCResponse> loadFdc(@RequestBody List<FinalDefenceCostDto> payload) {
+    public ResponseEntity<LoadFDCResponse> loadFdc(@RequestBody List<FinalDefenceCostDTO> payload) {
 
       if (payload == null || payload.isEmpty()) {
         return createResponse(HttpStatus.BAD_REQUEST, false, 0, "Request body cannot be empty");

@@ -19,7 +19,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsReadyRepository;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
@@ -71,7 +71,7 @@ class FinalDefenceCostServiceImplTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-        List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(
+        List<FinalDefenceCostDTO> finalDefenceCosts = objectMapper.readValue(
             FdcTestDataProvider.getValidFdcData(), new TypeReference<>() {
             });
 
@@ -93,7 +93,7 @@ class FinalDefenceCostServiceImplTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-        List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(
+        List<FinalDefenceCostDTO> finalDefenceCosts = objectMapper.readValue(
             FdcTestDataProvider.getInvalidFdcData(), new TypeReference<>() {
             });
 
@@ -115,7 +115,7 @@ class FinalDefenceCostServiceImplTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-        List<FinalDefenceCostDto> finalDefenceCosts = objectMapper.readValue(
+        List<FinalDefenceCostDTO> finalDefenceCosts = objectMapper.readValue(
             FdcTestDataProvider.getInvalidFdcData(), new TypeReference<>() {
             });
 

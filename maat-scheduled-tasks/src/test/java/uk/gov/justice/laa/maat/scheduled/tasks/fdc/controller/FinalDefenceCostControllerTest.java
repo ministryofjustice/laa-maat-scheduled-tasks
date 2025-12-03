@@ -1,26 +1,5 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostService;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
-
-import java.util.List;
-
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
@@ -32,15 +11,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.justice.laa.crime.util.RequestBuilderUtils.buildRequestGivenContent;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import java.util.List;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostService;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
+
 @WebMvcTest(FinalDefenceCostController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class FinalDefenceCostControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Mock
-    private FinalDefenceCostConfiguration fdcConfiguration;
 
     @MockitoBean
     private FinalDefenceCostService finalDefenceCostService;
@@ -56,8 +50,7 @@ class FinalDefenceCostControllerTest {
 
       String fdcDataJson = FdcTestDataProvider.getValidFdcData();
 
-      List<FinalDefenceCostDto> payload = createTestFDCDtos(fdcDataJson);
-      when(fdcConfiguration.getFetchSize()).thenReturn(1);
+      List<FinalDefenceCostDTO> payload = createTestFDCDtos(fdcDataJson);
       when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(3);
 
       mockMvc.perform(
@@ -76,8 +69,7 @@ class FinalDefenceCostControllerTest {
 
       String fdcDataJson = FdcTestDataProvider.getInvalidFdcData();
 
-      List<FinalDefenceCostDto> payload = createTestFDCDtos(fdcDataJson);
-      when(fdcConfiguration.getFetchSize()).thenReturn(1);
+      List<FinalDefenceCostDTO> payload = createTestFDCDtos(fdcDataJson);
       when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(1);
 
       mockMvc.perform(
@@ -115,8 +107,7 @@ class FinalDefenceCostControllerTest {
 
       String fdcDataJson = FdcTestDataProvider.getInvalidFdcDataWithMissingFields();
 
-      List<FinalDefenceCostDto> payload = createTestFDCDtos(fdcDataJson);
-      when(fdcConfiguration.getFetchSize()).thenReturn(1);
+      List<FinalDefenceCostDTO> payload = createTestFDCDtos(fdcDataJson);
       when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(1);
 
       mockMvc.perform(
@@ -135,8 +126,7 @@ class FinalDefenceCostControllerTest {
 
       String fdcDataJson = "[]";
 
-      List<FinalDefenceCostDto> payload = createTestFDCDtos(fdcDataJson);
-      when(fdcConfiguration.getFetchSize()).thenReturn(1);
+      List<FinalDefenceCostDTO> payload = createTestFDCDtos(fdcDataJson);
       when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(3);
 
       mockMvc.perform(
@@ -208,7 +198,7 @@ class FinalDefenceCostControllerTest {
         verify(finalDefenceCostService).saveFdcReadyItems(any());
     }
 
-    private List<FinalDefenceCostDto> createTestFDCDtos(String payloadJson)
+    private List<FinalDefenceCostDTO> createTestFDCDtos(String payloadJson)
         throws JsonProcessingException {
 
       objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());

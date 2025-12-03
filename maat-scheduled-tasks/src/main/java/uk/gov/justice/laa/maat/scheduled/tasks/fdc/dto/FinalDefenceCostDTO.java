@@ -15,46 +15,46 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FinalDefenceCostDto {
+public class FinalDefenceCostDTO {
 
-  @NotNull(message = "MAAT reference is mandatory.")
-  @Min(value = 1, message = "MAAT reference cannot be less than 1.")
+  @NotNull(message = "maat_reference is mandatory.")
+  @Min(value = 1, message = "maat_reference cannot be less than 1.")
   @JsonProperty("maat_reference")
-  private Integer maatReference;
+  private int maatReference;
 
-  @NotEmpty(message = "Case number is mandatory.")
-  @NotNull(message = "Case number MUST not be null.")
+  @NotEmpty(message = "case_no is mandatory.")
+  @NotNull(message = "case_no is mandatory.")
   @JsonProperty("case_no")
   private String caseNo;
 
-  @NotEmpty(message = "Supplier account code is mandatory.")
-  @NotNull(message = "Supplier account code is mandatory.")
+  @NotEmpty(message = "supp_account_code is mandatory.")
+  @NotNull(message = "supp_account_code is mandatory.")
   @JsonProperty("supp_account_code")
   private String suppAccountCode;
 
-  @NotEmpty(message = "Court code is mandatory")
-  @NotNull(message = "Court code is mandatory.")
+  @NotEmpty(message = "court_code is mandatory")
+  @NotNull(message = "court_code is mandatory.")
   @JsonProperty("court_code")
   private String courtCode;
 
-  @NotNull(message = "Judicial apportionment is mandatory.")
+  @NotNull(message = "judicial_apportionment is mandatory.")
   @Min(value = 1, message = "Judicial apportionment cannot be less than 1.")
   @JsonProperty("judicial_apportionment")
   private int judicialApportionment;
 
-  @NotNull(message = "Final defence cost is mandatory.")
+  @NotNull(message = "final_defence_cost is mandatory.")
   @Min(value = 1, message = "Final defence cost cannot be less than 1.")
   @JsonProperty("final_defence_cost")
   private BigDecimal finalDefenceCost;
 
-  @NotEmpty(message = "Item type is mandatory.")
-  @NotNull(message = "Item type MUST not be null.")
+  @NotEmpty(message = "item_type is mandatory.")
+  @NotNull(message = "item_type is mandatory.")
   @Pattern(regexp = "^(LGFS|AGFS)$", message = "Item type must be 'LGFS' or 'AGFS'")
   @JsonProperty("item_type")
   private String itemType;
 
-  @NotEmpty(message = "Paid as claim indication is mandatory.")
-  @NotNull(message = "Paid as claim indication must be supplied.")
+  @NotEmpty(message = "paid_as_claimed is mandatory.")
+  @NotNull(message = "paid_as_claimed is mandatory.")
   @Pattern(regexp = "^[YN]$", message = "Item type must be 'Y' or 'N'")
   @JsonProperty("paid_as_claimed")
   private String paidAsClaimed;

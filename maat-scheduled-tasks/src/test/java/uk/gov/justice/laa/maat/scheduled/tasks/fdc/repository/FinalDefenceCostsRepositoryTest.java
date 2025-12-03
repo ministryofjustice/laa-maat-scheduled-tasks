@@ -10,7 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDto;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
 
@@ -25,7 +25,7 @@ public class FinalDefenceCostsRepositoryTest {
 
     ObjectMapper objectMapper  = new ObjectMapper();
     objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
-    List<FinalDefenceCostDto> dtos = objectMapper.readValue(FdcTestDataProvider.getValidFdcData(), new TypeReference<>() {});
+    List<FinalDefenceCostDTO> dtos = objectMapper.readValue(FdcTestDataProvider.getValidFdcData(), new TypeReference<>() {});
 
     List<FinalDefenceCostEntity> entities = dtos.stream()
         .map(dto -> {
