@@ -6,15 +6,17 @@ import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity
 public class FinalDefenceCostsHelper {
 
   public static FinalDefenceCostEntity toFinalDefenceCostEntity(FinalDefenceCostDTO dto) {
-    return FinalDefenceCostEntity.builder()
-        .maatReference(dto.getMaatReference())
-        .caseNo(dto.getCaseNo())
-        .suppAccountCode(dto.getSuppAccountCode())
-        .courtCode(dto.getCourtCode())
-        .judicialApportionment(dto.getJudicialApportionment())
-        .finalDefenceCost(dto.getFinalDefenceCost())
-        .itemType(dto.getItemType())
-        .paidAsClaimed(dto.getPaidAsClaimed())
-        .build();
+
+    FinalDefenceCostEntity entity = new FinalDefenceCostEntity();
+    entity.setMaatReference(dto.getMaatReference());
+    entity.setCaseNo(dto.getCaseNo());
+    entity.setSuppAccountCode(dto.getSuppAccountCode());
+    entity.setCourtCode(dto.getCourtCode());
+    entity.setJudicialApportionment(dto.getJudicialApportionment());
+    entity.setFinalDefenceCost(dto.getFinalDefenceCost());
+    entity.setItemType(dto.getItemType());
+    entity.setPaidAsClaimed(dto.getPaidAsClaimed());
+
+    return entity;
   }
 }

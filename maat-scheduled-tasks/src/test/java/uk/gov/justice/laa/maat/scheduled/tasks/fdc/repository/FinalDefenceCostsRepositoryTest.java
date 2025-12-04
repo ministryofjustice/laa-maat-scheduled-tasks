@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FinalDefenceCostsHelper;
 
 @DataJpaTest
 public class FinalDefenceCostsRepositoryTest {
@@ -28,19 +29,8 @@ public class FinalDefenceCostsRepositoryTest {
     List<FinalDefenceCostDTO> dtos = objectMapper.readValue(FdcTestDataProvider.getValidFdcData(), new TypeReference<>() {});
 
     List<FinalDefenceCostEntity> entities = dtos.stream()
-        .map(dto -> {
-          FinalDefenceCostEntity entity = FinalDefenceCostEntity.builder()
-              .maatReference(dto.getMaatReference())
-              .caseNo(dto.getCaseNo())
-              .suppAccountCode(dto.getSuppAccountCode())
-              .courtCode(dto.getCourtCode())
-              .judicialApportionment(dto.getJudicialApportionment())
-              .finalDefenceCost(dto.getFinalDefenceCost())
-              .itemType(dto.getItemType())
-              .paidAsClaimed(dto.getPaidAsClaimed())
-              .build();
-          return entity;
-        }).toList();
+        .map(FinalDefenceCostsHelper::toFinalDefenceCostEntity)
+        .toList();
 
     repository.saveAll(entities);
 
