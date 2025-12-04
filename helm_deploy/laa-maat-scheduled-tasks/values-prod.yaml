@@ -99,6 +99,9 @@ ccrApi:
 xhibitBatch:
   fetchSize: 1000
 
+fdcBatch:
+  batchSize: 1000
+
 spring:
   profiles:
     active: prod

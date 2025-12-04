@@ -100,6 +100,8 @@ env:
     value: {{ .Values.aws_region }}
   - name: XHIBIT_BATCH_FETCH_SIZE
     value: {{ .Values.xhibitBatch.fetchSize | quote }}
+  - name: FDC_BATCH_SIZE
+    value: {{ .Values.fdctBatch.batchSize | quote }}
   - name: OBJECT_KEY_APPEAL_PREFIX
     valueFrom:
         secretKeyRef:

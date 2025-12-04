@@ -3,6 +3,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.fdc.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,9 +30,11 @@ public class FinalDefenceCostController {
 
     @PostMapping("load-fdc")
     @Operation(description = "Load and process FDC data into HUB")
-    @ApiResponse(responseCode = "200", description = "Request processed successfully.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
-    @ApiResponse(responseCode = "400", description = "Invalid or missing request data.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
-    @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+    @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Request processed successfully.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+      @ApiResponse(responseCode = "400", description = "Invalid or missing request data.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+      @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+    })
     public ResponseEntity<LoadFDCResponse> loadFdc(@RequestBody List<FinalDefenceCostDTO> payload) {
 
       if (payload == null || payload.isEmpty()) {
@@ -47,10 +50,7 @@ public class FinalDefenceCostController {
         }
       } catch (Exception e) {
         log.error("Failed to save FDC items", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-            new LoadFDCResponse(false, 0,
-                String.format("Failed to load FDC data: %s", e.getMessage()))
-        );
+        return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, false, 0, String.format("Failed to load FDC data: %s", e.getMessage()));
       }
     }
 

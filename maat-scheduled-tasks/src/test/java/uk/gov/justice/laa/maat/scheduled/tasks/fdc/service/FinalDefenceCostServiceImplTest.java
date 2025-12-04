@@ -62,7 +62,7 @@ class FinalDefenceCostServiceImplTest {
 
       @BeforeEach
       void setUp() {
-        when(fdcConfiguration.getFetchSize()).thenReturn(1);
+        when(fdcConfiguration.getBatchSize()).thenReturn(1);
       }
 
       @Test
@@ -137,7 +137,7 @@ class FinalDefenceCostServiceImplTest {
 
             @BeforeEach
             void setUp() {
-                when(fdcConfiguration.getFetchSize()).thenReturn(2);
+                when(fdcConfiguration.getBatchSize()).thenReturn(2);
             }
 
             @Test

@@ -1,5 +1,9 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
+import static java.util.function.Predicate.not;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -7,9 +11,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FinalDefenceCostsHelper;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.exception.FinalDefenceCostServiceException;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
@@ -34,25 +40,22 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
 
     List<FinalDefenceCostDTO> payloadDtos = new ArrayList<>(dtos);
         List<FinalDefenceCostDTO> invalidDtos = payloadDtos.stream()
-        .filter(dto -> !fdcItemValidator.validate(dto))
+        .filter(not(fdcItemValidator::validate))
         .toList();
 
-    log.warn("Invalid FDC records: {}: ", invalidDtos);
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      log.warn("There are {} nvalid FDC records: {}: ", invalidDtos.size(), mapper.writeValueAsString(invalidDtos));
+    } catch (JsonProcessingException e) {
+      throw new FinalDefenceCostServiceException(e.getMessage());
+    }
 
     payloadDtos.removeAll(invalidDtos);
 
-    int batchSize = fdcConfiguration.getFetchSize();
+    int batchSize = fdcConfiguration.getBatchSize();
     List<FinalDefenceCostEntity> fdcEntities = payloadDtos.stream()
-        .map(dto -> FinalDefenceCostEntity.builder()
-        .maatReference(dto.getMaatReference())
-        .caseNo(dto.getCaseNo())
-        .suppAccountCode(dto.getSuppAccountCode())
-        .courtCode(dto.getCourtCode())
-        .judicialApportionment(dto.getJudicialApportionment())
-        .finalDefenceCost(dto.getFinalDefenceCost())
-        .itemType(dto.getItemType())
-        .paidAsClaimed(dto.getPaidAsClaimed())
-        .build()).toList();
+        .map(FinalDefenceCostsHelper::toFinalDefenceCostEntity)
+        .toList();
 
     int count = fdcEntities.size();
     for (int i = 0; i < count; i += batchSize) {
@@ -79,7 +82,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
 
     validRequestDTOs.removeAll(invalidRequestDTOs);
 
-    int batchSize = fdcConfiguration.getFetchSize();
+    int batchSize = fdcConfiguration.getBatchSize();
 
     List<FDCReadyEntity> validEntities = validRequestDTOs.stream()
             .map(request -> {
@@ -112,7 +115,10 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
   }
 
   private FDCType parseFdcType(String itemType) {
-    if (itemType == null) return null;
+    if (itemType == null) {
+      return null;
+    }
+
     try {
       return FDCType.valueOf(itemType.toUpperCase());
     } catch (IllegalArgumentException e) {
