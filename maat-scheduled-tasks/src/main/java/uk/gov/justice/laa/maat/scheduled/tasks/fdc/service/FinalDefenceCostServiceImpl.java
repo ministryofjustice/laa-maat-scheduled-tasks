@@ -83,7 +83,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
     int saved = result.get(true).size();
     invalidRequestDTOs.addAll(result.get(false));
 
-    log.info("{} FDC Ready items uccessfully saved.", saved);
+    log.info("{} FDC Ready items successfully saved.", saved);
     return invalidRequestDTOs;
   }
 }
