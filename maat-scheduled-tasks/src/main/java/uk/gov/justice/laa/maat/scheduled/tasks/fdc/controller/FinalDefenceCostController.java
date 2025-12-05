@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.response.LoadFDCResponse;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.service.FinalDefenceCostService;
@@ -56,14 +56,14 @@ public class FinalDefenceCostController {
 
     @Operation(description = "Save FDC Ready items")
     @PostMapping("/ready")
-    public ResponseEntity<LoadFDCResponse<FdcReadyRequestDTO>> saveFdcReadyItems(
-             @RequestBody List<FdcReadyRequestDTO> requests ) {
+    public ResponseEntity<LoadFDCResponse<FinalDefenceCostReadyDTO>> saveFdcReadyItems(
+             @RequestBody List<FinalDefenceCostReadyDTO> requests ) {
         if (requests == null || requests.isEmpty()) {
             return createResponse(HttpStatus.BAD_REQUEST, false, List.of(), "Request body cannot be empty");
         }
 
         try {
-          List<FdcReadyRequestDTO> failed = finalDefenceCostService.saveFdcReadyItems(requests);
+          List<FinalDefenceCostReadyDTO> failed = finalDefenceCostService.saveFdcReadyItems(requests);
             if (failed.isEmpty()) {
                 return createResponse(HttpStatus.OK, true, List.of(),
                         String.format("Successfully saved %d FDC Ready items", requests.size()));

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FinalDefenceCostsHelper;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
@@ -55,17 +55,17 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
     return invalidDtos;
   }
 
-  public List<FdcReadyRequestDTO> saveFdcReadyItems(List<FdcReadyRequestDTO> requestDTOs) {
+  public List<FinalDefenceCostReadyDTO> saveFdcReadyItems(List<FinalDefenceCostReadyDTO> requestDTOs) {
     log.info("Saving {} FDC Ready items", requestDTOs.size());
 
-    List<FdcReadyRequestDTO> validRequestDTOs = new ArrayList<>(requestDTOs);
-    List<FdcReadyRequestDTO> invalidRequestDTOs = new ArrayList<>(requestDTOs.stream()
+    List<FinalDefenceCostReadyDTO> validRequestDTOs = new ArrayList<>(requestDTOs);
+    List<FinalDefenceCostReadyDTO> invalidRequestDTOs = new ArrayList<>(requestDTOs.stream()
         .filter(not(fdcItemValidator::validate))
         .toList());
 
     validRequestDTOs.removeAll(invalidRequestDTOs);
 
-    Map<Boolean, List<FdcReadyRequestDTO>> result =
+    Map<Boolean, List<FinalDefenceCostReadyDTO>> result =
         validRequestDTOs.stream()
             .collect(Collectors.partitioningBy(dto -> {
 

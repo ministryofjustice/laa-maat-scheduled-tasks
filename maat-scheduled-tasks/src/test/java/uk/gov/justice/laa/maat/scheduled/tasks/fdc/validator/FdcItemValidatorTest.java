@@ -4,7 +4,9 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNoFlag;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,20 +22,20 @@ class FdcItemValidatorTest {
 
     @Test
     void validate_returnsTrue_forValidDTO() {
-        FdcReadyRequestDTO dto = FdcReadyRequestDTO.builder()
+        FinalDefenceCostReadyDTO dto = FinalDefenceCostReadyDTO.builder()
                 .maatReference(123)
-                .fdcReady("Y")
-                .itemType("LGFS")
+                .fdcReady(YesNoFlag.Y)
+                .itemType(FDCType.LGFS)
                 .build();
         assertThat(validator.validate(dto)).isTrue();
     }
 
     @Test
     void validate_returnsFalse_forNullMaatReference() {
-        FdcReadyRequestDTO dto = FdcReadyRequestDTO.builder()
+        FinalDefenceCostReadyDTO dto = FinalDefenceCostReadyDTO.builder()
                 .maatReference(null)
-                .fdcReady("Y")
-                .itemType("LGFS")
+                .fdcReady(YesNoFlag.Y)
+                .itemType(FDCType.LGFS)
                 .build();
         assertThat(validator.validate(dto)).isFalse();
     }
@@ -41,40 +43,10 @@ class FdcItemValidatorTest {
 
     @Test
     void validate_returnsFalse_forInvalidFdcReady() {
-        FdcReadyRequestDTO dto = FdcReadyRequestDTO.builder()
+        FinalDefenceCostReadyDTO dto = FinalDefenceCostReadyDTO.builder()
                 .maatReference(123)
-                .fdcReady("X")
-                .itemType("LGFS")
-                .build();
-        assertThat(validator.validate(dto)).isFalse();
-    }
-
-    @Test
-    void validate_returnsFalse_forLowerCaseItemType() {
-        FdcReadyRequestDTO dto = FdcReadyRequestDTO.builder()
-                .maatReference(123)
-                .fdcReady("Y")
-                .itemType("lgfs")
-                .build();
-        assertThat(validator.validate(dto)).isTrue();
-    }
-
-    @Test
-    void validate_returnsFalse_forInvalidItemType() {
-        FdcReadyRequestDTO dto = FdcReadyRequestDTO.builder()
-                .maatReference(123)
-                .fdcReady("Y")
-                .itemType("INVALID")
-                .build();
-        assertThat(validator.validate(dto)).isFalse();
-    }
-
-    @Test
-    void validate_returnsFalse_forBlankFields() {
-        FdcReadyRequestDTO dto = FdcReadyRequestDTO.builder()
-                .maatReference(123)
-                .fdcReady("")
-                .itemType("")
+                .fdcReady(null)
+                .itemType(FDCType.LGFS)
                 .build();
         assertThat(validator.validate(dto)).isFalse();
     }

@@ -4,12 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNoFlag;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 
 @Data
 @Builder
@@ -47,15 +49,11 @@ public class FinalDefenceCostDTO {
   @JsonProperty("final_defence_cost")
   private BigDecimal finalDefenceCost;
 
-  @NotEmpty(message = "item_type is mandatory.")
   @NotNull(message = "item_type is mandatory.")
-  @Pattern(regexp = "^(LGFS|AGFS)$", message = "Item type must be 'LGFS' or 'AGFS'")
   @JsonProperty("item_type")
-  private String itemType;
+  private FDCType itemType;
 
-  @NotEmpty(message = "paid_as_claimed is mandatory.")
   @NotNull(message = "paid_as_claimed is mandatory.")
-  @Pattern(regexp = "^[YN]$", message = "Item type must be 'Y' or 'N'")
   @JsonProperty("paid_as_claimed")
-  private String paidAsClaimed;
+  private YesNoFlag paidAsClaimed;
 }

@@ -1,8 +1,7 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.util;
 
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
 
@@ -23,25 +22,13 @@ public class FinalDefenceCostsHelper {
     return entity;
   }
 
-  public static FDCReadyEntity toFDCReadyEntity(FdcReadyRequestDTO dto) {
+  public static FDCReadyEntity toFDCReadyEntity(FinalDefenceCostReadyDTO dto) {
 
     FDCReadyEntity entity = new FDCReadyEntity();
     entity.setMaatId(dto.getMaatReference());
     entity.setFdcReady(dto.getFdcReady());
-    entity.setItemType(parseFdcType(dto.getItemType()));
-
+    entity.setItemType(dto.getItemType());
     return entity;
   }
 
-  public static FDCType parseFdcType(String itemType) {
-    if (itemType == null) {
-      return null;
-    }
-
-    try {
-      return FDCType.valueOf(itemType.toUpperCase());
-    } catch (IllegalArgumentException e) {
-      return null;
-    }
-  }
 }

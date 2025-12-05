@@ -17,7 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNoFlag;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
 
@@ -99,7 +101,6 @@ public class FinalDefenceCostE2EIntegrationTest {
               "court_code": "COURT2",
               "judicial_apportionment": 12,
               "final_defence_cost": 564.32,
-              "item_type": "HGFS",
               "paid_as_claimed": "Y"
             }
           ]
@@ -153,9 +154,9 @@ public class FinalDefenceCostE2EIntegrationTest {
   @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
   void saveFdcReadyReturns200WithSuccessPayload() throws Exception {
 
-    List<FdcReadyRequestDTO> requests = List.of(
-        new FdcReadyRequestDTO(123, "Y", "AGFS"),
-        new FdcReadyRequestDTO(456, "N", "AGFS")
+    List<FinalDefenceCostReadyDTO> requests = List.of(
+        new FinalDefenceCostReadyDTO(123, YesNoFlag.Y, FDCType.AGFS),
+        new FinalDefenceCostReadyDTO(456, YesNoFlag.N, FDCType.LGFS)
     );
     String body = objectMapper.writeValueAsString(requests);
 
@@ -172,12 +173,12 @@ public class FinalDefenceCostE2EIntegrationTest {
   @Test
   @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
   void saveFdcReadyReturnsZeroForInvalidRequestDto() throws Exception {
-    List<FdcReadyRequestDTO> requests = List.of(
-        new FdcReadyRequestDTO(123, "Y", "AGFS"),
-        new FdcReadyRequestDTO(456, "Y1", "IN-VALID")
+    List<FinalDefenceCostReadyDTO> requests = List.of(
+        new FinalDefenceCostReadyDTO(123, YesNoFlag.Y, FDCType.AGFS),
+        new FinalDefenceCostReadyDTO(456, YesNoFlag.Y, null)
     );
     String body = objectMapper.writeValueAsString(requests);
-    String invalid = objectMapper.writeValueAsString(List.of(new FdcReadyRequestDTO(456, "Y1", "IN-VALID")));
+    String invalid = objectMapper.writeValueAsString(List.of(new FinalDefenceCostReadyDTO(456, YesNoFlag.Y, null)));
 
     mockMvc.perform(post(BASE + "/ready")
             .contentType(MediaType.APPLICATION_JSON)

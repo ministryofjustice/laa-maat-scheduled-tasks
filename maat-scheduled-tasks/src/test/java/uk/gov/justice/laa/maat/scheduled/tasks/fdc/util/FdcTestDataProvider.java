@@ -59,7 +59,6 @@ public class FdcTestDataProvider {
               "court_code": "COURT2",
               "judicial_apportionment": 12,
               "final_defence_cost": 564.32,
-              "item_type": "HGFS",
               "paid_as_claimed": "Y"
             },
             {
@@ -69,8 +68,7 @@ public class FdcTestDataProvider {
               "court_code": "COURT3",
               "judicial_apportionment": 13,
               "final_defence_cost": 7365.98,
-              "item_type": "LGFS",
-              "paid_as_claimed": "G"
+              "item_type": "LGFS"
             }
           ]
           """;
@@ -94,7 +92,6 @@ public class FdcTestDataProvider {
               "court_code": "COURT2",
               "judicial_apportionment": 12,
               "final_defence_cost": 564.32,
-              "item_type": "HGFS",
               "paid_as_claimed": "Y"
             },
             {
