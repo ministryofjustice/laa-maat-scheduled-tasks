@@ -28,7 +28,7 @@ public class FinalDefenceCostController {
 
     private final FinalDefenceCostService finalDefenceCostService;
 
-    @PostMapping("/load-fdc")
+    @PostMapping("/load")
     @Operation(description = "Load and process FDC data into HUB")
     @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Request processed successfully.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -55,7 +55,7 @@ public class FinalDefenceCostController {
     }
 
     @Operation(description = "Save FDC Ready items")
-    @PostMapping("/save-fdc-ready")
+    @PostMapping("/ready")
     public ResponseEntity<LoadFDCResponse<FdcReadyRequestDTO>> saveFdcReadyItems(
              @RequestBody List<FdcReadyRequestDTO> requests ) {
         if (requests == null || requests.isEmpty()) {

@@ -57,7 +57,7 @@ class FinalDefenceCostControllerTest {
       when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(List.of());
 
       mockMvc.perform(
-          buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load-fdc", false))
+          buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load", false))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.success").value(true))
           .andExpect(jsonPath("$.invalid", hasSize(0)))
@@ -76,7 +76,7 @@ class FinalDefenceCostControllerTest {
       when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(payload);
 
       mockMvc.perform(
-              buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load-fdc", false))
+              buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load", false))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.success").value(true))
           .andExpect(content().json("""
@@ -99,7 +99,7 @@ class FinalDefenceCostControllerTest {
 
     String body = FdcTestDataProvider.getInvalidFdcData();
 
-    mockMvc.perform(post(BASE + "/load-fdc")
+    mockMvc.perform(post(BASE + "/load")
             .contentType(MediaType.APPLICATION_JSON)
             .content(body))
         .andExpect(status().isInternalServerError())
@@ -121,7 +121,7 @@ class FinalDefenceCostControllerTest {
       String result = objectMapper.writeValueAsString(payload.subList(0, 2));
 
       mockMvc.perform(
-              buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load-fdc", false))
+              buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load", false))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.success").value(true))
           .andExpect(content().json("""
@@ -146,7 +146,7 @@ class FinalDefenceCostControllerTest {
       when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(List.of());
 
       mockMvc.perform(
-              buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load-fdc", false))
+              buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load", false))
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.success").value(false))
           .andExpect(jsonPath("$.invalid", hasSize(0)))
@@ -159,7 +159,7 @@ class FinalDefenceCostControllerTest {
     @DisplayName("save-fdc-ready: returns 400 when request body is empty")
     @Test
     void saveFdcReadyReturns400WhenBodyEmpty() throws Exception {
-        mockMvc.perform(post(BASE + "/save-fdc-ready")
+        mockMvc.perform(post(BASE + "/ready")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("[]"))
                 .andExpect(status().isBadRequest())
@@ -182,7 +182,7 @@ class FinalDefenceCostControllerTest {
         List<FdcReadyRequestDTO> payload = createTestFDCReadyDtos(body);
         when(finalDefenceCostService.saveFdcReadyItems(any())).thenReturn(List.of());
 
-        mockMvc.perform(post(BASE + "/save-fdc-ready")
+        mockMvc.perform(post(BASE + "/ready")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -206,7 +206,7 @@ class FinalDefenceCostControllerTest {
         when(finalDefenceCostService.saveFdcReadyItems(any()))
           .thenThrow(new RuntimeException("DB down"));
 
-        mockMvc.perform(post(BASE + "/save-fdc-ready")
+        mockMvc.perform(post(BASE + "/ready")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isInternalServerError())

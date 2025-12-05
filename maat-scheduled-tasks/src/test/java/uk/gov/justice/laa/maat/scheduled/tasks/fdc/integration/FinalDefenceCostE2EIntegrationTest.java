@@ -40,7 +40,7 @@ public class FinalDefenceCostE2EIntegrationTest {
     String payload = FdcTestDataProvider.getValidFdcData();
 
     mockMvc.perform(
-            post(BASE + "/load-fdc")
+            post(BASE + "/load")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(payload))
         .andExpect(status().isOk())
@@ -60,7 +60,7 @@ public class FinalDefenceCostE2EIntegrationTest {
         });
 
     mockMvc.perform(
-            post(BASE + "/load-fdc")
+            post(BASE + "/load")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(payload)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -106,7 +106,7 @@ public class FinalDefenceCostE2EIntegrationTest {
         """;
 
     mockMvc.perform(
-            post(BASE + "/load-fdc")
+            post(BASE + "/load")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(payload))
         .andExpect(status().isOk())
@@ -128,7 +128,7 @@ public class FinalDefenceCostE2EIntegrationTest {
     String payload = "[]";
 
     mockMvc.perform(
-            post(BASE + "/load-fdc")
+            post(BASE + "/load")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -140,7 +140,7 @@ public class FinalDefenceCostE2EIntegrationTest {
   @Test
   @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
   void saveFdcReadyReturns400WhenBodyEmpty() throws Exception {
-    mockMvc.perform(post(BASE+"/save-fdc-ready")
+    mockMvc.perform(post(BASE+"/ready")
             .contentType(MediaType.APPLICATION_JSON)
             .content("[]"))
         .andExpect(status().isBadRequest())
@@ -159,7 +159,7 @@ public class FinalDefenceCostE2EIntegrationTest {
     );
     String body = objectMapper.writeValueAsString(requests);
 
-    mockMvc.perform(post(BASE + "/save-fdc-ready")
+    mockMvc.perform(post(BASE + "/ready")
             .contentType(MediaType.APPLICATION_JSON)
             .content(body))
         .andExpect(status().isOk())
@@ -179,7 +179,7 @@ public class FinalDefenceCostE2EIntegrationTest {
     String body = objectMapper.writeValueAsString(requests);
     String invalid = objectMapper.writeValueAsString(List.of(new FdcReadyRequestDTO(456, "Y1", "IN-VALID")));
 
-    mockMvc.perform(post(BASE + "/save-fdc-ready")
+    mockMvc.perform(post(BASE + "/ready")
             .contentType(MediaType.APPLICATION_JSON)
             .content(body))
         .andExpect(status().isOk())
