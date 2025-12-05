@@ -75,9 +75,6 @@ xhibit-batch:
   object-key-trial-prefix: "incoming/trial/"
   object-key-appeal-prefix: "incoming/appeal/"
 
-fdc-batch:
-  batch-size: 1
-
 billing:
   user-modified: "test"
   cclf_extract:

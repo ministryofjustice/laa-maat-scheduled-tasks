@@ -2,127 +2,88 @@ package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
 import static java.util.function.Predicate.not;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FinalDefenceCostsHelper;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.exception.FinalDefenceCostServiceException;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsReadyRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.util.ListUtils;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FinalDefenceCostsHelper;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
 
-  private final FinalDefenceCostsRepository finalDefenceCostsRepository;
-  private final FinalDefenceCostsReadyRepository finalDefenceCostsReadyRepository;
-  private final FinalDefenceCostConfiguration fdcConfiguration;
+  private final FinalDefenceCostEntitySaver finalDefenceCostEntitySaver;
+  private final FDCReadyEntitySaver fdcReadyEntitySaver;
   private final FdcItemValidator fdcItemValidator;
 
-  @Transactional
-  public int processFinalDefenceCosts(List<FinalDefenceCostDTO> dtos) {
+  public List<FinalDefenceCostDTO> processFinalDefenceCosts(List<FinalDefenceCostDTO> dtos) {
     log.info("Loading Final Defence Costs data into HUB");
 
     List<FinalDefenceCostDTO> payloadDtos = new ArrayList<>(dtos);
-        List<FinalDefenceCostDTO> invalidDtos = payloadDtos.stream()
+    List<FinalDefenceCostDTO> invalidDtos = new ArrayList<>(payloadDtos.stream()
         .filter(not(fdcItemValidator::validate))
-        .toList();
-
-    ObjectMapper mapper = new ObjectMapper();
-    try {
-      log.warn("There are {} nvalid FDC records: {}: ", invalidDtos.size(), mapper.writeValueAsString(invalidDtos));
-    } catch (JsonProcessingException e) {
-      throw new FinalDefenceCostServiceException(e.getMessage());
-    }
+        .toList());
 
     payloadDtos.removeAll(invalidDtos);
 
-    int batchSize = fdcConfiguration.getBatchSize();
-    List<FinalDefenceCostEntity> fdcEntities = payloadDtos.stream()
-        .map(FinalDefenceCostsHelper::toFinalDefenceCostEntity)
-        .toList();
+    Map<Boolean, List<FinalDefenceCostDTO>> result =
+        payloadDtos.stream()
+            .collect(Collectors.partitioningBy(dto -> {
+              try {
+                finalDefenceCostEntitySaver.saveEntity(
+                    FinalDefenceCostsHelper.toFinalDefenceCostEntity(dto)
+                );
+                return true;   // saved
+              } catch (Exception e) {
+                log.warn("Failed to save Final Defence Cost Entity", e);
+                return false;  // failed
+              }
+            }));
 
-    int count = fdcEntities.size();
-    for (int i = 0; i < count; i += batchSize) {
-      int end = Math.min(i + batchSize, count);
-      finalDefenceCostsRepository.saveAll(fdcEntities.subList(i, end));
-      finalDefenceCostsRepository.flush();
-    }
+    int saved = result.get(true).size();
+    invalidDtos.addAll(result.get(false));
 
-    log.info("{} FDC records processed successfully.", count);
+    log.info("{} FDC records processed successfully.", saved);
 
-    return count;
+    return invalidDtos;
   }
 
-  @Transactional
-  public int saveFdcReadyItems(List<FdcReadyRequestDTO> requestDTOs) {
+  public List<FdcReadyRequestDTO> saveFdcReadyItems(List<FdcReadyRequestDTO> requestDTOs) {
     log.info("Saving {} FDC Ready items", requestDTOs.size());
 
     List<FdcReadyRequestDTO> validRequestDTOs = new ArrayList<>(requestDTOs);
-    List<FdcReadyRequestDTO> invalidRequestDTOs = requestDTOs.stream()
-            .filter(dto -> !fdcItemValidator.validate(dto))
-            .toList();
-
-    log.warn("Invalid Fdc Ready records: {}: ", invalidRequestDTOs);
+    List<FdcReadyRequestDTO> invalidRequestDTOs = new ArrayList<>(requestDTOs.stream()
+        .filter(not(fdcItemValidator::validate))
+        .toList());
 
     validRequestDTOs.removeAll(invalidRequestDTOs);
 
-    int batchSize = fdcConfiguration.getBatchSize();
+    Map<Boolean, List<FdcReadyRequestDTO>> result =
+        validRequestDTOs.stream()
+            .collect(Collectors.partitioningBy(dto -> {
 
-    List<FDCReadyEntity> validEntities = validRequestDTOs.stream()
-            .map(request -> {
-              FDCType itemType = parseFdcType(request.getItemType());
-              if (itemType == null) {
-                log.warn("Invalid item_type: {} for maat_reference: {}",
-                        request.getItemType(), request.getMaatReference());
-                return null;
+              try {
+                fdcReadyEntitySaver.saveEntity(
+                    FinalDefenceCostsHelper.toFDCReadyEntity(dto)
+                );
+                return true;   // saved
+              } catch (Exception e) {
+                log.warn("Failed to save FDC Ready Entity", e);
+                return false;  // failed
               }
-              FDCReadyEntity entity = new FDCReadyEntity();
-              entity.setMaatId(request.getMaatReference());
-              entity.setFdcReady(request.getFdcReady());
-              entity.setItemType(itemType);
-              return entity;
-            })
-            .filter(Objects::nonNull)
-            .toList();
+            }));
 
-    int savedCount = 0;
-    List<List<FDCReadyEntity>> batchesEntities = ListUtils.batchList(validEntities, batchSize);
-    for (List<FDCReadyEntity> batch : batchesEntities) {
-      List<FDCReadyEntity> saved = finalDefenceCostsReadyRepository.saveAll(batch);
-      finalDefenceCostsReadyRepository.flush();
-      savedCount += saved.size();
-    }
+    int saved = result.get(true).size();
+    invalidRequestDTOs.addAll(result.get(false));
 
-
-    log.info("Successfully saved {} FDC Ready items", savedCount);
-    return savedCount;
-  }
-
-  private FDCType parseFdcType(String itemType) {
-    if (itemType == null) {
-      return null;
-    }
-
-    try {
-      return FDCType.valueOf(itemType.toUpperCase());
-    } catch (IllegalArgumentException e) {
-      return null;
-    }
+    log.info("{} FDC Ready items uccessfully saved.", saved);
+    return invalidRequestDTOs;
   }
 }

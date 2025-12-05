@@ -7,8 +7,8 @@ import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 
 public interface FinalDefenceCostService {
 
-  int processFinalDefenceCosts(List<FinalDefenceCostDTO> payload);
+  List<FinalDefenceCostDTO> processFinalDefenceCosts(List<FinalDefenceCostDTO> payload);
 
-  int saveFdcReadyItems(List<FdcReadyRequestDTO> requests);
+  List<FdcReadyRequestDTO> saveFdcReadyItems(List<FdcReadyRequestDTO> requests);
 
 }

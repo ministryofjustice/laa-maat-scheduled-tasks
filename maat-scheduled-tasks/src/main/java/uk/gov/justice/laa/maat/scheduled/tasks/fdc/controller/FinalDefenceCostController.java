@@ -35,53 +35,53 @@ public class FinalDefenceCostController {
       @ApiResponse(responseCode = "400", description = "Invalid or missing request data.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
       @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
-    public ResponseEntity<LoadFDCResponse> loadFdc(@RequestBody List<FinalDefenceCostDTO> payload) {
+    public ResponseEntity<LoadFDCResponse<FinalDefenceCostDTO>> loadFdc(@RequestBody List<FinalDefenceCostDTO> payload) {
 
       if (payload == null || payload.isEmpty()) {
-        return createResponse(HttpStatus.BAD_REQUEST, false, 0, "Request body cannot be empty");
+        return createResponse(HttpStatus.BAD_REQUEST, false, List.of(), "Request body cannot be empty");
       }
 
       try {
-        int recordsInserted = finalDefenceCostService.processFinalDefenceCosts(payload);
-        if (recordsInserted == payload.size()) {
-          return createResponse(HttpStatus.OK, true, recordsInserted, "Loaded dataset successfully.");
+        List<FinalDefenceCostDTO> failed = finalDefenceCostService.processFinalDefenceCosts(payload);
+        if (failed.isEmpty()) {
+          return createResponse(HttpStatus.OK, true, List.of(), "Loaded dataset successfully.");
         } else {
-          return createResponse(HttpStatus.OK, true, recordsInserted, "Not all dataset loaded successfully.");
+          return createResponse(HttpStatus.OK, true, failed, "Not all dataset loaded successfully.");
         }
       } catch (Exception e) {
         log.error("Failed to save FDC items", e);
-        return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, false, 0, String.format("Failed to load FDC data: %s", e.getMessage()));
+        return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, false, List.of(), String.format("Exception while loading FDC data: %s", e.getMessage()));
       }
     }
 
     @Operation(description = "Save FDC Ready items")
     @PostMapping("/save-fdc-ready")
-    public ResponseEntity<LoadFDCResponse> saveFdcReadyItems(
+    public ResponseEntity<LoadFDCResponse<FdcReadyRequestDTO>> saveFdcReadyItems(
              @RequestBody List<FdcReadyRequestDTO> requests ) {
         if (requests == null || requests.isEmpty()) {
-            return createResponse(HttpStatus.BAD_REQUEST, false, 0, "Request body cannot be empty");
+            return createResponse(HttpStatus.BAD_REQUEST, false, List.of(), "Request body cannot be empty");
         }
 
         try {
-            int recordsInserted = finalDefenceCostService.saveFdcReadyItems(requests);
-            if (recordsInserted == requests.size()) {
-                return createResponse(HttpStatus.OK, true, recordsInserted,
-                        String.format("Successfully saved %d FDC Ready items", recordsInserted));
+          List<FdcReadyRequestDTO> failed = finalDefenceCostService.saveFdcReadyItems(requests);
+            if (failed.isEmpty()) {
+                return createResponse(HttpStatus.OK, true, List.of(),
+                        String.format("Successfully saved %d FDC Ready items", requests.size()));
             } else {
-                return createResponse(HttpStatus.OK, true, recordsInserted,
+                return createResponse(HttpStatus.OK, true, failed,
                         "Not all FDC Ready items saved successfully.");
             }
         } catch (Exception e) {
             log.error("Failed to save FDC Ready items", e);
-            return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, false, 0,
+            return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, false, List.of(),
                     String.format("Failed to save FDC Ready items: %s", e.getMessage()));
         }
     }
 
 
-    private ResponseEntity<LoadFDCResponse> createResponse(HttpStatus status, boolean success, int records, String message) {
+    private <T> ResponseEntity<LoadFDCResponse<T>> createResponse(HttpStatus status, boolean success, List<T> records, String message) {
       return ResponseEntity.status(status).body(
-          new LoadFDCResponse(success, records, message)
+          new LoadFDCResponse<>(success, records, message)
       );
     }
 }

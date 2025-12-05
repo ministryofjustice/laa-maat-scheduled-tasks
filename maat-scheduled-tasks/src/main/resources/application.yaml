@@ -80,9 +80,6 @@ xhibit-batch:
   s3-data-bucket-name: ${AWS_S3_XHIBIT_DATA_BUCKET_NAME}
   fetch-size: ${XHIBIT_BATCH_FETCH_SIZE}
 
-fdc-batch:
-  fetch-size: ${FDC_BATCH_SIZE}
-
 billing:
   user-modified: "system"
   cclf_extract:

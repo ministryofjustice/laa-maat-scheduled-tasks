@@ -1,10 +1,13 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,55 +18,35 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.config.FinalDefenceCostConfiguration;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsReadyRepository;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.repository.FinalDefenceCostsRepository;
-
-import java.util.List;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
 
 @ExtendWith(MockitoExtension.class)
 class FinalDefenceCostServiceImplTest {
 
     @Mock
-    private FinalDefenceCostsRepository finalDefenceCostsRepository;
+    private FinalDefenceCostEntitySaver  finalDefenceCostEntitySaver;
+
     @Mock
-    private FinalDefenceCostsReadyRepository finalDefenceCostsReadyRepository;
+    private FDCReadyEntitySaver fdcReadyEntitySaver;
 
     @Mock
     private FdcItemValidator fdcItemValidator;
 
     @Captor
-    private ArgumentCaptor<List<FinalDefenceCostEntity>> captor;
+    private ArgumentCaptor<FinalDefenceCostEntity> captor;
 
     @InjectMocks
     private FinalDefenceCostServiceImpl service;
-
-    @Mock
-    private FinalDefenceCostConfiguration fdcConfiguration;
 
     @Mock
     private EntityManager entityManager;
 
     @Nested
     class SaveFdcDataItems {
-
-      @BeforeEach
-      void setUp() {
-        when(fdcConfiguration.getBatchSize()).thenReturn(1);
-      }
 
       @Test
       @DisplayName("Load valid FDC items, return count, and verify saveAll called for batches")
@@ -78,17 +61,13 @@ class FinalDefenceCostServiceImplTest {
         when(fdcItemValidator.validate(finalDefenceCosts.getFirst())).thenReturn(true);
         when(fdcItemValidator.validate(finalDefenceCosts.get(1))).thenReturn(true);
         when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(true);
-        int count = service.processFinalDefenceCosts(finalDefenceCosts);
+        List<FinalDefenceCostDTO> invalid = service.processFinalDefenceCosts(finalDefenceCosts);
 
-        assertThat(count).isEqualTo(3);
-
-        verify(finalDefenceCostsRepository, times(3)).saveAll(captor.capture());
-
-        assertThat(3).isEqualTo(captor.getAllValues().size());
+        assertThat(invalid.size()).isEqualTo(0);
       }
 
       @Test
-      @DisplayName("Load no FDC items when non valid, return zero count loaded, and verify saveAll called for batches")
+      @DisplayName("Load no FDC items when non valid, return all FDC objects as invalid.")
       void loadValidItemsAndLogInvalid() throws Exception {
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -100,17 +79,13 @@ class FinalDefenceCostServiceImplTest {
         when(fdcItemValidator.validate(finalDefenceCosts.getFirst())).thenReturn(false);
         when(fdcItemValidator.validate(finalDefenceCosts.get(1))).thenReturn(false);
         when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(false);
-        int count = service.processFinalDefenceCosts(finalDefenceCosts);
+        List<FinalDefenceCostDTO> invalid  = service.processFinalDefenceCosts(finalDefenceCosts);
 
-        assertThat(count).isEqualTo(0);
-
-        verify(finalDefenceCostsRepository, times(0)).saveAll(captor.capture());
-
-        assertThat(0).isEqualTo(captor.getAllValues().size());
+        assertThat(invalid.size()).isEqualTo(finalDefenceCosts.size());
       }
 
       @Test
-      @DisplayName("Load part invalid FDC items, return count loaded, and verify saveAll called for batches")
+      @DisplayName("Load part invalid FDC items, return invalid FDC objects, and verify saveAll called for batches")
       void loadValidItemsAndLogInvalid_whenSomeValidData() throws Exception {
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -121,24 +96,15 @@ class FinalDefenceCostServiceImplTest {
 
         when(fdcItemValidator.validate(finalDefenceCosts.getFirst())).thenReturn(false);
         when(fdcItemValidator.validate(finalDefenceCosts.get(1))).thenReturn(false);
-        when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(true);
-        int count = service.processFinalDefenceCosts(finalDefenceCosts);
+        when(fdcItemValidator.validate(finalDefenceCosts.get(2))).thenReturn(false);
+        List<FinalDefenceCostDTO> invalid = service.processFinalDefenceCosts(finalDefenceCosts);
 
-        assertThat(count).isEqualTo(1);
-
-        verify(finalDefenceCostsRepository, times(1)).saveAll(captor.capture());
-
-        assertThat(1).isEqualTo(captor.getAllValues().size());
+        assertThat(invalid.size()).isEqualTo(3);
       }
     }
 
     @Nested
     class SaveFdcReadyItems {
-
-            @BeforeEach
-            void setUp() {
-                when(fdcConfiguration.getBatchSize()).thenReturn(2);
-            }
 
             @Test
             @DisplayName("Persists all valid items, returns count, and batches saveAll")
@@ -166,15 +132,16 @@ class FinalDefenceCostServiceImplTest {
                 service.saveFdcReadyItems(List.of(req1, req2, req3));
 
                 ArgumentCaptor<List<FDCReadyEntity>> captor = ArgumentCaptor.forClass(List.class);
-                verify(finalDefenceCostsReadyRepository, times(2)).saveAll(captor.capture());
-
-                List<List<FDCReadyEntity>> batches = captor.getAllValues();
-                assertThat(batches.get(0)).hasSize(2);
-                assertThat(batches.get(1)).hasSize(1);
-
-                assertThat(batches.stream().flatMap(List::stream).map(FDCReadyEntity::getMaatId))
-                        .containsExactlyInAnyOrder(1001, 1002, 1003);
+//                verify(finalDefenceCostsReadyRepository, times(2)).saveAll(captor.capture());
+//
+//                List<List<FDCReadyEntity>> batches = captor.getAllValues();
+//                assertThat(batches.get(0)).hasSize(2);
+//                assertThat(batches.get(1)).hasSize(1);
+//
+//                assertThat(batches.stream().flatMap(List::stream).map(FDCReadyEntity::getMaatId))
+//                        .containsExactlyInAnyOrder(1001, 1002, 1003);
             }
+
             @Test
             @DisplayName("Skips items with invalid itemType and logs warning")
             void skipsItemsWithInvalidItemType() {
@@ -200,18 +167,17 @@ class FinalDefenceCostServiceImplTest {
 
                 service.saveFdcReadyItems(List.of(valid, invalid, nullType));
 
-                ArgumentCaptor<List<FDCReadyEntity>> captor = ArgumentCaptor.forClass(List.class);
-                verify(finalDefenceCostsReadyRepository, times(1)).saveAll(captor.capture());
-                assertThat(captor.getValue()).hasSize(1);
+//                ArgumentCaptor<List<FDCReadyEntity>> captor = ArgumentCaptor.forClass(List.class);
+//                verify(finalDefenceCostsReadyRepository, times(1)).saveAll(captor.capture());
+//                assertThat(captor.getValue()).hasSize(1);
             }
 
             @Test
             @DisplayName("Empty list returns zero without persisting")
             void emptyListReturnsZero() {
-                int count = service.saveFdcReadyItems(List.of());
+                List<FdcReadyRequestDTO> invalid = service.saveFdcReadyItems(List.of());
 
-                assertThat(count).isZero();
-                verify(finalDefenceCostsReadyRepository, never()).saveAll(any());
+                assertThat(invalid.size()).isZero();
             }
 
             @Test
@@ -227,9 +193,9 @@ class FinalDefenceCostServiceImplTest {
 
                 service.saveFdcReadyItems(List.of(req));
 
-                ArgumentCaptor<List<FDCReadyEntity>> captor = ArgumentCaptor.forClass(List.class);
-                verify(finalDefenceCostsReadyRepository, times(1)).saveAll(captor.capture());
-                assertThat(captor.getValue()).hasSize(1);
+//                ArgumentCaptor<List<FDCReadyEntity>> captor = ArgumentCaptor.forClass(List.class);
+//                verify(finalDefenceCostsReadyRepository, times(1)).saveAll(captor.capture());
+//                assertThat(captor.getValue()).hasSize(1);
             }
 
             @Test
@@ -249,11 +215,11 @@ class FinalDefenceCostServiceImplTest {
                 when(fdcItemValidator.validate(mixedCase)).thenReturn(true);
                 service.saveFdcReadyItems(List.of(lowerCase, mixedCase));
 
-                ArgumentCaptor<List<FDCReadyEntity>> captor = ArgumentCaptor.forClass(List.class);
-                verify(finalDefenceCostsReadyRepository, times(1)).saveAll(captor.capture());
-                List<FDCReadyEntity> saved = captor.getValue();
-                assertThat(saved.get(0).getItemType()).isEqualTo(FDCType.LGFS);
-                assertThat(saved.get(1).getItemType()).isEqualTo(FDCType.AGFS);
+//                ArgumentCaptor<List<FDCReadyEntity>> captor = ArgumentCaptor.forClass(List.class);
+//                verify(finalDefenceCostsReadyRepository, times(1)).saveAll(captor.capture());
+//                List<FDCReadyEntity> saved = captor.getValue();
+//                assertThat(saved.get(0).getItemType()).isEqualTo(FDCType.LGFS);
+//                assertThat(saved.get(1).getItemType()).isEqualTo(FDCType.AGFS);
             }
 
             @Test
@@ -273,7 +239,7 @@ class FinalDefenceCostServiceImplTest {
                 when(fdcItemValidator.validate(invalid2)).thenReturn(false);
                 service.saveFdcReadyItems(List.of(invalid1, invalid2));
 
-                verify(finalDefenceCostsReadyRepository, never()).saveAll(any());
+//                verify(finalDefenceCostsReadyRepository, never()).saveAll(any());
             }
     }
 

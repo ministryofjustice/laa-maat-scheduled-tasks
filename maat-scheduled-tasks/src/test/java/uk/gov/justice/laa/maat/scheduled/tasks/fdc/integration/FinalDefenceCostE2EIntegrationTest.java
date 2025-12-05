@@ -1,10 +1,14 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.integration;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +16,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FdcReadyRequestDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
 
 @SpringBootTest
@@ -41,7 +45,7 @@ public class FinalDefenceCostE2EIntegrationTest {
                 .content(payload))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.recordsInserted").value(3))
+        .andExpect(jsonPath("$.invalid", hasSize(0)))
         .andExpect(jsonPath("$.message").value("Loaded dataset successfully."));
   }
 
@@ -50,17 +54,25 @@ public class FinalDefenceCostE2EIntegrationTest {
   void testFdcLoad_whenAllInvalidData_returns200() throws Exception {
 
     String payload = FdcTestDataProvider.getInvalidFdcData();
+    objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
+    List<FinalDefenceCostDTO> invalid = objectMapper.readValue(
+        payload, new TypeReference<>() {
+        });
 
     mockMvc.perform(
             post(BASE + "/load-fdc")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(payload)
-                .with(SecurityMockMvcRequestPostProcessors.jwt()
-                    .jwt(jwt -> jwt.claim("scope", "maat-scheduled-tasks-dev/standard")))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.recordsInserted").value(0))
+        .andExpect(content().json("""
+                                    {
+                                      "success": true,
+                                      "invalid": %s,
+                                      "message": "Not all dataset loaded successfully."
+                                    }
+                                    """.formatted(payload)))
         .andExpect(jsonPath("$.message").value("Not all dataset loaded successfully."));
   }
 
@@ -70,13 +82,42 @@ public class FinalDefenceCostE2EIntegrationTest {
 
     String payload = FdcTestDataProvider.getInvalidFdcDataWithMissingFields();
 
+    String retJson = """
+        [
+            {
+              "maat_reference": 123456,
+              "case_no": "CASE1",
+              "supp_account_code": "SUPPLIER1",
+              "court_code": "COURT1",
+              "judicial_apportionment": 11,
+              "final_defence_cost": 456.64,
+              "paid_as_claimed": "Y"
+            },
+            {
+              "maat_reference": 234567,
+              "case_no": "CASE2",
+              "court_code": "COURT2",
+              "judicial_apportionment": 12,
+              "final_defence_cost": 564.32,
+              "item_type": "HGFS",
+              "paid_as_claimed": "Y"
+            }
+          ]
+        """;
+
     mockMvc.perform(
             post(BASE + "/load-fdc")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(payload))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.recordsInserted").value(1))
+        .andExpect(content().json("""
+                                    {
+                                      "success": true,
+                                      "invalid": %s,
+                                      "message": "Not all dataset loaded successfully."
+                                    }
+                                    """.formatted(retJson)))
         .andExpect(jsonPath("$.message").value("Not all dataset loaded successfully."));
   }
 
@@ -92,7 +133,7 @@ public class FinalDefenceCostE2EIntegrationTest {
                 .content(payload))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.success").value(false))
-        .andExpect(jsonPath("$.recordsInserted").value(0))
+        .andExpect(jsonPath("$.invalid", hasSize(0)))
         .andExpect(jsonPath("$.message").value("Request body cannot be empty"));
   }
 
@@ -104,7 +145,7 @@ public class FinalDefenceCostE2EIntegrationTest {
             .content("[]"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.success").value(false))
-        .andExpect(jsonPath("$.recordsInserted").value(0))
+        .andExpect(jsonPath("$.invalid", hasSize(0)))
         .andExpect(jsonPath("$.message").value("Request body cannot be empty"));
   }
 
@@ -123,7 +164,7 @@ public class FinalDefenceCostE2EIntegrationTest {
             .content(body))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.recordsInserted").value(2))
+        .andExpect(jsonPath("$.invalid", hasSize(0)))
         .andExpect(jsonPath("$.message").value("Successfully saved 2 FDC Ready items"));
 
   }
@@ -136,13 +177,20 @@ public class FinalDefenceCostE2EIntegrationTest {
         new FdcReadyRequestDTO(456, "Y1", "IN-VALID")
     );
     String body = objectMapper.writeValueAsString(requests);
+    String invalid = objectMapper.writeValueAsString(List.of(new FdcReadyRequestDTO(456, "Y1", "IN-VALID")));
 
     mockMvc.perform(post(BASE + "/save-fdc-ready")
             .contentType(MediaType.APPLICATION_JSON)
             .content(body))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.recordsInserted").value(1))
+        .andExpect(content().json("""
+                                    {
+                                      "success": true,
+                                      "invalid": %s,
+                                      "message": "Not all FDC Ready items saved successfully."
+                                    }
+                                    """.formatted(invalid)))
         .andExpect(jsonPath("$.message").value("Not all FDC Ready items saved successfully."));
   }
 }
