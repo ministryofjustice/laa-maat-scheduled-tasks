@@ -54,7 +54,7 @@ class FinalDefenceCostControllerTest {
       String fdcDataJson = FdcTestDataProvider.getValidFdcData();
 
       List<FinalDefenceCostDTO> payload = createTestFDCDtos(fdcDataJson);
-      when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(List.of());
+      when(finalDefenceCostService.saveFDCItems(payload)).thenReturn(List.of());
 
       mockMvc.perform(
           buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load", false))
@@ -63,7 +63,7 @@ class FinalDefenceCostControllerTest {
           .andExpect(jsonPath("$.invalid", hasSize(0)))
           .andExpect(jsonPath("$.message", containsString("Loaded dataset successfully.")));
 
-      verify(finalDefenceCostService, times(1)).processFinalDefenceCosts(payload);
+      verify(finalDefenceCostService, times(1)).saveFDCItems(payload);
     }
 
     @Test
@@ -73,7 +73,7 @@ class FinalDefenceCostControllerTest {
       String fdcDataJson = FdcTestDataProvider.getInvalidFdcData();
 
       List<FinalDefenceCostDTO> payload = createTestFDCDtos(fdcDataJson);
-      when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(payload);
+      when(finalDefenceCostService.saveFDCItems(payload)).thenReturn(payload);
 
       mockMvc.perform(
               buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load", false))
@@ -88,13 +88,13 @@ class FinalDefenceCostControllerTest {
                                     """.formatted(fdcDataJson)))
           .andExpect(jsonPath("$.message", containsString("Not all dataset loaded successfully.")));
 
-      verify(finalDefenceCostService).processFinalDefenceCosts(payload);
+      verify(finalDefenceCostService).saveFDCItems(payload);
     }
 
   @DisplayName("load-fdc: returns 500 when service throws exception")
   @Test
   void testLoadFdc_returns500ServiceException() throws Exception {
-    when(finalDefenceCostService.processFinalDefenceCosts(any()))
+    when(finalDefenceCostService.saveFDCItems(any()))
         .thenThrow(new RuntimeException("Internal Server Error"));
 
     String body = FdcTestDataProvider.getInvalidFdcData();
@@ -107,7 +107,7 @@ class FinalDefenceCostControllerTest {
         .andExpect(jsonPath("$.invalid", hasSize(0)))
         .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("Exception while loading FDC data: Internal Server Error")));
 
-    verify(finalDefenceCostService).processFinalDefenceCosts(any());
+    verify(finalDefenceCostService).saveFDCItems(any());
   }
 
     @Test
@@ -117,7 +117,7 @@ class FinalDefenceCostControllerTest {
       String fdcDataJson = FdcTestDataProvider.getInvalidFdcDataWithMissingFields();
 
       List<FinalDefenceCostDTO> payload = createTestFDCDtos(fdcDataJson);
-      when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(payload.subList(0, 2));
+      when(finalDefenceCostService.saveFDCItems(payload)).thenReturn(payload.subList(0, 2));
       String result = objectMapper.writeValueAsString(payload.subList(0, 2));
 
       mockMvc.perform(
@@ -133,7 +133,7 @@ class FinalDefenceCostControllerTest {
                                     """.formatted(result)))
           .andExpect(jsonPath("$.message", containsString("Not all dataset loaded successfully.")));
 
-      verify(finalDefenceCostService).processFinalDefenceCosts(payload);
+      verify(finalDefenceCostService).saveFDCItems(payload);
     }
 
     @Test
@@ -143,7 +143,7 @@ class FinalDefenceCostControllerTest {
       String fdcDataJson = "[]";
 
       List<FinalDefenceCostDTO> payload = createTestFDCDtos(fdcDataJson);
-      when(finalDefenceCostService.processFinalDefenceCosts(payload)).thenReturn(List.of());
+      when(finalDefenceCostService.saveFDCItems(payload)).thenReturn(List.of());
 
       mockMvc.perform(
               buildRequestGivenContent(HttpMethod.POST, fdcDataJson, BASE + "/load", false))

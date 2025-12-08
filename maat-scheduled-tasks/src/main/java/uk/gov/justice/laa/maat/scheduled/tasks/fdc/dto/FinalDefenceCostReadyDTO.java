@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNoFlag;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 
 @Data
@@ -20,7 +20,7 @@ public class FinalDefenceCostReadyDTO {
 
     @NotNull(message = "fdc_ready is mandatory")
     @JsonProperty("fdc_ready")
-    private YesNoFlag fdcReady;
+    private YesNo fdcReady;
 
     @NotNull(message = "item_type is mandatory")
     @JsonProperty("item_type")

@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
+import static java.lang.String.format;
 import static java.util.function.Predicate.not;
 
 import java.util.ArrayList;
@@ -23,32 +24,29 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
   private final FDCReadyEntitySaver fdcReadyEntitySaver;
   private final FdcItemValidator fdcItemValidator;
 
-  public List<FinalDefenceCostDTO> processFinalDefenceCosts(List<FinalDefenceCostDTO> dtos) {
+  public List<FinalDefenceCostDTO> saveFDCItems(List<FinalDefenceCostDTO> dtos) {
     log.info("Loading Final Defence Costs data into HUB");
 
-    List<FinalDefenceCostDTO> payloadDtos = new ArrayList<>(dtos);
-    List<FinalDefenceCostDTO> invalidDtos = new ArrayList<>(payloadDtos.stream()
-        .filter(not(fdcItemValidator::validate))
-        .toList());
+    List<FinalDefenceCostDTO> invalidDtos = new ArrayList<>();
+    int saved = 0;
 
-    payloadDtos.removeAll(invalidDtos);
+    for (FinalDefenceCostDTO dto : dtos) {
 
-    Map<Boolean, List<FinalDefenceCostDTO>> result =
-        payloadDtos.stream()
-            .collect(Collectors.partitioningBy(dto -> {
-              try {
-                finalDefenceCostEntitySaver.saveEntity(
-                    FinalDefenceCostsHelper.toFinalDefenceCostEntity(dto)
-                );
-                return true;   // saved
-              } catch (Exception e) {
-                log.warn("Failed to save Final Defence Cost Entity", e);
-                return false;  // failed
-              }
-            }));
+      if (!fdcItemValidator.validate(dto)) {
+        invalidDtos.add(dto);
+        continue;
+      }
 
-    int saved = result.get(true).size();
-    invalidDtos.addAll(result.get(false));
+      try {
+        finalDefenceCostEntitySaver.saveEntity(
+            FinalDefenceCostsHelper.toFinalDefenceCostEntity(dto)
+        );
+        saved++;
+      } catch (Exception e) {
+        log.warn(format("Failed to save FDC record with MAAT Reference: %s", dto.getMaatReference()), e);
+        invalidDtos.add(dto);
+      }
+    }
 
     log.info("{} FDC records processed successfully.", saved);
 
@@ -58,32 +56,29 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
   public List<FinalDefenceCostReadyDTO> saveFdcReadyItems(List<FinalDefenceCostReadyDTO> requestDTOs) {
     log.info("Saving {} FDC Ready items", requestDTOs.size());
 
-    List<FinalDefenceCostReadyDTO> validRequestDTOs = new ArrayList<>(requestDTOs);
-    List<FinalDefenceCostReadyDTO> invalidRequestDTOs = new ArrayList<>(requestDTOs.stream()
-        .filter(not(fdcItemValidator::validate))
-        .toList());
+    List<FinalDefenceCostReadyDTO> invalidRequestDTOs = new ArrayList<>();
+    int saved = 0;
 
-    validRequestDTOs.removeAll(invalidRequestDTOs);
+    for (FinalDefenceCostReadyDTO dto : requestDTOs) {
 
-    Map<Boolean, List<FinalDefenceCostReadyDTO>> result =
-        validRequestDTOs.stream()
-            .collect(Collectors.partitioningBy(dto -> {
+      if (!fdcItemValidator.validate(dto)) {
+        invalidRequestDTOs.add(dto);
+        continue;
+      }
 
-              try {
-                fdcReadyEntitySaver.saveEntity(
-                    FinalDefenceCostsHelper.toFDCReadyEntity(dto)
-                );
-                return true;   // saved
-              } catch (Exception e) {
-                log.warn("Failed to save FDC Ready Entity", e);
-                return false;  // failed
-              }
-            }));
-
-    int saved = result.get(true).size();
-    invalidRequestDTOs.addAll(result.get(false));
+      try {
+        fdcReadyEntitySaver.saveEntity(
+            FinalDefenceCostsHelper.toFDCReadyEntity(dto)
+        );
+        saved++;
+      } catch (Exception e) {
+        log.warn(format("Failed to save FDC Ready record with MAAT Reference: %s", dto.getMaatReference()), e);
+        invalidRequestDTOs.add(dto);
+      }
+    }
 
     log.info("{} FDC Ready items successfully saved.", saved);
+
     return invalidRequestDTOs;
   }
 }

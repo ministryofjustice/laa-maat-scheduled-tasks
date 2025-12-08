@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNoFlag;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
@@ -155,8 +155,8 @@ public class FinalDefenceCostE2EIntegrationTest {
   void saveFdcReadyReturns200WithSuccessPayload() throws Exception {
 
     List<FinalDefenceCostReadyDTO> requests = List.of(
-        new FinalDefenceCostReadyDTO(123, YesNoFlag.Y, FDCType.AGFS),
-        new FinalDefenceCostReadyDTO(456, YesNoFlag.N, FDCType.LGFS)
+        new FinalDefenceCostReadyDTO(123, YesNo.Y, FDCType.AGFS),
+        new FinalDefenceCostReadyDTO(456, YesNo.N, FDCType.LGFS)
     );
     String body = objectMapper.writeValueAsString(requests);
 
@@ -174,11 +174,11 @@ public class FinalDefenceCostE2EIntegrationTest {
   @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
   void saveFdcReadyReturnsZeroForInvalidRequestDto() throws Exception {
     List<FinalDefenceCostReadyDTO> requests = List.of(
-        new FinalDefenceCostReadyDTO(123, YesNoFlag.Y, FDCType.AGFS),
-        new FinalDefenceCostReadyDTO(456, YesNoFlag.Y, null)
+        new FinalDefenceCostReadyDTO(123, YesNo.Y, FDCType.AGFS),
+        new FinalDefenceCostReadyDTO(456, YesNo.Y, null)
     );
     String body = objectMapper.writeValueAsString(requests);
-    String invalid = objectMapper.writeValueAsString(List.of(new FinalDefenceCostReadyDTO(456, YesNoFlag.Y, null)));
+    String invalid = objectMapper.writeValueAsString(List.of(new FinalDefenceCostReadyDTO(456, YesNo.Y, null)));
 
     mockMvc.perform(post(BASE + "/ready")
             .contentType(MediaType.APPLICATION_JSON)

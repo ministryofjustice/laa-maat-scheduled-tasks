@@ -7,7 +7,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 
 public interface FinalDefenceCostService {
 
-  List<FinalDefenceCostDTO> processFinalDefenceCosts(List<FinalDefenceCostDTO> payload);
+  List<FinalDefenceCostDTO> saveFDCItems(List<FinalDefenceCostDTO> payload);
 
   List<FinalDefenceCostReadyDTO> saveFdcReadyItems(List<FinalDefenceCostReadyDTO> requests);
 

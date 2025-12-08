@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNoFlag;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 
 @Data
@@ -32,7 +32,7 @@ public class FDCReadyEntity {
     private Integer maatId;
 
     @Column(name = "FDC_READY", length = 1)
-    private YesNoFlag fdcReady;
+    private YesNo fdcReady;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ITEM_TYPE", length = 4)

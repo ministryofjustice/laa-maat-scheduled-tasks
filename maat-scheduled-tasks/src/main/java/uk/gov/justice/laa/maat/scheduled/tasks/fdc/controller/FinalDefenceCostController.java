@@ -42,7 +42,7 @@ public class FinalDefenceCostController {
       }
 
       try {
-        List<FinalDefenceCostDTO> failed = finalDefenceCostService.processFinalDefenceCosts(payload);
+        List<FinalDefenceCostDTO> failed = finalDefenceCostService.saveFDCItems(payload);
         if (failed.isEmpty()) {
           return createResponse(HttpStatus.OK, true, List.of(), "Loaded dataset successfully.");
         } else {
@@ -56,6 +56,11 @@ public class FinalDefenceCostController {
 
     @Operation(description = "Save FDC Ready items")
     @PostMapping("/ready")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Request processed successfully.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "400", description = "Invalid or missing request data.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "500", description = "Internal server error.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+    })
     public ResponseEntity<LoadFDCResponse<FinalDefenceCostReadyDTO>> saveFdcReadyItems(
              @RequestBody List<FinalDefenceCostReadyDTO> requests ) {
         if (requests == null || requests.isEmpty()) {

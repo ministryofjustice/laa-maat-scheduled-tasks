@@ -4,7 +4,7 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNoFlag;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 
@@ -24,7 +24,7 @@ class FdcItemValidatorTest {
     void validate_returnsTrue_forValidDTO() {
         FinalDefenceCostReadyDTO dto = FinalDefenceCostReadyDTO.builder()
                 .maatReference(123)
-                .fdcReady(YesNoFlag.Y)
+                .fdcReady(YesNo.Y)
                 .itemType(FDCType.LGFS)
                 .build();
         assertThat(validator.validate(dto)).isTrue();
@@ -34,7 +34,7 @@ class FdcItemValidatorTest {
     void validate_returnsFalse_forNullMaatReference() {
         FinalDefenceCostReadyDTO dto = FinalDefenceCostReadyDTO.builder()
                 .maatReference(null)
-                .fdcReady(YesNoFlag.Y)
+                .fdcReady(YesNo.Y)
                 .itemType(FDCType.LGFS)
                 .build();
         assertThat(validator.validate(dto)).isFalse();

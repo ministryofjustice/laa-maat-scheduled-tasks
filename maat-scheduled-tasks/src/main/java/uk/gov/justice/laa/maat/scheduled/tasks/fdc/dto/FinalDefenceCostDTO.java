@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNoFlag;
+import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 
 @Data
@@ -20,7 +20,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 public class FinalDefenceCostDTO {
 
   @NotNull(message = "maat_reference is mandatory.")
-  @Min(value = 1, message = "maat_reference cannot be less than 1.")
+  @Min(value = 1, message = "MAAT reference cannot be less than 1.")
   @JsonProperty("maat_reference")
   private int maatReference;
 
@@ -55,5 +55,5 @@ public class FinalDefenceCostDTO {
 
   @NotNull(message = "paid_as_claimed is mandatory.")
   @JsonProperty("paid_as_claimed")
-  private YesNoFlag paidAsClaimed;
+  private YesNo paidAsClaimed;
 }
