@@ -31,9 +31,9 @@ class FdcItemValidatorTest {
     }
 
     @Test
-    void validate_returnsFalse_forNullMaatReference() {
+    void validate_returnsFalse_forMaatReferenceLessThanOne() {
         FinalDefenceCostReadyDTO dto = FinalDefenceCostReadyDTO.builder()
-                .maatReference(null)
+                .maatReference(0)
                 .fdcReady(YesNo.Y)
                 .itemType(FDCType.LGFS)
                 .build();
