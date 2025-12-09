@@ -74,9 +74,13 @@ dependencies {
 	testImplementation "org.testcontainers:localstack:$versions.localstack"
 	testImplementation "cloud.localstack:localstack-utils:$versions.localstackUtils"
 	testImplementation "org.testcontainers:junit-jupiter:$versions.localstack"
+    testImplementation 'org.springframework.security:spring-security-test'
 
 	testCompileOnly "org.projectlombok:lombok"
 	testAnnotationProcessor "org.projectlombok:lombok"
+
+	testImplementation 'org.springframework.security:spring-security-test'
+
 }
 
 tasks.named('test') {
