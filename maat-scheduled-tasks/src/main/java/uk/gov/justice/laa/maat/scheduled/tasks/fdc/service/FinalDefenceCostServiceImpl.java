@@ -43,7 +43,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
         );
         saved++;
       } catch (Exception e) {
-        log.warn(format("Failed to save FDC record with MAAT Reference: %s", dto.getMaatReference()), e);
+        log.error("Failed to save FDC record with MAAT Reference: {}", dto.getMaatReference(), e);
         invalidDtos.add(dto);
       }
     }
@@ -72,7 +72,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
         );
         saved++;
       } catch (Exception e) {
-        log.warn(format("Failed to save FDC Ready record with MAAT Reference: %s", dto.getMaatReference()), e);
+        log.error("Failed to save FDC Ready record with MAAT Reference: {}", dto.getMaatReference(), e);
         invalidRequestDTOs.add(dto);
       }
     }

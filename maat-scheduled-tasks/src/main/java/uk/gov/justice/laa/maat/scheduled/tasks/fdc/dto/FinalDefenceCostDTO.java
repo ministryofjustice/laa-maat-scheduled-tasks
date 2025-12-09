@@ -20,7 +20,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 public class FinalDefenceCostDTO {
 
   @NotNull(message = "maat_reference is mandatory.")
-  @Min(value = 1, message = "MAAT reference cannot be less than 1.")
+  @Min(value = 1, message = "maat_reference cannot be less than 1.")
   @JsonProperty("maat_reference")
   private int maatReference;
 
@@ -40,12 +40,12 @@ public class FinalDefenceCostDTO {
   private String courtCode;
 
   @NotNull(message = "judicial_apportionment is mandatory.")
-  @Min(value = 1, message = "Judicial apportionment cannot be less than 1.")
+  @Min(value = 1, message = "judicial_apportionment cannot be less than 1.")
   @JsonProperty("judicial_apportionment")
   private int judicialApportionment;
 
   @NotNull(message = "final_defence_cost is mandatory.")
-  @Min(value = 1, message = "Final defence cost cannot be less than 1.")
+  @Min(value = 1, message = "final_defence_cost cannot be less than 1.")
   @JsonProperty("final_defence_cost")
   private BigDecimal finalDefenceCost;
 
