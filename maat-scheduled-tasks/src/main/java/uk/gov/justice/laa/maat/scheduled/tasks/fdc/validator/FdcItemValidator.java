@@ -23,7 +23,7 @@ public class FdcItemValidator {
       return true;
     }
 
-    log.error(
+    log.warn(
         violations.stream()
             .map(ConstraintViolation::getMessage)
             .collect(Collectors.joining("\n"))

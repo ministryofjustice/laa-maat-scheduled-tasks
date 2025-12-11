@@ -33,7 +33,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
     for (FinalDefenceCostDTO dto : dtos) {
 
       if (!fdcItemValidator.validate(dto)) {
-        log.error("FDC record is not valid (MAAT reference: {})", dto.getMaatReference());
+        log.warn("FDC record is not valid (MAAT reference: {})", dto.getMaatReference());
         invalidDtos.add(dto);
         continue;
       }
