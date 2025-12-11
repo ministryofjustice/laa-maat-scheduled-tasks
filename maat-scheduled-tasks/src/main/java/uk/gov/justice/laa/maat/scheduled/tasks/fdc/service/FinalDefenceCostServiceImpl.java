@@ -63,7 +63,7 @@ public class FinalDefenceCostServiceImpl implements FinalDefenceCostService {
     for (FinalDefenceCostReadyDTO dto : requestDTOs) {
 
       if (!fdcItemValidator.validate(dto)) {
-        log.error("FDC Ready record is not valid (MAAT reference: {})", dto.getMaatReference());
+        log.warn("FDC Ready record is not valid (MAAT reference: {})", dto.getMaatReference());
         invalidRequestDTOs.add(dto);
         continue;
       }
