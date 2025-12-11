@@ -2,6 +2,8 @@ package uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -48,8 +50,10 @@ public class FinalDefenceCostEntity {
     private BigDecimal finalDefenceCost;
 
     @Column(name = "ITEM_TYPE", length = 4)
+    @Enumerated(EnumType.STRING)
     private FDCType itemType;
 
     @Column(name = "PAID_AS_CLAIMED", length = 1)
+    @Enumerated(EnumType.STRING)
     private YesNo paidAsClaimed;
 }

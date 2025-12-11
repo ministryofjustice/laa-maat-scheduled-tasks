@@ -40,12 +40,12 @@ public class FinalDefenceCostDTO {
   private String courtCode;
 
   @NotNull(message = "judicial_apportionment is mandatory.")
-  @Min(value = 1, message = "judicial_apportionment cannot be less than 1.")
+  @Min(value = 0, message = "judicial_apportionment cannot be negative.")
   @JsonProperty("judicial_apportionment")
   private int judicialApportionment;
 
   @NotNull(message = "final_defence_cost is mandatory.")
-  @Min(value = 1, message = "final_defence_cost cannot be less than 1.")
+  @Min(value = 0, message = "final_defence_cost cannot be negative.")
   @JsonProperty("final_defence_cost")
   private BigDecimal finalDefenceCost;
 
