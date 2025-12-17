@@ -1,14 +1,13 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class FdcItemValidatorTest {
 
@@ -24,7 +23,7 @@ class FdcItemValidatorTest {
     void validate_returnsTrue_forValidDTO() {
         FinalDefenceCostReadyDTO dto = FinalDefenceCostReadyDTO.builder()
                 .maatReference(123)
-                .fdcReady(YesNo.Y)
+                .fdcReady(true)
                 .itemType(FDCType.LGFS)
                 .build();
         assertThat(validator.validate(dto)).isTrue();
@@ -34,7 +33,7 @@ class FdcItemValidatorTest {
     void validate_returnsFalse_forMaatReferenceLessThanOne() {
         FinalDefenceCostReadyDTO dto = FinalDefenceCostReadyDTO.builder()
                 .maatReference(0)
-                .fdcReady(YesNo.Y)
+                .fdcReady(true)
                 .itemType(FDCType.LGFS)
                 .build();
         assertThat(validator.validate(dto)).isFalse();

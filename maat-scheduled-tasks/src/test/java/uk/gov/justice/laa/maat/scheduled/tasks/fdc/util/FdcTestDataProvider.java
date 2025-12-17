@@ -13,7 +13,7 @@ public class FdcTestDataProvider {
               "judicial_apportionment": 11,
               "final_defence_cost": 456.64,
               "item_type": "LGFS",
-              "paid_as_claimed": "Y"
+              "paid_as_claimed": true
             },
             {
               "maat_reference": 234567,
@@ -23,7 +23,7 @@ public class FdcTestDataProvider {
               "judicial_apportionment": 12,
               "final_defence_cost": 564.32,
               "item_type": "LGFS",
-              "paid_as_claimed": "Y"
+              "paid_as_claimed": true
             },
             {
               "maat_reference": 6785643,
@@ -33,7 +33,7 @@ public class FdcTestDataProvider {
               "judicial_apportionment": 13,
               "final_defence_cost": 7365.98,
               "item_type": "LGFS",
-              "paid_as_claimed": "N"
+              "paid_as_claimed": false
             }
           ]
           """;
@@ -50,7 +50,7 @@ public class FdcTestDataProvider {
               "judicial_apportionment": 11,
               "final_defence_cost": 456.64,
               "item_type": "LGFS",
-              "paid_as_claimed": "Y"
+              "paid_as_claimed": true
             },
             {
               "maat_reference": 234567,
@@ -59,7 +59,7 @@ public class FdcTestDataProvider {
               "court_code": "COURT2",
               "judicial_apportionment": 12,
               "final_defence_cost": 564.32,
-              "paid_as_claimed": "Y"
+              "paid_as_claimed": true
             },
             {
               "maat_reference": 6785643,
@@ -84,7 +84,7 @@ public class FdcTestDataProvider {
               "court_code": "COURT1",
               "judicial_apportionment": 11,
               "final_defence_cost": 456.64,
-              "paid_as_claimed": "Y"
+              "paid_as_claimed": true
             },
             {
               "maat_reference": 234567,
@@ -92,7 +92,7 @@ public class FdcTestDataProvider {
               "court_code": "COURT2",
               "judicial_apportionment": 12,
               "final_defence_cost": 564.32,
-              "paid_as_claimed": "Y"
+              "paid_as_claimed": true
             },
             {
               "maat_reference": 6785643,
@@ -102,7 +102,7 @@ public class FdcTestDataProvider {
               "judicial_apportionment": 13,
               "final_defence_cost": 7365.98,
               "item_type": "LGFS",
-              "paid_as_claimed": "N"
+              "paid_as_claimed": false
             }
           ]
           """;

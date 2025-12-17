@@ -1,17 +1,12 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
-import static java.lang.String.format;
-import static java.util.function.Predicate.not;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FinalDefenceCostsHelper;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
 

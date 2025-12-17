@@ -15,7 +15,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -53,7 +52,6 @@ public class FinalDefenceCostEntity {
     @Enumerated(EnumType.STRING)
     private FDCType itemType;
 
-    @Column(name = "PAID_AS_CLAIMED", length = 1)
-    @Enumerated(EnumType.STRING)
-    private YesNo paidAsClaimed;
+    @Column(name = "PAID_AS_CLAIMED", nullable = false, length = 1)
+    private Boolean paidAsClaimed;
 }

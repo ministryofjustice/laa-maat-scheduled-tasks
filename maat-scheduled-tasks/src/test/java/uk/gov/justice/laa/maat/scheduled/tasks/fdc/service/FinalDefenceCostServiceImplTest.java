@@ -1,8 +1,16 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,21 +18,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.validator.FdcItemValidator;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FinalDefenceCostServiceImplTest {
@@ -113,17 +111,17 @@ class FinalDefenceCostServiceImplTest {
             void persistsAllValidItemsWithBatching() {
                 FinalDefenceCostReadyDTO req1 = FinalDefenceCostReadyDTO.builder()
                         .maatReference(1001)
-                        .fdcReady(YesNo.Y)
+                        .fdcReady(true)
                         .itemType(FDCType.LGFS)
                         .build();
                 FinalDefenceCostReadyDTO req2 = FinalDefenceCostReadyDTO.builder()
                         .maatReference(1002)
-                        .fdcReady(YesNo.N)
+                        .fdcReady(false)
                         .itemType(FDCType.AGFS)
                         .build();
                 FinalDefenceCostReadyDTO req3 = FinalDefenceCostReadyDTO.builder()
                         .maatReference(1003)
-                        .fdcReady(YesNo.Y)
+                        .fdcReady(true)
                         .itemType(FDCType.LGFS)
                         .build();
 
@@ -143,12 +141,12 @@ class FinalDefenceCostServiceImplTest {
             void skipsItemsWithInvalidItemType() {
                 FinalDefenceCostReadyDTO valid = FinalDefenceCostReadyDTO.builder()
                         .maatReference(2001)
-                        .fdcReady(YesNo.Y)
+                        .fdcReady(true)
                         .itemType(FDCType.LGFS)
                         .build();
                 FinalDefenceCostReadyDTO invalid = FinalDefenceCostReadyDTO.builder()
                         .maatReference(2002)
-                        .fdcReady(YesNo.N)
+                        .fdcReady(false)
                         .itemType(null)
                         .build();
                 FinalDefenceCostReadyDTO nullType = FinalDefenceCostReadyDTO.builder()
@@ -185,7 +183,7 @@ class FinalDefenceCostServiceImplTest {
             void singleItemPersistsAtEnd() {
                 FinalDefenceCostReadyDTO req = FinalDefenceCostReadyDTO.builder()
                         .maatReference(3001)
-                        .fdcReady(YesNo.Y)
+                        .fdcReady(true)
                         .itemType(FDCType.AGFS)
                         .build();
 
@@ -203,12 +201,12 @@ class FinalDefenceCostServiceImplTest {
             void allInvalidItemTypesReturnsZero() {
                 FinalDefenceCostReadyDTO invalid1 = FinalDefenceCostReadyDTO.builder()
                         .maatReference(5001)
-                        .fdcReady(YesNo.Y)
+                        .fdcReady(true)
                         .itemType(null)
                         .build();
                 FinalDefenceCostReadyDTO invalid2 = FinalDefenceCostReadyDTO.builder()
                         .maatReference(5002)
-                        .fdcReady(YesNo.N)
+                        .fdcReady(false)
                         .itemType(null)
                         .build();
                 List<FinalDefenceCostReadyDTO> invalids = List.of(invalid1, invalid2);

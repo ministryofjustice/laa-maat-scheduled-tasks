@@ -4,13 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 
 @Data
@@ -55,5 +53,5 @@ public class FinalDefenceCostDTO {
 
   @NotNull(message = "paid_as_claimed is mandatory.")
   @JsonProperty("paid_as_claimed")
-  private YesNo paidAsClaimed;
+  private Boolean paidAsClaimed;
 }
