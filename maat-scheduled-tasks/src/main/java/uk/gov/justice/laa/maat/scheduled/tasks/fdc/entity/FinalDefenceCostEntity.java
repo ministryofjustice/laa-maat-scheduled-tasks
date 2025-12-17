@@ -53,5 +53,5 @@ public class FinalDefenceCostEntity {
     private FDCType itemType;
 
     @Column(name = "PAID_AS_CLAIMED", nullable = false, length = 1)
-    private Boolean paidAsClaimed;
+    private boolean paidAsClaimed;
 }

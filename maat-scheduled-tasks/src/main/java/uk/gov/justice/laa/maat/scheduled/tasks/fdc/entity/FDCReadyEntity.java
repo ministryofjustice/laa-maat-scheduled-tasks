@@ -31,7 +31,7 @@ public class FDCReadyEntity {
     private Integer maatId;
 
     @Column(name = "FDC_READY", nullable = false, length = 1)
-    private Boolean fdcReady;
+    private boolean fdcReady;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ITEM_TYPE", length = 4)
