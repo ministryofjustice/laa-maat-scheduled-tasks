@@ -17,10 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.YesNo;
 import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;
 
 @SpringBootTest
@@ -93,7 +92,7 @@ public class FinalDefenceCostE2EIntegrationTest {
               "court_code": "COURT1",
               "judicial_apportionment": 11,
               "final_defence_cost": 456.64,
-              "paid_as_claimed": "Y"
+              "paid_as_claimed": true
             },
             {
               "maat_reference": 234567,
@@ -101,7 +100,7 @@ public class FinalDefenceCostE2EIntegrationTest {
               "court_code": "COURT2",
               "judicial_apportionment": 12,
               "final_defence_cost": 564.32,
-              "paid_as_claimed": "Y"
+              "paid_as_claimed": true
             }
           ]
         """;
@@ -155,8 +154,8 @@ public class FinalDefenceCostE2EIntegrationTest {
   void saveFdcReadyReturns200WithSuccessPayload() throws Exception {
 
     List<FinalDefenceCostReadyDTO> requests = List.of(
-        new FinalDefenceCostReadyDTO(123, YesNo.Y, FDCType.AGFS),
-        new FinalDefenceCostReadyDTO(456, YesNo.N, FDCType.LGFS)
+        new FinalDefenceCostReadyDTO(123, true, FDCType.AGFS),
+        new FinalDefenceCostReadyDTO(456, false, FDCType.LGFS)
     );
     String body = objectMapper.writeValueAsString(requests);
 
@@ -174,11 +173,11 @@ public class FinalDefenceCostE2EIntegrationTest {
   @WithMockUser(authorities = "SCOPE_maat-scheduled-tasks-dev/standard")
   void saveFdcReadyReturnsZeroForInvalidRequestDto() throws Exception {
     List<FinalDefenceCostReadyDTO> requests = List.of(
-        new FinalDefenceCostReadyDTO(123, YesNo.Y, FDCType.AGFS),
-        new FinalDefenceCostReadyDTO(456, YesNo.Y, null)
+        new FinalDefenceCostReadyDTO(123, true, FDCType.AGFS),
+        new FinalDefenceCostReadyDTO(456, true, null)
     );
     String body = objectMapper.writeValueAsString(requests);
-    String invalid = objectMapper.writeValueAsString(List.of(new FinalDefenceCostReadyDTO(456, YesNo.Y, null)));
+    String invalid = objectMapper.writeValueAsString(List.of(new FinalDefenceCostReadyDTO(456, true, null)));
 
     mockMvc.perform(post(BASE + "/ready")
             .contentType(MediaType.APPLICATION_JSON)
