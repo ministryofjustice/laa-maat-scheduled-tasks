@@ -2,7 +2,7 @@ package uk.gov.justice.laa.maat.scheduled.tasks.fdc.util;
 
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FDCReadyEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
 
 public class FinalDefenceCostsHelper {
@@ -22,9 +22,9 @@ public class FinalDefenceCostsHelper {
     return entity;
   }
 
-  public static FDCReadyEntity toFDCReadyEntity(FinalDefenceCostReadyDTO dto) {
+  public static FinalDefenceCostReadyEntity toFDCReadyEntity(FinalDefenceCostReadyDTO dto) {
 
-    FDCReadyEntity entity = new FDCReadyEntity();
+    FinalDefenceCostReadyEntity entity = new FinalDefenceCostReadyEntity();
     entity.setMaatId(dto.getMaatReference());
     entity.setFdcReady(dto.getFdcReady());
     entity.setItemType(dto.getItemType());

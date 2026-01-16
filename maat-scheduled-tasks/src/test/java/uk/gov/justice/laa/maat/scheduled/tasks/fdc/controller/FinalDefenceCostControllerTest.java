@@ -48,7 +48,7 @@ class FinalDefenceCostControllerTest {
     private static final String BASE = "/api/internal/v1/fdc";
 
     @Test
-    @DisplayName("load-fdc: returns 200 and total number of records as inserted.")
+    @DisplayName("load: returns 200 and total number of records as inserted.")
     void testLoadFdc_whenValidData_thenReturnSuccess() throws Exception {
 
       String fdcDataJson = FdcTestDataProvider.getValidFdcData();
@@ -67,7 +67,7 @@ class FinalDefenceCostControllerTest {
     }
 
     @Test
-    @DisplayName("load-fdc: returns 400 for failed load.")
+    @DisplayName("load: returns 400 for failed load.")
     void testLoadFdc_whenInvalidData_thenReturnBadRequest() throws Exception {
 
       String fdcDataJson = FdcTestDataProvider.getInvalidFdcData();
@@ -91,7 +91,7 @@ class FinalDefenceCostControllerTest {
       verify(finalDefenceCostService).saveFDCItems(payload);
     }
 
-  @DisplayName("load-fdc: returns 500 when service throws exception")
+  @DisplayName("load: returns 500 when service throws exception")
   @Test
   void testLoadFdc_returns500ServiceException() throws Exception {
     when(finalDefenceCostService.saveFDCItems(any()))
@@ -111,7 +111,7 @@ class FinalDefenceCostControllerTest {
   }
 
     @Test
-    @DisplayName("load-fdc: returns 200 and loads only valid records.")
+    @DisplayName("load: returns 200 and loads only valid records.")
     void testLoadFdc_Data_whenMissingDataField_thenReturnBadRequest() throws Exception {
 
       String fdcDataJson = FdcTestDataProvider.getInvalidFdcDataWithMissingFields();
@@ -137,7 +137,7 @@ class FinalDefenceCostControllerTest {
     }
 
     @Test
-    @DisplayName("load-fdc: returns 400 when payload is empty.")
+    @DisplayName("load: returns 400 when payload is empty.")
     void testLoadFdc_Data_whenPayloadEmpty_thenReturnBadRequest() throws Exception {
 
       String fdcDataJson = "[]";
@@ -156,7 +156,7 @@ class FinalDefenceCostControllerTest {
     }
 
 
-    @DisplayName("save-fdc-ready: returns 400 when request body is empty")
+    @DisplayName("ready: returns 400 when request body is empty")
     @Test
     void saveFdcReadyReturns400WhenBodyEmpty() throws Exception {
         mockMvc.perform(post(BASE + "/ready")
@@ -168,7 +168,7 @@ class FinalDefenceCostControllerTest {
                 .andExpect(jsonPath("$.message").value("Request body cannot be empty"));
     }
 
-    @DisplayName("save-fdc-ready: returns 200 with success payload when service inserts all items")
+    @DisplayName("ready: returns 200 with success payload when service inserts all items")
     @Test
     void saveFdcReadyReturns200WithSuccessPayload() throws Exception {
 
@@ -193,7 +193,7 @@ class FinalDefenceCostControllerTest {
     }
 
     @Test
-    @DisplayName("save-fdc-ready: returns 200 with success payload when service inserts only valid items")
+    @DisplayName("ready: returns 200 with success payload when service inserts only valid items")
     void saveFdcReadyReturns200WithSuccessPayloadAndFailedItems() throws Exception {
 
         String body = """
@@ -224,7 +224,7 @@ class FinalDefenceCostControllerTest {
         verify(finalDefenceCostService).saveFdcReadyItems(payload);
     }
 
-    @DisplayName("save-fdc-ready: returns 500 when service throws exception")
+    @DisplayName("ready: returns 500 when service throws exception")
     @Test
     void saveFdcReadyReturns500OnServiceException() throws Exception {
 

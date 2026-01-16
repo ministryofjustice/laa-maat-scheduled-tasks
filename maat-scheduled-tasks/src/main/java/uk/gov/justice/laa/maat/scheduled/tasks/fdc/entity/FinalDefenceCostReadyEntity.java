@@ -19,7 +19,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "fdc_ready", schema = "HUB")
-public class FDCReadyEntity {
+public class FinalDefenceCostReadyEntity {
 
     @Id
     @SequenceGenerator(name = "fdc_ready_gen_seq", sequenceName = "FDC_READY_SEQUENCE", allocationSize = 1, schema = "HUB")
