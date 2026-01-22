@@ -6,30 +6,33 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FDCManualDataLoadService {
-  private final ResourceLoader resourceLoader;
   private final EntityManager entityManager;
+
+  private static final String BASE_DIR = "csv/";
 
   // this method will be replaced to invoke the Billing API to load the data into MAAT DB
   @Transactional
   public int loadFinalDefenceCosts(String csvPath, FDCType itemType, int batchSize) {
     log.info("Loading FDC Final Defence Costs");
     int count = 0;
-    Resource resource = resourceLoader.getResource("classpath:" + csvPath);
+    Resource resource = loadCsv(csvPath);
     try (BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
       // read header
       String headerLine = br.readLine();
@@ -76,7 +79,7 @@ public class FDCManualDataLoadService {
   public int loadFdcReady(String csvPath, FDCType itemType, int batchSize) {
     log.info("Loading FDC Ready");
     int count = 0;
-    Resource resource = resourceLoader.getResource("classpath:" + csvPath);
+    Resource resource = loadCsv(csvPath);
 
     try (BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
       String headerLine = br.readLine();
@@ -136,5 +139,29 @@ public class FDCManualDataLoadService {
   private static BigDecimal getDecimal(String[] cols, Map<String, Integer> idx) {
     String v = getStr(cols, idx, "final_defence_cost");
     return (v == null) ? null : new BigDecimal(v);
+  }
+
+  public Resource loadCsv(String csvPath) {
+    if (csvPath == null || csvPath.isBlank()) {
+      throw new IllegalArgumentException("CSV path required");
+    }
+
+    if (!csvPath.endsWith(".csv")) {
+      throw new IllegalArgumentException("Invalid file type");
+    }
+
+    Path normalized = Paths.get(BASE_DIR, csvPath).normalize();
+
+    if (!normalized.startsWith(BASE_DIR)) {
+      throw new IllegalArgumentException("Path traversal attempt");
+    }
+
+    Resource resource = new ClassPathResource(normalized.toString());
+
+    if (!resource.exists()) {
+      throw new IllegalArgumentException("CSV not found");
+    }
+
+    return resource;
   }
 }
