@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.service;
+package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -10,9 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.FDCReadyEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.FinalDefenceCostsEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCReadyEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
 
 import jakarta.persistence.EntityManager;
 
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class FDCDataLoadServiceTest {
+class FDCManualDataLoadServiceTest {
 
   @Mock
   private ResourceLoader resourceLoader;
@@ -36,7 +36,7 @@ class FDCDataLoadServiceTest {
   private Resource resource;
 
   @InjectMocks
-  private FDCDataLoadService service;
+  private FDCManualDataLoadService service;
 
   private void mockCsv(String csvPath, String csv) throws IOException {
     when(resourceLoader.getResource("classpath:" + csvPath)).thenReturn(resource);
@@ -65,11 +65,11 @@ class FDCDataLoadServiceTest {
       assertThat(count).isEqualTo(3);
 
       // capture entities persisted
-      ArgumentCaptor<FinalDefenceCostsEntity> captor = ArgumentCaptor.forClass(FinalDefenceCostsEntity.class);
+      ArgumentCaptor<ManualFDCEntity> captor = ArgumentCaptor.forClass(ManualFDCEntity.class);
       verify(entityManager, times(3)).persist(captor.capture());
 
-      List<FinalDefenceCostsEntity> all = captor.getAllValues();
-      FinalDefenceCostsEntity first = all.getFirst();
+      List<ManualFDCEntity> all = captor.getAllValues();
+      ManualFDCEntity first = all.getFirst();
       assertThat(first.getMaatId()).isEqualTo(1001);
       assertThat(first.getCaseNo()).isEqualTo("CASE1");
       assertThat(first.getSuppAccountCode()).isEqualTo("SUP1");
@@ -79,7 +79,7 @@ class FDCDataLoadServiceTest {
       assertThat(first.getItemType()).isEqualTo(FDCType.AGFS);
       assertThat(first.getPaidAsClaimed()).isEqualTo("YES");
 
-      FinalDefenceCostsEntity third = all.get(2);
+      ManualFDCEntity third = all.get(2);
       assertThat(third.getMaatId()).isEqualTo(1003);
       assertThat(third.getTotalCaseCosts()).isEqualByComparingTo(new BigDecimal("98765.43"));
 
@@ -103,7 +103,7 @@ class FDCDataLoadServiceTest {
       int count = service.loadFinalDefenceCosts("CCLF_data.csv", FDCType.LGFS, 10);
 
       assertThat(count).isEqualTo(2);
-      verify(entityManager, times(2)).persist(any(FinalDefenceCostsEntity.class));
+      verify(entityManager, times(2)).persist(any(ManualFDCEntity.class));
     }
 
     @Test
@@ -151,10 +151,10 @@ class FDCDataLoadServiceTest {
 
       assertThat(count).isEqualTo(3);
 
-      ArgumentCaptor<FDCReadyEntity> captor = ArgumentCaptor.forClass(FDCReadyEntity.class);
+      ArgumentCaptor<ManualFDCReadyEntity> captor = ArgumentCaptor.forClass(ManualFDCReadyEntity.class);
       verify(entityManager, times(3)).persist(captor.capture());
 
-      List<FDCReadyEntity> all = captor.getAllValues();
+      List<ManualFDCReadyEntity> all = captor.getAllValues();
       assertThat(all.getFirst().getMaatId()).isEqualTo(3001);
       assertThat(all.getFirst().getFdcReady()).isEqualTo("YES");
       assertThat(all.getFirst().getItemType()).isEqualTo(FDCType.AGFS);

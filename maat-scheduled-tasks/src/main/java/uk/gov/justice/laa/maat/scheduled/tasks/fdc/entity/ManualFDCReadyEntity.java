@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.entity;
+package uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
 
 @Builder
 @AllArgsConstructor
@@ -25,7 +25,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 @ToString
 @Entity
 @Table(name = "fdc_ready", schema = "HUB")
-public class FDCReadyEntity {
+public class ManualFDCReadyEntity {
   @Id
   @SequenceGenerator(name = "fdc_ready_gen_seq", sequenceName = "S_GENERAL_SEQUENCE", allocationSize = 1, schema = "TOGDATA")
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fdc_ready_gen_seq")

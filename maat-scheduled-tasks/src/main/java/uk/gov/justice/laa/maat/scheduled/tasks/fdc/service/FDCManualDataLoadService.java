@@ -1,27 +1,26 @@
-package uk.gov.justice.laa.maat.scheduled.tasks.service;
+package uk.gov.justice.laa.maat.scheduled.tasks.fdc.service;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.FDCReadyEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.entity.FinalDefenceCostsEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCReadyEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FDCDataLoadService {
+public class FDCManualDataLoadService {
   private final ResourceLoader resourceLoader;
   private final EntityManager entityManager;
 
@@ -42,7 +41,7 @@ public class FDCDataLoadService {
       while ((line = br.readLine()) != null) {
         if (line.isBlank()) continue;
         String[] cols = line.split(",", -1);
-        FinalDefenceCostsEntity e = new FinalDefenceCostsEntity();
+        ManualFDCEntity e = new ManualFDCEntity();
         e.setMaatId(getInt(cols, idx, "maat_reference"));
         e.setCaseNo(getStr(cols, idx, "case_no"));
         e.setSuppAccountCode(getStr(cols, idx, "supp_account_code"));
@@ -88,7 +87,7 @@ public class FDCDataLoadService {
       while ((line = br.readLine()) != null) {
         if (line.isBlank()) continue;
         String[] cols = line.split(",", -1);
-        FDCReadyEntity e = new FDCReadyEntity();
+        ManualFDCReadyEntity e = new ManualFDCReadyEntity();
         e.setMaatId(getInt(cols, idx, "maat_reference"));
         e.setFdcReady(getStr(cols, idx, "fdc_ready"));
         e.setItemType(itemType);
