@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,6 +16,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.StrictBooleanDeserializer;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -53,5 +55,6 @@ public class FinalDefenceCostEntity {
     private FDCType itemType;
 
     @Column(name = "PAID_AS_CLAIMED", nullable = false, length = 1)
+    @JsonDeserialize(using = StrictBooleanDeserializer.class)
     private boolean paidAsClaimed;
 }

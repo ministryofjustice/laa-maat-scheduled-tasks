@@ -20,8 +20,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCReadyEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,23 +47,23 @@ class FDCManualDataLoadServiceTest {
       assertThat(count).isEqualTo(3);
 
       // capture entities persisted
-      ArgumentCaptor<ManualFDCEntity> captor = ArgumentCaptor.forClass(ManualFDCEntity.class);
+      ArgumentCaptor<FinalDefenceCostEntity> captor = ArgumentCaptor.forClass(FinalDefenceCostEntity.class);
       verify(entityManager, times(3)).persist(captor.capture());
 
-      List<ManualFDCEntity> all = captor.getAllValues();
-      ManualFDCEntity first = all.getFirst();
-      assertThat(first.getMaatId()).isEqualTo(1001);
+      List<FinalDefenceCostEntity> all = captor.getAllValues();
+      FinalDefenceCostEntity first = all.getFirst();
+      assertThat(first.getMaatReference()).isEqualTo(1001);
       assertThat(first.getCaseNo()).isEqualTo("CASE1");
       assertThat(first.getSuppAccountCode()).isEqualTo("SUP1");
-      assertThat(first.getCourCourtCode()).isEqualTo("CRT1");
+      assertThat(first.getCourtCode()).isEqualTo("CRT1");
       assertThat(first.getJudicialApportionment()).isEqualTo(1);
-      assertThat(first.getTotalCaseCosts()).isEqualByComparingTo(new BigDecimal("123.45"));
+      assertThat(first.getFinalDefenceCost()).isEqualByComparingTo(new BigDecimal("123.45"));
       assertThat(first.getItemType()).isEqualTo(FDCType.AGFS);
-      assertThat(first.getPaidAsClaimed()).isEqualTo("YES");
+      assertThat(first.isPaidAsClaimed()).isEqualTo(true);
 
-      ManualFDCEntity third = all.get(2);
-      assertThat(third.getMaatId()).isEqualTo(1003);
-      assertThat(third.getTotalCaseCosts()).isEqualByComparingTo(new BigDecimal("98765.43"));
+      FinalDefenceCostEntity third = all.get(2);
+      assertThat(third.getMaatReference()).isEqualTo(1003);
+      assertThat(third.getFinalDefenceCost()).isEqualByComparingTo(new BigDecimal("98765.43"));
 
       // batching: expect flush/clear after row 2, and again at end for remaining row
       verify(entityManager, times(2)).flush();
@@ -77,7 +77,7 @@ class FDCManualDataLoadServiceTest {
       int count = service.loadFinalDefenceCosts("CCLF_data.csv", FDCType.LGFS, 10);
 
       assertThat(count).isEqualTo(2);
-      verify(entityManager, times(2)).persist(any(ManualFDCEntity.class));
+      verify(entityManager, times(2)).persist(any(FinalDefenceCostEntity.class));
     }
 
     @Test
@@ -114,16 +114,16 @@ class FDCManualDataLoadServiceTest {
 
       assertThat(count).isEqualTo(3);
 
-      ArgumentCaptor<ManualFDCReadyEntity> captor = ArgumentCaptor.forClass(ManualFDCReadyEntity.class);
+      ArgumentCaptor<FinalDefenceCostReadyEntity> captor = ArgumentCaptor.forClass(FinalDefenceCostReadyEntity.class);
       verify(entityManager, times(3)).persist(captor.capture());
 
-      List<ManualFDCReadyEntity> all = captor.getAllValues();
+      List<FinalDefenceCostReadyEntity> all = captor.getAllValues();
       assertThat(all.getFirst().getMaatId()).isEqualTo(3001);
-      assertThat(all.getFirst().getFdcReady()).isEqualTo("YES");
+      assertThat(all.getFirst().isFdcReady()).isEqualTo(true);
       assertThat(all.getFirst().getItemType()).isEqualTo(FDCType.AGFS);
 
       assertThat(all.get(1).getMaatId()).isEqualTo(3002);
-      assertThat(all.get(1).getFdcReady()).isEqualTo("NO");
+      assertThat(all.get(1).isFdcReady()).isEqualTo(false);
 
       verify(entityManager, times(2)).flush();
       verify(entityManager, times(2)).clear();

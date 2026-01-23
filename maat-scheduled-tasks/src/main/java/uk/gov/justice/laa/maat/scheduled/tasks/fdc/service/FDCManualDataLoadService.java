@@ -10,13 +10,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCEntity;
-import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.ManualFDCReadyEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostEntity;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity.FinalDefenceCostReadyEntity;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
 
 @Slf4j
@@ -44,15 +45,17 @@ public class FDCManualDataLoadService {
       while ((line = br.readLine()) != null) {
         if (line.isBlank()) continue;
         String[] cols = line.split(",", -1);
-        ManualFDCEntity e = new ManualFDCEntity();
-        e.setMaatId(getInt(cols, idx, "maat_reference"));
+        FinalDefenceCostEntity e = new FinalDefenceCostEntity();
+        e.setMaatReference(getInt(cols, idx, "maat_reference"));
         e.setCaseNo(getStr(cols, idx, "case_no"));
         e.setSuppAccountCode(getStr(cols, idx, "supp_account_code"));
-        e.setCourCourtCode(getStr(cols, idx, "court_code"));
+        e.setCourtCode(getStr(cols, idx, "court_code"));
         e.setJudicialApportionment(getInt(cols, idx, "judicial_apportionment"));
-        e.setTotalCaseCosts(getDecimal(cols, idx));
+        e.setFinalDefenceCost(getDecimal(cols, idx));
         e.setItemType(itemType);
-        e.setPaidAsClaimed(getStr(cols, idx, "paid_as_claimed"));
+        boolean paidAsClaimed = Objects.equals(getStr(cols, idx, "paid_as_claimed"), "YES") ||
+            Objects.equals(getStr(cols, idx, "paid_as_claimed"), "Y");
+        e.setPaidAsClaimed(paidAsClaimed);
 
         entityManager.persist(e);
         inBatch++;
@@ -90,9 +93,11 @@ public class FDCManualDataLoadService {
       while ((line = br.readLine()) != null) {
         if (line.isBlank()) continue;
         String[] cols = line.split(",", -1);
-        ManualFDCReadyEntity e = new ManualFDCReadyEntity();
+        FinalDefenceCostReadyEntity e = new FinalDefenceCostReadyEntity();
         e.setMaatId(getInt(cols, idx, "maat_reference"));
-        e.setFdcReady(getStr(cols, idx, "fdc_ready"));
+        boolean fdcReady = Objects.equals(getStr(cols, idx, "fdc_ready"), "YES") ||
+            Objects.equals(getStr(cols, idx, "fdc_ready"), "Y");
+        e.setFdcReady(fdcReady);
         e.setItemType(itemType);
         entityManager.persist(e);
         inBatch++;

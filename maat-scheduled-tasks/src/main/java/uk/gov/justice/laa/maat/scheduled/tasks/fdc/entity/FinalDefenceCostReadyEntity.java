@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.StrictBooleanDeserializer;
 
 @Data
 @Entity
@@ -31,6 +33,7 @@ public class FinalDefenceCostReadyEntity {
     private Integer maatId;
 
     @Column(name = "FDC_READY", nullable = false, length = 1)
+    @JsonDeserialize(using = StrictBooleanDeserializer.class)
     private boolean fdcReady;
 
     @Enumerated(EnumType.STRING)
