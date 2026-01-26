@@ -24,7 +24,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.StrictBooleanDeserialize
 public class FinalDefenceCostReadyEntity {
 
     @Id
-    @SequenceGenerator(name = "fdc_ready_gen_seq", sequenceName = "FDC_READY_SEQUENCE", allocationSize = 1, schema = "HUB")
+    @SequenceGenerator(name = "fdc_ready_gen_seq", sequenceName = "S_GENERAL_SEQUENCE", allocationSize = 1, schema = "TOGDATA")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fdc_ready_gen_seq")
     @Column(name = "HDAT_ID")
     private Integer hdatId;
