@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,7 +15,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.StrictBooleanDeserializer;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,7 +27,7 @@ import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
 public class FinalDefenceCostEntity {
 
     @Id
-    @SequenceGenerator(name = "fdc_gen_seq", sequenceName = "FINAL_DEFENCE_COSTS_SEQUENCE", allocationSize = 1, schema = "HUB")
+    @SequenceGenerator(name = "fdc_gen_seq", sequenceName = "S_GENERAL_SEQUENCE", allocationSize = 1, schema = "TOGDATA")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fdc_gen_seq")
     @Column(name = "HDAT_ID")
     private Integer hdatId;
@@ -53,5 +55,6 @@ public class FinalDefenceCostEntity {
     private FDCType itemType;
 
     @Column(name = "PAID_AS_CLAIMED", nullable = false, length = 1)
+    @JsonDeserialize(using = StrictBooleanDeserializer.class)
     private boolean paidAsClaimed;
 }

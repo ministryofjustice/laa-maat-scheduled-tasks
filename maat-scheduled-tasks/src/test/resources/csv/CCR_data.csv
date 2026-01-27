@@ -1,0 +1,4 @@
+maat_reference,case_no,supp_account_code,court_code,judicial_apportionment,final_defence_cost,paid_as_claimed
+1001,CASE1,SUP1,CRT1,1,123.45,YES
+1002,CASE2,SUP2,CRT2,0,0.00,NO
+1003,CASE3,SUP3,CRT3,2,98765.43,YES

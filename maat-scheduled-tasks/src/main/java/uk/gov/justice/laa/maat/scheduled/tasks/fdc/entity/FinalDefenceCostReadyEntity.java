@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.maat.scheduled.tasks.fdc.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,17 +13,18 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.StrictBooleanDeserializer;
 
 @Data
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "fdc_ready", schema = "HUB")
-public class FDCReadyEntity {
+public class FinalDefenceCostReadyEntity {
 
     @Id
-    @SequenceGenerator(name = "fdc_ready_gen_seq", sequenceName = "FDC_READY_SEQUENCE", allocationSize = 1, schema = "HUB")
+    @SequenceGenerator(name = "fdc_ready_gen_seq", sequenceName = "S_GENERAL_SEQUENCE", allocationSize = 1, schema = "TOGDATA")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fdc_ready_gen_seq")
     @Column(name = "HDAT_ID")
     private Integer hdatId;
@@ -31,6 +33,7 @@ public class FDCReadyEntity {
     private Integer maatId;
 
     @Column(name = "FDC_READY", nullable = false, length = 1)
+    @JsonDeserialize(using = StrictBooleanDeserializer.class)
     private boolean fdcReady;
 
     @Enumerated(EnumType.STRING)

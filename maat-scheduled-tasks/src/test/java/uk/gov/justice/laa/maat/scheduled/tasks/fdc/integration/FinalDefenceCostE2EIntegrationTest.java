@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.justice.laa.maat.scheduled.tasks.enums.FDCType;
+import uk.gov.justice.laa.maat.scheduled.tasks.fdc.enums.FDCType;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.dto.FinalDefenceCostReadyDTO;
 import uk.gov.justice.laa.maat.scheduled.tasks.fdc.util.FdcTestDataProvider;

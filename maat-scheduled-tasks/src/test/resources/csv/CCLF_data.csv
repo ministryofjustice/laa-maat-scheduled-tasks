@@ -1,0 +1,4 @@
+maat_reference,case_no,supp_account_code,court_code,judicial_apportionment,final_defence_cost,paid_as_claimed
+2001,CASEX,SUPX,CRTX,1,10.00,YES
+
+2002,CASEY,SUPY,CRTY,0,20.00,NO
